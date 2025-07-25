@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar';
 import { Inter } from 'next/font/google';
+import Footer from './components/layout/Footer';
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
@@ -59,10 +60,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className="dark">
       <body className={`${inter.className} antialiased`}>
         <Navbar/>
         {children}
+        <Footer/>
       </body>
     </html>
   );

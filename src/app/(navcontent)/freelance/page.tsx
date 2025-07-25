@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Shield, Zap, Target, Code, Palette, Brain, Star, ArrowRight, CheckCircle, Coffee, Laptop, GraduationCap } from 'lucide-react';
+import { Users, Shield, Zap, Target, Code, Palette, Brain, Star, ArrowRight, CheckCircle, Coffee, Laptop, GraduationCap, Sparkles } from 'lucide-react';
 
 export default function FreelancerPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  const workEnvironmentImages = [
-    "/api/placeholder/800/500",
-    "/api/placeholder/800/500", 
-    "/api/placeholder/800/500"
+  const workEnvironmentImages: any = [
+    // "/api/placeholder/800/500",
+    // "/api/placeholder/800/500", 
+    // "/api/placeholder/800/500"
   ];
 
   useEffect(() => {
@@ -57,11 +57,22 @@ export default function FreelancerPage() {
   ];
 
   const coreQualities = [
-    "Respect the community",
-    "Embrace flat hierarchy", 
-    "Transparent communication",
-    "Set clear expectations",
-    "Maintain professionalism"
+    {
+      text: "Respect the community",
+      description: "Treat every team member with dignity and foster collaborative relationships"
+    },
+    {
+      text: "Transparent communication",
+      description: "Keep stakeholders informed with honest, timely updates on project progress"
+    },
+    {
+      text: "Set clear expectations",
+      description: "Define deliverables, timelines, and requirements upfront to avoid confusion"
+    },
+    {
+      text: "Maintain professionalism",
+      description: "Uphold high standards in all interactions and deliverables"
+    }
   ];
 
   const howItWorksSteps = [
@@ -147,8 +158,8 @@ export default function FreelancerPage() {
       </section>
 
       {/* All other sections with dark background */}
-      <div className=" text-white relative z-10">
-        {/* Key Benefits */}
+      <div className="text-white relative z-10">
+        {/* Key Benefits - Improved */}
         <section className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
@@ -164,28 +175,28 @@ export default function FreelancerPage() {
               {keyBenefits.map((benefit, index) => (
                 <motion.div
                   key={index}
-                  className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300"
+                  className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 group"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   whileHover={{ 
                     scale: 1.02, 
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                    y: -5
+                    borderColor: 'rgba(168, 85, 247, 0.4)',
+                    y: -8
                   }}
                 >
-                  <div className="text-purple-400 mb-4">
+                  <div className="text-purple-400 mb-4 group-hover:text-pink-400 transition-colors duration-300">
                     {benefit.icon}
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-white/90">{benefit.title}</h3>
-                  <p className="text-white/70 leading-relaxed">{benefit.description}</p>
+                  <h3 className="text-xl font-bold mb-3 text-white/90 group-hover:text-white transition-colors duration-300">{benefit.title}</h3>
+                  <p className="text-white/70 leading-relaxed group-hover:text-white/80 transition-colors duration-300">{benefit.description}</p>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Who You Are */}
+        {/* Who You Are - Improved */}
         <section className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
@@ -201,62 +212,94 @@ export default function FreelancerPage() {
               {whoYouAre.map((profile, index) => (
                 <motion.div
                   key={index}
-                  className="text-center backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300"
+                  className="text-center backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 group h-72 flex flex-col justify-between"
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    borderColor: 'rgba(168, 85, 247, 0.4)',
+                    y: -5
+                  }}
                 >
-                  <div className="text-pink-400 mb-6 flex justify-center">
+                  <div className="text-pink-400 mb-6 flex justify-center group-hover:text-purple-400 transition-colors duration-300">
                     {profile.icon}
                   </div>
-                  <h3 className="text-2xl font-bold mb-4 text-white/90">{profile.title}</h3>
-                  <p className="text-white/70 leading-relaxed">{profile.description}</p>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-4 text-white/90 group-hover:text-white transition-colors duration-300">{profile.title}</h3>
+                    <p className="text-white/70 leading-relaxed group-hover:text-white/80 transition-colors duration-300">{profile.description}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Core Qualities */}
+        {/* Core Qualities - Completely Redesigned */}
         <section className="py-20 px-8">
-          <div className="container mx-auto max-w-4xl">
-            <motion.h2 
-              className="text-4xl md:text-5xl font-bold text-center mb-8"
+          <div className="container mx-auto max-w-6xl">
+            <motion.div
+              className="text-center mb-16"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               transition={{ duration: 0.6 }}
             >
-              What We Expect
-            </motion.h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                What We Expect
+              </h2>
+              <p className="text-xl text-white/70 max-w-2xl mx-auto">
+                No compromises on these core values that define our community
+              </p>
+            </motion.div>
             
-            <motion.p 
-              className="text-xl text-center text-white/70 mb-12"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              No compromises on these core values
-            </motion.p>
-            
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-8">
               {coreQualities.map((quality, index) => (
                 <motion.div
                   key={index}
-                  className="flex items-center gap-4 backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-6"
-                  initial={{ opacity: 0, x: -20 }}
+                  className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 group"
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    borderColor: 'rgba(168, 85, 247, 0.4)',
+                    y: -5
+                  }}
                 >
-                  <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
-                  <span className="text-lg font-medium text-white/90">{quality}</span>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="relative">
+                        <CheckCircle className="w-8 h-8 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
+                        <motion.div
+                          className="absolute inset-0 w-8 h-8 rounded-full bg-green-400/20 group-hover:bg-green-400/30 transition-colors duration-300"
+                          animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [0.5, 0.8, 0.5]
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-white/90 mb-3 group-hover:text-white transition-colors duration-300">
+                        {quality.text}
+                      </h3>
+                      <p className="text-white/70 leading-relaxed group-hover:text-white/80 transition-colors duration-300">
+                        {quality.description}
+                      </p>
+                    </div>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Gen-Z Work Environment Showcase */}
+        {/* Creative Workspace - Completely Redesigned */}
         <section className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
@@ -269,48 +312,105 @@ export default function FreelancerPage() {
             </motion.h2>
             
             <motion.div 
-              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl overflow-hidden p-8"
+              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl overflow-hidden p-8 group"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
+              whileHover={{ borderColor: 'rgba(168, 85, 247, 0.3)' }}
             >
-              <div className="relative h-96 rounded-2xl overflow-hidden">
+              <div className="relative h-96 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-blue-500/20">
+                {/* Enhanced placeholder when no images */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <motion.div
+                      animate={{
+                        rotate: [0, 360],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    >
+                      <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                    </motion.div>
+                    <h3 className="text-2xl font-bold text-white/80 mb-2">Modern Creative Environment</h3>
+                    <p className="text-white/60 text-lg">Where innovation meets inspiration</p>
+                  </div>
+                </div>
+
                 <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentSlide}
-                    src={workEnvironmentImages[currentSlide]}
-                    alt={`Work environment ${currentSlide + 1}`}
-                    className="w-full h-full object-cover"
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.5 }}
-                  />
+                  {workEnvironmentImages.length > 0 && (
+                    <motion.img
+                      key={currentSlide}
+                      src={workEnvironmentImages[currentSlide]}
+                      alt={`Work environment ${currentSlide + 1}`}
+                      className="w-full h-full object-cover"
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  )}
                 </AnimatePresence>
                 
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                  {workEnvironmentImages.map((_, index) => (
-                    <button
-                      key={index}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        index === currentSlide ? 'bg-gradient-to-r from-purple-400 to-pink-400' : 'bg-white/30'
-                      }`}
-                      onClick={() => setCurrentSlide(index)}
-                    />
-                  ))}
-                </div>
+                {/* Enhanced slide indicators */}
+                {workEnvironmentImages.length > 0 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
+                    {workEnvironmentImages.map((_: any, index: any) => (
+                      <motion.button
+                        key={index}
+                        className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                          index === currentSlide ? 'bg-gradient-to-r from-purple-400 to-pink-400 shadow-lg' : 'bg-white/30 hover:bg-white/50'
+                        }`}
+                        onClick={() => setCurrentSlide(index)}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Floating elements for visual appeal */}
+                <motion.div
+                  className="absolute top-6 left-6 text-purple-400/30"
+                  animate={{
+                    y: [0, -10, 0],
+                    rotate: [0, 5, 0]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Code className="w-8 h-8" />
+                </motion.div>
+                
+                <motion.div
+                  className="absolute top-6 right-6 text-pink-400/30"
+                  animate={{
+                    y: [0, 10, 0],
+                    rotate: [0, -5, 0]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1
+                  }}
+                >
+                  <Palette className="w-8 h-8" />
+                </motion.div>
               </div>
               
-              <div className="text-center mt-8">
-                <p className="text-xl text-white/70">
-                  A modern, collaborative environment designed for Gen-Z talent to thrive
-                </p>
-              </div>
+              
             </motion.div>
           </div>
         </section>
 
-        {/* How It Works */}
+        {/* How It Works - Improved with uniform sizing */}
         <section className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
@@ -326,23 +426,37 @@ export default function FreelancerPage() {
               {howItWorksSteps.map((step, index) => (
                 <motion.div
                   key={index}
-                  className="text-center relative"
+                  className="relative"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
-                  <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6 mb-4 hover:bg-white/10 transition-all duration-300">
-                    <div className="text-purple-400 mb-4 flex justify-center">
-                      {step.icon}
+                  <motion.div
+                    className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6 h-72 flex flex-col justify-between hover:bg-white/10 transition-all duration-300 group"
+                    whileHover={{ 
+                      scale: 1.05,
+                      borderColor: 'rgba(168, 85, 247, 0.4)',
+                      y: -5
+                    }}
+                  >
+                    <div className="text-center">
+                      <div className="text-purple-400 mb-4 flex justify-center group-hover:text-pink-400 transition-colors duration-300">
+                        {step.icon}
+                      </div>
+                      <div className="text-4xl font-black text-white/20 mb-4 group-hover:text-purple-400/30 transition-colors duration-300">{step.step}</div>
+                      <h3 className="text-xl font-bold mb-3 text-white/90 group-hover:text-white transition-colors duration-300 leading-tight">{step.title}</h3>
                     </div>
-                    <div className="text-4xl font-black text-white/20 mb-4">{step.step}</div>
-                    <h3 className="text-xl font-bold mb-3 text-white/90">{step.title}</h3>
-                    <p className="text-white/70 text-sm leading-relaxed">{step.description}</p>
-                  </div>
+                    <p className="text-white/70 text-sm leading-relaxed text-center group-hover:text-white/80 transition-colors duration-300 mt-auto">{step.description}</p>
+                  </motion.div>
                   
                   {index < howItWorksSteps.length - 1 && (
                     <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
-                      <ArrowRight className="w-6 h-6 text-purple-400/50" />
+                      <motion.div
+                        animate={{ x: [0, 5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        {/* <ArrowRight className="w-6 h-6 m-3 text-purple-400/50" /> */}
+                      </motion.div>
                     </div>
                   )}
                 </motion.div>
@@ -351,67 +465,7 @@ export default function FreelancerPage() {
           </div>
         </section>
 
-        {/* Vision Statement */}
-        <section className="py-20 px-8">
-          <div className="container mx-auto max-w-4xl text-center">
-            <motion.div
-              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl p-12"
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-            >
-              <Brain className="w-16 h-16 text-purple-400 mx-auto mb-8" />
-              <h2 className="text-3xl md:text-4xl font-bold mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                "Freelance is the new open source"
-              </h2>
-              <p className="text-xl text-white/70 leading-relaxed mb-8">
-                With Gen-AI, we're moving to a gig-based economy. Join our platform to build a strong freelancer 
-                community that addresses gaps in the startup space while providing opportunities for those on the grind.
-              </p>
-              <p className="text-lg text-white/60">
-                Build systems of scale and create art that makes a difference, while expanding your network 
-                and connecting with industry leaders.
-              </p>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Final CTA */}
-        <section className="py-20 px-8">
-          <div className="container mx-auto max-w-4xl text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-4xl md:text-5xl font-bold mb-8">
-                Ready to Shape the Future?
-              </h2>
-              <p className="text-xl text-white/70 mb-12">
-                Join our freelancer community and be part of the next generation of work.
-              </p>
-              
-              <motion.button
-                className="group relative px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl overflow-hidden transition-all duration-300"
-                whileHover={{ 
-                  scale: 1.02,
-                  boxShadow: "0 20px 40px rgba(168, 85, 247, 0.4)"
-                }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => window.open('https://forms.google.com/your-freelancer-form', '_blank')}
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  Join Freelancer Waitlist
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                </span>
-              </motion.button>
-              
-              <p className="text-sm text-white/50 mt-6">
-                No commitment required • Join the waitlist today
-              </p>
-            </motion.div>
-          </div>
-        </section>
+      
       </div>
     </div>
   );
