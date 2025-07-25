@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import FadeIn from '../../components/animations/FadeIn'
+import FadeIn from '../animations/FadeIn'
 import { scrollToSection } from '../../lib/utils'
 
 export default function FinalCTA() {

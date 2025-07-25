@@ -1,7 +1,9 @@
+//services component
 'use client'
 
 import { motion } from 'framer-motion'
 import FadeIn from '../../components/animations/FadeIn'
+// import FadeIn  from '@/src/components/animations/FadeIn'
 
 interface Service {
   icon: string

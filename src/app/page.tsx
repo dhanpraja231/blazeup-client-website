@@ -2,8 +2,8 @@ import Header from './components/ui/Header'
 import Hero from './components/ui/Hero'
 import Stats from './components/ui/Stats'
 import Services from './components/ui/Services'
-import FinalCTA from './components/ui/FinalCTA'
-import Footer from './components/ui/Footer'
+import FinalCTA from './components/archive/FinalCTA'
+import Footer from '@/components/ui/Footer'
 
 export default function Home() {
   return (

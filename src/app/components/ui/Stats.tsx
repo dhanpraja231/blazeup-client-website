@@ -1,3 +1,4 @@
+//stats component
 'use client'
 
 import { motion } from 'framer-motion'

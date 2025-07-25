@@ -1,3 +1,4 @@
+//header component
 'use client'
 
 import { useState, useEffect } from 'react'
