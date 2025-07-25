@@ -7,11 +7,11 @@ import { CheckCircle, XCircle, AlertTriangle, Users, Target, Zap, Eye, Monitor, 
 export default function ClientPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  const workboardImages = [
-    "/api/placeholder/800/500",
-    "/api/placeholder/800/500", 
-    "/api/placeholder/800/500",
-    "/api/placeholder/800/500"
+  const workboardImages: any = [
+    // "/api/placeholder/800/500",
+    // "/api/placeholder/800/500", 
+    // "/api/placeholder/800/500",
+    // "/api/placeholder/800/500"
   ];
 
   useEffect(() => {
@@ -109,27 +109,108 @@ export default function ClientPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white">
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-8">
-        <div className="container mx-auto max-w-6xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
+    <div className="min-h-screen bg-gradient-hero text-white overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{
+            rotate: [0, 120, 240, 360],
+            scale: [1, 1.1, 0.9, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.15) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(107, 70, 193, 0.15) 0%, transparent 50%),
+              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)
+            `
+          }}
+        />
+      </div>
+
+      {/* Additional Gradient Overlay */}
+      {/* <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            linear-gradient(45deg, transparent 0%, rgba(255, 107, 53, 0.02) 25%, transparent 50%),
+            linear-gradient(-45deg, transparent 0%, rgba(107, 70, 193, 0.02) 25%, transparent 50%)
+          `
+        }}
+      /> */}
+
+      {/* Comparison Chart */}
+      <section className="py-20 px-8 relative z-10">
+        <div className="container mx-auto max-w-7xl">
+          <motion.h2 
+            className="text-4xl md:text-5xl font-bold text-center mb-16"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+          >
+            See The Difference
+          </motion.h2>
+          
+          <motion.div 
+            className="backdrop-blur-glass bg-black/20 border border-white/10 rounded-3xl overflow-hidden"
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-6xl md:text-7xl font-black mb-6 text-gradient-animated">
-              Build Smarter
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
-              From concept to launch, we provide everything you need to build exceptional products without the complexity.
-            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left p-6 text-xl font-bold">Feature</th>
+                    <th className="text-center p-6 text-2xl font-bold text-gradient-animated">BlazeUp</th>
+                    <th className="text-center p-6 text-xl font-bold text-white/60">Freelancer Platforms</th>
+                    <th className="text-center p-6 text-xl font-bold text-white/60">Tech Agencies</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonData.map((row, index) => (
+                    <motion.tr 
+                      key={index}
+                      className="border-b border-white/5 hover:bg-white/5 transition-colors duration-300"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.05 }}
+                    >
+                      <td className="p-6 font-semibold text-lg text-white/90">{row.feature}</td>
+                      <td className="p-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <StatusIcon status={row.blazeup.status} />
+                          <span className="text-sm font-medium text-white/90">{row.blazeup.text}</span>
+                        </div>
+                      </td>
+                      <td className="p-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <StatusIcon status={row.freelancer.status} />
+                          <span className="text-sm font-medium text-white/60">{row.freelancer.text}</span>
+                        </div>
+                      </td>
+                      <td className="p-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <StatusIcon status={row.agency.status} />
+                          <span className="text-sm font-medium text-white/60">{row.agency.text}</span>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* Key Benefits */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-8 relative z-10">
         <div className="container mx-auto max-w-6xl">
           <motion.h2 
             className="text-4xl md:text-5xl font-bold text-center mb-16"
@@ -144,90 +225,29 @@ export default function ClientPage() {
             {keyPoints.map((point, index) => (
               <motion.div
                 key={index}
-                className="bg-gradient-to-br from-gray-800/50 to-purple-800/20 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-8"
+                className="backdrop-blur-glass bg-black/20 border border-white/10 rounded-2xl p-8 hover:bg-black/30 transition-all duration-300"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ scale: 1.02, borderColor: 'rgba(147, 51, 234, 0.4)' }}
+                whileHover={{ 
+                  scale: 1.02, 
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  y: -5
+                }}
               >
-                <div className="text-purple-400 mb-4">
+                <div className="text-gradient-animated mb-4">
                   {point.icon}
                 </div>
-                <h3 className="text-2xl font-bold mb-4">{point.title}</h3>
-                <p className="text-gray-300 text-lg leading-relaxed">{point.description}</p>
+                <h3 className="text-2xl font-bold mb-4 text-white/90">{point.title}</h3>
+                <p className="text-white/70 text-lg leading-relaxed">{point.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Comparison Chart */}
-      <section className="py-20 px-8">
-        <div className="container mx-auto max-w-7xl">
-          <motion.h2 
-            className="text-4xl md:text-5xl font-bold text-center mb-16"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            See The Difference
-          </motion.h2>
-          
-          <motion.div 
-            className="bg-gradient-to-br from-gray-800/30 to-purple-800/10 backdrop-blur-sm border border-purple-500/20 rounded-3xl overflow-hidden"
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-purple-500/20">
-                    <th className="text-left p-6 text-xl font-bold">Feature</th>
-                    <th className="text-center p-6 text-xl font-bold text-purple-400">BlazeUp</th>
-                    <th className="text-center p-6 text-xl font-bold text-gray-400">Freelancer Platforms</th>
-                    <th className="text-center p-6 text-xl font-bold text-gray-400">Tech Agencies</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comparisonData.map((row, index) => (
-                    <motion.tr 
-                      key={index}
-                      className="border-b border-purple-500/10 hover:bg-purple-500/5 transition-colors duration-300"
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.05 }}
-                    >
-                      <td className="p-6 font-semibold text-lg">{row.feature}</td>
-                      <td className="p-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <StatusIcon status={row.blazeup.status} />
-                          <span className="text-sm font-medium">{row.blazeup.text}</span>
-                        </div>
-                      </td>
-                      <td className="p-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <StatusIcon status={row.freelancer.status} />
-                          <span className="text-sm font-medium text-gray-400">{row.freelancer.text}</span>
-                        </div>
-                      </td>
-                      <td className="p-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <StatusIcon status={row.agency.status} />
-                          <span className="text-sm font-medium text-gray-400">{row.agency.text}</span>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* How It Works */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-8 relative z-10">
         <div className="container mx-auto max-w-6xl">
           <motion.h2 
             className="text-4xl md:text-5xl font-bold text-center mb-16"
@@ -268,9 +288,9 @@ export default function ClientPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <div className="text-6xl font-black text-purple-400/30 mb-4">{item.step}</div>
-                <h3 className="text-xl font-bold mb-4">{item.title}</h3>
-                <p className="text-gray-300 leading-relaxed">{item.description}</p>
+                <div className="text-6xl font-black text-gradient-animated mb-4 opacity-30">{item.step}</div>
+                <h3 className="text-xl font-bold mb-4 text-white/90">{item.title}</h3>
+                <p className="text-white/70 leading-relaxed">{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -278,7 +298,7 @@ export default function ClientPage() {
       </section>
 
       {/* Workboard Showcase */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-8 relative z-10">
         <div className="container mx-auto max-w-6xl">
           <motion.h2 
             className="text-4xl md:text-5xl font-bold text-center mb-16"
@@ -290,7 +310,7 @@ export default function ClientPage() {
           </motion.h2>
           
           <motion.div 
-            className="relative bg-gradient-to-br from-gray-800/30 to-purple-800/10 backdrop-blur-sm border border-purple-500/20 rounded-3xl overflow-hidden p-8"
+            className="backdrop-blur-glass bg-black/20 border border-white/10 rounded-3xl overflow-hidden p-8"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
@@ -311,11 +331,11 @@ export default function ClientPage() {
               
               {/* Slide indicators */}
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                {workboardImages.map((_, index) => (
+                {workboardImages.map((_:any, index: any) => (
                   <button
                     key={index}
                     className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      index === currentSlide ? 'bg-purple-400' : 'bg-white/30'
+                      index === currentSlide ? 'bg-gradient-to-r from-pink-400 to-purple-500' : 'bg-white/30'
                     }`}
                     onClick={() => setCurrentSlide(index)}
                   />
@@ -324,7 +344,7 @@ export default function ClientPage() {
             </div>
             
             <div className="text-center mt-8">
-              <p className="text-xl text-gray-300">
+              <p className="text-xl text-white/70">
                 Real-time visibility into your project's progress with our interactive workboard
               </p>
             </div>
@@ -333,7 +353,7 @@ export default function ClientPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-8 relative z-10">
         <div className="container mx-auto max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -343,49 +363,56 @@ export default function ClientPage() {
             <h2 className="text-4xl md:text-5xl font-bold mb-8">
               Ready to Build Something Amazing?
             </h2>
-            <p className="text-xl text-gray-300 mb-12">
+            <p className="text-xl text-white/70 mb-12">
               Join our client waitlist and be among the first to experience the future of product development.
             </p>
             
-            <motion.a
-              href="https://forms.google.com/your-form-link"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block px-12 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xl rounded-2xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <motion.button
+              className="group relative px-12 py-4 text-lg font-semibold bg-transparent border-2 text-pink-400 rounded-2xl overflow-hidden transition-all duration-300 backdrop-blur-sm"
+              style={{
+                background: 'rgba(236, 72, 153, 0.1)',
+                borderColor: 'rgba(244, 63, 94, 0.1)'
+              }}
+              whileHover={{ 
+                scale: 1.02,
+                backgroundColor: 'rgba(236, 72, 153, 0.15)',
+                borderColor: 'rgba(236, 72, 153, 0.8)'
+              }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => window.open('https://forms.google.com/your-form-link', '_blank')}
             >
-              Join Client Waitlist
-            </motion.a>
+              <span className="relative z-10 transition-colors duration-300 group-hover:text-pink-300">
+                Join Client Waitlist
+              </span>
+            </motion.button>
           </motion.div>
         </div>
       </section>
 
-      <style jsx global>{`
-        .text-gradient-animated {
-          background: linear-gradient(
-            45deg,
-            #ff6b35,
-            #f7931e,
-            #ffd23f,
-            #06ffa5,
-            #36c9ff,
-            #6b46c1,
-            #d946ef,
-            #ff6b35
-          );
-          background-size: 300% 300%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          animation: gradientShift 3s ease-in-out infinite;
-        }
+      {/* <style jsx global>{`
+        
 
         @keyframes gradientShift {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
         }
-      `}</style>
+
+        .bg-gradient-hero {
+          background: linear-gradient(135deg, #0f0f0f 0%, #1a0b2e 25%);
+          background-size: 400% 400%;
+          animation: gradientFlow 15s ease infinite;
+        }
+
+        @keyframes gradientFlow {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+
+        .backdrop-blur-glass {
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+        }
+      `}</style> */}
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import { Service, StatItem, Testimonial, FooterSection, NavItem } from '@/lib/types';
 
 export const NAV_ITEMS: NavItem[] = [
-  { name: 'Home', href: '#hero' },
-//   { name: 'Services', href: '#services' },
-  { name: 'Vision', href: '#about' },
-  { name: 'Success', href: '#testimonials' },
+  { name: 'Home', href: '/home' },
+  { name: 'Build', href: '/build' },
+  { name: 'Freelance', href: '/freelance' },
+  { name: 'Vision', href: '/vision' },
+  { name: 'Success', href: '/success' }
 //   { name: 'Contact', href: '#contact' }
 ];
 

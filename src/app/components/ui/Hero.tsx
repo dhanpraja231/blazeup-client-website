@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { HERO_WORDS } from '@/data';
 
 export default function Hero() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -14,6 +16,14 @@ export default function Hero() {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleBuildClick = () => {
+    router.push('/build');
+  };
+
+  const handleFreelanceClick = () => {
+    router.push('/freelance');
+  };
 
   return (
     <section 
@@ -116,46 +126,11 @@ export default function Hero() {
                 secondary: { bg: 'rgba(147, 51, 234, 0.1)', border: 'rgba(147, 51, 234, 0.1)', text: 'ftext-purple-500', hoverText: 'group-hover:text-purple-300', hoverBg: 'rgba(147, 51, 234, 0.15)', hoverBorder: 'rgba(147, 51, 234, 0.8)' }
               };
               
-              // Option 1: Pink & Purple (Current)
-            //   const colors = {
-            //     primary: { bg: 'rgba(236, 72, 153, 0.08)', border: 'rgba(236, 72, 153, 0.6)', text: 'text-pink-400', hoverText: 'group-hover:text-pink-300', hoverBg: 'rgba(236, 72, 153, 0.15)', hoverBorder: 'rgba(236, 72, 153, 0.8)' },
-            //     secondary: { bg: 'rgba(147, 51, 234, 0.08)', border: 'rgba(147, 51, 234, 0.6)', text: 'text-purple-500', hoverText: 'group-hover:text-purple-300', hoverBg: 'rgba(147, 51, 234, 0.15)', hoverBorder: 'rgba(147, 51, 234, 0.8)' }
-            //   };
-
-              // Option 2: Blue & Cyan
-            //   const colors = {
-            //     primary: { bg: 'rgba(59, 130, 246, 0.08)', border: 'rgba(59, 130, 246, 0.6)', text: 'text-blue-400', hoverText: 'group-hover:text-blue-300', hoverBg: 'rgba(59, 130, 246, 0.15)', hoverBorder: 'rgba(59, 130, 246, 0.8)' },
-            //     secondary: { bg: 'rgba(6, 182, 212, 0.08)', border: 'rgba(6, 182, 212, 0.6)', text: 'text-cyan-400', hoverText: 'group-hover:text-cyan-300', hoverBg: 'rgba(6, 182, 212, 0.15)', hoverBorder: 'rgba(6, 182, 212, 0.8)' }
-            //   };
-              
-              // Option 3: Green & Emerald
-              // const colors = {
-              //   primary: { bg: 'rgba(34, 197, 94, 0.08)', border: 'rgba(34, 197, 94, 0.6)', text: 'text-green-400', hoverText: 'group-hover:text-green-300', hoverBg: 'rgba(34, 197, 94, 0.15)', hoverBorder: 'rgba(34, 197, 94, 0.8)' },
-              //   secondary: { bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.6)', text: 'text-emerald-400', hoverText: 'group-hover:text-emerald-300', hoverBg: 'rgba(16, 185, 129, 0.15)', hoverBorder: 'rgba(16, 185, 129, 0.8)' }
-              // };
-              
-            //   Option 4: Rose & Orange
-            //   const colors = {
-            //     primary: { bg: 'rgba(244, 63, 94, 0.08)', border: 'rgba(244, 63, 94, 0.6)', text: 'text-rose-400', hoverText: 'group-hover:text-rose-300', hoverBg: 'rgba(244, 63, 94, 0.15)', hoverBorder: 'rgba(244, 63, 94, 0.8)' },
-            //     secondary: { bg: 'rgba(251, 146, 60, 0.08)', border: 'rgba(251, 146, 60, 0.6)', text: 'text-orange-400', hoverText: 'group-hover:text-orange-300', hoverBg: 'rgba(251, 146, 60, 0.15)', hoverBorder: 'rgba(251, 146, 60, 0.8)' }
-            //   };
-              
-              // Option 5: Indigo & Violet
-            //   const colors = {
-            //     primary: { bg: 'rgba(99, 102, 241, 0.08)', border: 'rgba(99, 102, 241, 0.6)', text: 'text-indigo-400', hoverText: 'group-hover:text-indigo-300', hoverBg: 'rgba(99, 102, 241, 0.15)', hoverBorder: 'rgba(99, 102, 241, 0.8)' },
-            //     secondary: { bg: 'rgba(139, 92, 246, 0.08)', border: 'rgba(139, 92, 246, 0.6)', text: 'text-violet-400', hoverText: 'group-hover:text-violet-300', hoverBg: 'rgba(139, 92, 246, 0.15)', hoverBorder: 'rgba(139, 92, 246, 0.8)' }
-            //   };
-              
-              // Option 6: Teal & Sky
-            //   const colors = {
-            //     primary: { bg: 'rgba(20, 184, 166, 0.08)', border: 'rgba(20, 184, 166, 0.6)', text: 'text-teal-400', hoverText: 'group-hover:text-teal-300', hoverBg: 'rgba(20, 184, 166, 0.15)', hoverBorder: 'rgba(20, 184, 166, 0.8)' },
-            //     secondary: { bg: 'rgba(14, 165, 233, 0.08)', border: 'rgba(14, 165, 233, 0.6)', text: 'text-sky-400', hoverText: 'group-hover:text-sky-300', hoverBg: 'rgba(14, 165, 233, 0.15)', hoverBorder: 'rgba(14, 165, 233, 0.8)' }
-            //   };
-
               return (
                 <>
                   {/* Build Button */}
                   <motion.button
+                    onClick={handleBuildClick}
                     className={`group relative px-10 py-4 text-lg font-semibold bg-transparent border-2 ${colors.primary.text} rounded-2xl overflow-hidden transition-all duration-300 backdrop-blur-sm`}
                     style={{
                       background: colors.primary.bg,
@@ -175,6 +150,7 @@ export default function Hero() {
 
                   {/* Freelance Button */}
                   <motion.button
+                    onClick={handleFreelanceClick}
                     className={`group relative px-10 py-4 text-lg font-semibold bg-transparent border-2 ${colors.secondary.text} rounded-xl overflow-hidden transition-all duration-300 backdrop-blur-sm`}
                     style={{
                       background: colors.secondary.bg,

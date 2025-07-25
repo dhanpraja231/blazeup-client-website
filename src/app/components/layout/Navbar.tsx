@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { NAV_ITEMS } from '@/data';
-import { scrollToSection } from '@/lib/utils';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,9 +20,12 @@ export default function Navbar() {
   }, []);
 
   const handleNavClick = (href: string) => {
-    const sectionId = href.replace('#', '');
-    scrollToSection(sectionId);
+    router.push(href);
     setIsMobileMenuOpen(false);
+  };
+
+  const handleLogoClick = () => {
+    router.push('/');
   };
 
   return (
@@ -29,8 +33,8 @@ export default function Navbar() {
       <nav
         className={`sticky top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled 
-            ? 'backdrop-blur-glass bg-black/20' 
-            : 'bg-transparent'
+            ? 'backdrop-blur-glass bg-black/90' 
+            : 'backdrop-blur-glass bg-black/90'
         }`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,7 +43,7 @@ export default function Navbar() {
             {/* Logo */}
             <motion.div
               className="flex items-center space-x-2 cursor-pointer"
-              onClick={() => scrollToSection('hero')}
+              onClick={handleLogoClick}
               whileHover={{ scale: 1.05 }}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
