@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { HERO_WORDS } from '@/data';
+
+// Mock HERO_WORDS data - replace with your actual import
+const HERO_WORDS = ['Dreams', 'Vision', 'Future', 'Success', 'Impact', 'Legacy'];
 
 export default function Hero() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -28,54 +30,64 @@ export default function Hero() {
   return (
     <section 
       id="hero"
-      className="min-h-screen flex items-center justify-center text-center relative bg-gradient-hero overflow-hidden"
+      className="min-h-screen flex items-center justify-center text-center relative bg-black overflow-hidden"
     >
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* Animated Background - Matching Success Page */}
+      <div className="fixed inset-0 overflow-hidden">
         <motion.div
           animate={{
             rotate: [0, 120, 240, 360],
             scale: [1, 1.1, 0.9, 1],
           }}
           transition={{
-            duration: 20,
+            duration: 30,
             repeat: Infinity,
             ease: "linear"
           }}
           className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.15) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(107, 70, 193, 0.15) 0%, transparent 50%),
-              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)
+              radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
+              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 50%)
             `
           }}
         />
+        
+        {/* Floating particles */}
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white/20 rounded-full"
+            animate={{
+              x: [0, Math.random() * 100 - 50],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              delay: Math.random() * 5,
+            }}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
       </div>
-
-      {/* Additional Gradient Overlay */}
-      <div 
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `
-            linear-gradient(45deg, transparent 0%, rgba(255, 107, 53, 0.02) 25%, transparent 50%),
-            linear-gradient(-45deg, transparent 0%, rgba(107, 70, 193, 0.02) 25%, transparent 50%)
-          `
-        }}
-      />
 
       <div className="container mx-auto mb-20 px-8 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 1, ease: "easeOut" }}
           className="max-w-4xl mx-auto"
         >
           {/* Main Heading */}
           <motion.h1 
-            className="text-5xl md:text-7xl lg:text-7xl font-black mb-6 leading-tight"
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
           >
             <motion.span 
@@ -91,7 +103,7 @@ export default function Hero() {
               <AnimatePresence mode="wait">
                 <motion.span
                   key={currentWordIndex}
-                  className="text-gradient-animated inline-block"
+                  className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent inline-block"
                   initial={{ opacity: 0, x: 0 }}
                   animate={{ 
                     opacity: [0, 0.5, 1, 1],
@@ -109,70 +121,89 @@ export default function Hero() {
               </AnimatePresence>
             </div>
           </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            className="text-xl md:text-2xl text-white/70 mb-12 max-w-3xl mx-auto leading-relaxed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
+          >
+            Where talent meets opportunity. Where ideas become reality. Where your success story begins.
+          </motion.p>
           
           {/* Call to Action Buttons */}
           <motion.div 
             className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-12"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
           >
-            {(() => {
-              // COLOR SCHEME OPTIONS - Uncomment one to use:
-              
-              // Option 1: Pink & Purple (Current)
-              const colors = {
-                primary: { bg: 'rgba(236, 72, 153, 0.1)', border: 'rgba(244, 63, 94, 0.1)', text: 'ftext-pink-400', hoverText: 'group-hover:text-pink-300', hoverBg: 'rgba(236, 72, 153, 0.15)', hoverBorder: 'rgba(236, 72, 153, 0.8)' },
-                secondary: { bg: 'rgba(147, 51, 234, 0.1)', border: 'rgba(147, 51, 234, 0.1)', text: 'ftext-purple-500', hoverText: 'group-hover:text-purple-300', hoverBg: 'rgba(147, 51, 234, 0.15)', hoverBorder: 'rgba(147, 51, 234, 0.8)' }
-              };
-              
-              return (
-                <>
-                  {/* Build Button */}
-                  <motion.button
-                    onClick={handleBuildClick}
-                    className={`group relative px-10 py-4 text-lg font-semibold bg-transparent border-2 ${colors.primary.text} rounded-2xl overflow-hidden transition-all duration-300 backdrop-blur-sm`}
-                    style={{
-                      background: colors.primary.bg,
-                      borderColor: colors.primary.border
-                    }}
-                    whileHover={{ 
-                      scale: 1.02,
-                      backgroundColor: colors.primary.hoverBg,
-                      borderColor: colors.primary.hoverBorder
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <span className={`relative z-10 transition-colors duration-300 ${colors.primary.hoverText}`}>
-                      Build
-                    </span>
-                  </motion.button>
+            {/* Build Button */}
+            <motion.button
+              onClick={handleBuildClick}
+              className="group relative px-10 py-4 text-lg font-semibold backdrop-blur-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl hover:shadow-purple-500/25"
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: "0 20px 40px rgba(168, 85, 247, 0.3)"
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                Build Your Vision
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </motion.button>
 
-                  {/* Freelance Button */}
-                  <motion.button
-                    onClick={handleFreelanceClick}
-                    className={`group relative px-10 py-4 text-lg font-semibold bg-transparent border-2 ${colors.secondary.text} rounded-xl overflow-hidden transition-all duration-300 backdrop-blur-sm`}
-                    style={{
-                      background: colors.secondary.bg,
-                      borderColor: colors.secondary.border
-                    }}
-                    whileHover={{ 
-                      scale: 1.02,
-                      backgroundColor: colors.secondary.hoverBg,
-                      borderColor: colors.secondary.hoverBorder
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <span className={`relative z-10 transition-colors duration-300 ${colors.secondary.hoverText}`}>
-                      Freelance
-                    </span>
-                  </motion.button>
-                </>
-              );
-            })()}
+            {/* Freelance Button */}
+            <motion.button
+              onClick={handleFreelanceClick}
+              className="group relative px-10 py-4 text-lg font-semibold backdrop-blur-lg bg-white/5 border border-white/10 text-white/90 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/10 hover:border-white/20"
+              whileHover={{ 
+                scale: 1.05,
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                borderColor: "rgba(255, 255, 255, 0.2)"
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="relative z-10 flex items-center gap-2 group-hover:text-white transition-colors duration-300">
+                Join as Freelancer
+              </span>
+            </motion.button>
           </motion.div>
+
+          {/* Additional Context */}
+          {/* <motion.div
+            className="mt-16 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.8 }}
+          >
+            <p className="text-white/40 text-sm uppercase tracking-wider font-medium">
+              Trusted by innovators worldwide
+            </p>
+            
+            {/* Trust indicators 
+            <div className="flex justify-center items-center gap-8 mt-6 text-white/30">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-xs">200+ Projects</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                <span className="text-xs">95% Retention</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+                <span className="text-xs">3.2x Faster</span>
+              </div>
+            </div>
+          </motion.div> */}
         </motion.div> 
       </div>
+
+      {/* Bottom Gradient Fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
     </section>
   );
 }
