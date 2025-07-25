@@ -1,5 +1,12 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Navbar from '@/components/layout/Navbar';
+import { Inter } from 'next/font/google';
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
 
 export const metadata: Metadata = {
   title: 'BlazeUp',
@@ -49,13 +56,14 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className="antialiased">
+    <html lang="en" className={inter.variable}>
+      <body className={`${inter.className} antialiased`}>
+        <Navbar/>
         {children}
       </body>
     </html>
-  )
+  );
 }
