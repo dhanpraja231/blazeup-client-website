@@ -158,14 +158,14 @@ a {
   background: var(--dark-gray);
 }
 
-::-webkit-scrollbar-thumb {
+/* ::-webkit-scrollbar-thumb {
   background: var(--blaze-orange);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--rich-purple);
-}
+} */
 
 /* Selection */
 ::selection {
@@ -177,4 +177,25 @@ a {
 :focus-visible {
   outline: 2px solid var(--electric-blue);
   outline-offset: 2px;
+}
+
+/* Navbar animations */
+.nav-item-hover {
+  position: relative;
+}
+
+.nav-underline {
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blaze-orange), var(--rich-purple));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.nav-item-hover:hover .nav-underline {
+  transform: scaleX(1);
 }
