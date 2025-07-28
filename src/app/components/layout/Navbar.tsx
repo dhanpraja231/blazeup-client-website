@@ -68,10 +68,10 @@ export default function Navbar() {
                   key={item.name}
                   onClick={() => handleNavClick(item.href)}
                   className="relative text-white/80 hover:text-white transition-colors duration-300 font-medium nav-item-hover"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  // initial={{ opacity: 0, y: -20 }}
+                  // animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 + 0.3, duration: 0.5 }}
-                  whileHover={{ y: -2 }}
+                  // whileHover={{ y: -2 }}
                 >
                   {item.name}
                   <div className="nav-underline" />

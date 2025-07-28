@@ -1,6 +1,5 @@
 'use client'
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Shield, Zap, Target, Code, Palette, Brain, Star, ArrowRight, CheckCircle, Coffee, Laptop, GraduationCap, Sparkles } from 'lucide-react';
 
@@ -102,6 +101,11 @@ export default function FreelancerPage() {
     }
   ];
 
+  const handleJoinWaitlist = () => {
+    // Navigate to the registration form
+    window.location.href = '/freelancer-registration';
+  };
+
   return (
     <div className="min-h-screen overflow-hidden">
       {/* Full Screen Animated Background */}
@@ -146,10 +150,10 @@ export default function FreelancerPage() {
               className="group relative px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl overflow-hidden transition-all duration-300"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => window.open('https://forms.google.com/your-freelancer-form', '_blank')}
+              onClick={handleJoinWaitlist}
             >
               <span className="relative z-10 flex items-center gap-2">
-                Join Freelancer Waitlist
+                Join Freelancer Network
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </motion.button>
@@ -358,7 +362,7 @@ export default function FreelancerPage() {
                 {/* Enhanced slide indicators */}
                 {workEnvironmentImages.length > 0 && (
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
-                    {workEnvironmentImages.map((_: any, index: any) => (
+                    {workEnvironmentImages.map((_:any, index:any) => (
                       <motion.button
                         key={index}
                         className={`w-4 h-4 rounded-full transition-all duration-300 ${
@@ -404,8 +408,6 @@ export default function FreelancerPage() {
                   <Palette className="w-8 h-8" />
                 </motion.div>
               </div>
-              
-              
             </motion.div>
           </div>
         </section>
@@ -465,7 +467,36 @@ export default function FreelancerPage() {
           </div>
         </section>
 
-      
+        {/* Call to Action Section */}
+        <section className="py-20 px-8">
+          <div className="container mx-auto max-w-4xl text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl p-12"
+            >
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                Ready to Transform Your Career?
+              </h2>
+              <p className="text-xl text-white/70 mb-8 max-w-2xl mx-auto">
+                Join thousands of freelancers who are already building their future with BlazeUp
+              </p>
+              
+              <motion.button
+                className="group relative px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl overflow-hidden transition-all duration-300"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleJoinWaitlist}
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Start Your Journey Today
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                </span>
+              </motion.button>
+            </motion.div>
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -150,7 +150,7 @@ export default function Hero() {
               whileTap={{ scale: 0.95 }}
             >
               <span className="relative z-10 flex items-center gap-2">
-                Build Your Vision
+                Craft your product
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.button>

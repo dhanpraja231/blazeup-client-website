@@ -108,6 +108,11 @@ export default function ClientPage() {
     }
   };
 
+  const handleJoinWaitlist = () => {
+    // Navigate to the client registration form
+    window.location.href = '/client-registration';
+  };
+
   return (
     <div className="min-h-screen overflow-hidden">
       {/* Full Screen Animated Background */}
@@ -152,7 +157,7 @@ export default function ClientPage() {
               className="group relative px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl overflow-hidden transition-all duration-300"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => window.open('https://forms.google.com/your-form-link', '_blank')}
+              onClick={handleJoinWaitlist}
             >
               <span className="relative z-10 flex items-center gap-2">
                 Join Client Waitlist
@@ -258,8 +263,6 @@ export default function ClientPage() {
                     </div>
                     <p className="text-white/70 text-sm leading-relaxed text-center group-hover:text-white/80 transition-colors duration-300 mt-auto">{item.description}</p>
                   </motion.div>
-                  
-
                 </motion.div>
               ))}
             </div>
@@ -351,7 +354,7 @@ export default function ClientPage() {
                   boxShadow: "0 25px 50px rgba(168, 85, 247, 0.5)"
                 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => window.open('https://forms.google.com/your-form-link', '_blank')}
+                onClick={handleJoinWaitlist}
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
@@ -427,6 +430,33 @@ export default function ClientPage() {
                   </tbody>
                 </table>
               </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section className="py-20 px-8">
+          <div className="container mx-auto max-w-4xl text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl p-12"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                Ready to Transform Your Ideas?
+              </h2>
+              <p className="text-xl text-white/70 mb-8">
+                Join hundreds of visionaries who are already building the future with BlazeUp.
+              </p>
+              <motion.button
+                className="px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleJoinWaitlist}
+              >
+                Start Your Journey Today
+              </motion.button>
             </motion.div>
           </div>
         </section>
