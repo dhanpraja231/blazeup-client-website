@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Quote, Star, ArrowRight, Users, Briefcase, TrendingUp, Award, ChevronLeft, ChevronRight, Target, Zap, Eye, Monitor, Package, Globe, Network, Lightbulb, Heart, Layers, Compass, Rocket, Sparkles, Building2, Code, Palette, BarChart3, Leaf, Stethoscope, BookOpen, ShoppingBag, CheckCircle, MessageSquare, Clock, Handshake } from 'lucide-react';
-
+import { useRouter } from 'next/navigation';
 export default function SuccessPage() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [activeMetricStory, setActiveMetricStory] = useState(0);
-
+  const router = useRouter();
   const testimonials = [
     {
       quote: "DSA doesn't crack SDE jobs at unicorns anymore, your verified profile at BlazeUp does.",
@@ -165,7 +165,7 @@ export default function SuccessPage() {
 
   const categories = ["All", "Career Growth", "Network Expansion", "Business Flexibility", "Speed to Market", "Transparency", "Team Building", "Work Culture"];
   const [selectedCategory, setSelectedCategory] = useState("All");
-
+  
   const filteredTestimonials = selectedCategory === "All" 
     ? testimonials 
     : testimonials.filter(t => t.category === selectedCategory);
@@ -191,6 +191,10 @@ export default function SuccessPage() {
   const prevTestimonial = () => {
     setCurrentTestimonial((prev) => (prev - 1 + filteredTestimonials.length) % filteredTestimonials.length);
   };
+
+  const handleSuccessClick = () => {
+    router.push("/home")
+  }
 
   return (
     <div className="min-h-screen overflow-hidden bg-black">
@@ -660,9 +664,9 @@ export default function SuccessPage() {
                     Every success story starts with a single decision—the choice to believe that extraordinary results come from extraordinary partnerships.
                   </p>
 
-                  <p>
+                  {/* <p>
                     Whether you're a visionary founder with an idea that could change the world, or a talented professional ready to build something meaningful, your story is waiting to be written.
-                  </p>
+                  </p> */}
 
                   <p className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                     Join the community where talent meets opportunity, where ideas become reality, and where success stories are born every day.
@@ -672,6 +676,7 @@ export default function SuccessPage() {
                     className="pt-8"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={handleSuccessClick}
                   >
                     <button className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full font-semibold text-white shadow-2xl hover:shadow-purple-500/25 transition-all duration-300">
                       <span className="flex items-center gap-2">
