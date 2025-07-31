@@ -128,7 +128,7 @@ export default function VisionPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}
             >
-              <h1 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-6xl md:text-7xl font-bold mb-8 py-2 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                 Our Story
               </h1>
               <p className="text-xl md:text-2xl text-white/70 max-w-3xl mx-auto leading-relaxed">

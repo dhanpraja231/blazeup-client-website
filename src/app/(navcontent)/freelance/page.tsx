@@ -1,7 +1,191 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Shield, Zap, Target, Code, Palette, Brain, Star, ArrowRight, CheckCircle, Coffee, Laptop, GraduationCap, Sparkles } from 'lucide-react';
+import { Users, Shield, Zap, Target, Code, Palette, Brain, Star, ArrowRight, CheckCircle, Coffee, Laptop, GraduationCap, Sparkles, Play, User, Calendar, Clock } from 'lucide-react';
+
+// Types for the workboard
+interface Task {
+  id: number;
+  title: string;
+  assignee: string;
+  priority: 'high' | 'medium' | 'low';
+  status: 'open' | 'in-progress' | 'review';
+  avatar: string;
+}
+
+interface Column {
+  id: 'open' | 'in-progress' | 'review';
+  title: string;
+  color: string;
+}
+
+// Interactive Workboard Preview Component
+const InteractiveWorkboardPreview: React.FC = () => {
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: 1,
+      title: "Design Homepage",
+      assignee: "Sarah",
+      priority: "high",
+      status: "open",
+      avatar: "👩‍🎨"
+    },
+    {
+      id: 2,
+      title: "API Integration",
+      assignee: "Alex",
+      priority: "medium",
+      status: "in-progress",
+      avatar: "👨‍💻"
+    },
+    {
+      id: 3,
+      title: "User Testing",
+      assignee: "Maya",
+      priority: "low",
+      status: "review",
+      avatar: "👩‍🔬"
+    },
+    {
+      id: 4,
+      title: "Database Setup",
+      assignee: "Jake",
+      priority: "high",
+      status: "open",
+      avatar: "👨‍🔧"
+    },
+    {
+      id: 5,
+      title: "Mobile Responsive",
+      assignee: "Lisa",
+      priority: "medium",
+      status: "in-progress",
+      avatar: "👩‍💻"
+    }
+  ]);
+
+  const columns: Column[] = [
+    { id: "open", title: "Open", color: "from-purple-400 to-purple-500" },
+    { id: "in-progress", title: "In Progress", color: "from-pink-400 to-pink-500" },
+    { id: "review", title: "Review", color: "from-blue-400 to-blue-500" }
+  ];
+
+  const getPriorityColor = (priority: Task['priority']): string => {
+    switch (priority) {
+      case 'high': return 'bg-red-400/80';
+      case 'medium': return 'bg-yellow-400/80';
+      case 'low': return 'bg-green-400/80';
+      default: return 'bg-gray-400/80';
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: Task): void => {
+    setDraggedTask(task);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, columnId: Column['id']): void => {
+    e.preventDefault();
+    if (draggedTask && draggedTask.status !== columnId) {
+      setTasks(prev => prev.map(task => 
+        task.id === draggedTask.id 
+          ? { ...task, status: columnId }
+          : task
+      ));
+    }
+    setDraggedTask(null);
+  };
+
+  const getTasksByStatus = (status: Task['status']): Task[] => {
+    return tasks.filter(task => task.status === status);
+  };
+
+  return (
+    <div className="w-full max-w-6xl mx-auto">
+      <div className="grid grid-cols-3 gap-6">
+        {columns.map((column) => (
+          <motion.div
+            key={column.id}
+            className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6 min-h-96 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, column.id)}
+            whileHover={{ scale: 1.01, borderColor: 'rgba(168, 85, 247, 0.3)' }}
+          >
+            <div className={`bg-gradient-to-r ${column.color} rounded-xl p-4 mb-6 shadow-lg`}>
+              <h3 className="text-white font-bold text-center text-lg">{column.title}</h3>
+              <div className="text-center text-white/90 text-sm mt-1">
+                {getTasksByStatus(column.id).length} tasks
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              {getTasksByStatus(column.id).map((task) => (
+                <motion.div
+                  key={task.id}
+                  className="backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl p-4 cursor-move hover:bg-white/15 hover:border-white/30 transition-all duration-200 shadow-lg group"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e as unknown as  React.DragEvent<HTMLDivElement>, task)}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileDrag={{ scale: 1.05, rotate: 2 }}
+                  layout
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="text-white font-semibold text-sm flex-1 leading-tight group-hover:text-white/90">
+                      {task.title}
+                    </h4>
+                    <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)} ml-2 mt-0.5 shadow-sm`}></div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">{task.avatar}</span>
+                      <span className="text-white/80 text-xs font-medium">{task.assignee}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-white/60">
+                      <Clock className="w-3 h-3" />
+                      <span className="text-xs">2d</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              
+              {/* Add task placeholder */}
+              <motion.div
+                className="border-2 border-dashed border-white/30 rounded-xl p-4 text-center text-white/50 hover:border-white/50 hover:text-white/70 hover:bg-white/5 transition-all duration-200 cursor-pointer"
+                whileHover={{ scale: 1.01 }}
+              >
+                <div className="text-sm font-medium">+ Add task</div>
+              </motion.div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      
+      {/* Demo Instructions */}
+      <motion.div
+        className="mt-8 text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-4 inline-block">
+          <p className="text-white/70 text-sm flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            Try dragging tasks between columns to see the interactive workflow in action!
+            <Sparkles className="w-4 h-4 text-pink-400" />
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 export default function FreelancerPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -180,13 +364,13 @@ export default function FreelancerPage() {
                 <motion.div
                   key={index}
                   className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 group"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   whileHover={{ 
                     scale: 1.02, 
                     borderColor: 'rgba(168, 85, 247, 0.4)',
-                    y: -8
+                    // y: -8
                   }}
                 >
                   <div className="text-purple-400 mb-4 group-hover:text-pink-400 transition-colors duration-300">
@@ -200,45 +384,7 @@ export default function FreelancerPage() {
           </div>
         </section>
 
-        {/* Who You Are - Improved */}
-        <section className="py-20 px-8">
-          <div className="container mx-auto max-w-6xl">
-            <motion.h2 
-              className="text-4xl md:text-5xl font-bold text-center mb-16"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
-            >
-              Who You Are
-            </motion.h2>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {whoYouAre.map((profile, index) => (
-                <motion.div
-                  key={index}
-                  className="text-center backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 group h-72 flex flex-col justify-between"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    borderColor: 'rgba(168, 85, 247, 0.4)',
-                    y: -5
-                  }}
-                >
-                  <div className="text-pink-400 mb-6 flex justify-center group-hover:text-purple-400 transition-colors duration-300">
-                    {profile.icon}
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold mb-4 text-white/90 group-hover:text-white transition-colors duration-300">{profile.title}</h3>
-                    <p className="text-white/70 leading-relaxed group-hover:text-white/80 transition-colors duration-300">{profile.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
+       
         {/* Core Qualities - Completely Redesigned */}
         <section className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
@@ -261,9 +407,9 @@ export default function FreelancerPage() {
                 <motion.div
                   key={index}
                   className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 group"
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+                  initial={{ opacity: 0, }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  // transition={{ duration: 0.6, delay: index * 0.1 }}
                   whileHover={{ 
                     scale: 1.02,
                     borderColor: 'rgba(168, 85, 247, 0.4)',
@@ -303,114 +449,6 @@ export default function FreelancerPage() {
           </div>
         </section>
 
-        {/* Creative Workspace - Completely Redesigned */}
-        <section className="py-20 px-8">
-          <div className="container mx-auto max-w-6xl">
-            <motion.h2 
-              className="text-4xl md:text-5xl font-bold text-center mb-16"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
-            >
-              Your Creative Workspace
-            </motion.h2>
-            
-            <motion.div 
-              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl overflow-hidden p-8 group"
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-              whileHover={{ borderColor: 'rgba(168, 85, 247, 0.3)' }}
-            >
-              <div className="relative h-96 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-blue-500/20">
-                {/* Enhanced placeholder when no images */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <motion.div
-                      animate={{
-                        rotate: [0, 360],
-                        scale: [1, 1.1, 1]
-                      }}
-                      transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "linear"
-                      }}
-                    >
-                      <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                    </motion.div>
-                    <h3 className="text-2xl font-bold text-white/80 mb-2">Modern Creative Environment</h3>
-                    <p className="text-white/60 text-lg">Where innovation meets inspiration</p>
-                  </div>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {workEnvironmentImages.length > 0 && (
-                    <motion.img
-                      key={currentSlide}
-                      src={workEnvironmentImages[currentSlide]}
-                      alt={`Work environment ${currentSlide + 1}`}
-                      className="w-full h-full object-cover"
-                      initial={{ opacity: 0, scale: 1.1 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.5 }}
-                    />
-                  )}
-                </AnimatePresence>
-                
-                {/* Enhanced slide indicators */}
-                {workEnvironmentImages.length > 0 && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
-                    {workEnvironmentImages.map((_:any, index:any) => (
-                      <motion.button
-                        key={index}
-                        className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                          index === currentSlide ? 'bg-gradient-to-r from-purple-400 to-pink-400 shadow-lg' : 'bg-white/30 hover:bg-white/50'
-                        }`}
-                        onClick={() => setCurrentSlide(index)}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Floating elements for visual appeal */}
-                <motion.div
-                  className="absolute top-6 left-6 text-purple-400/30"
-                  animate={{
-                    y: [0, -10, 0],
-                    rotate: [0, 5, 0]
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <Code className="w-8 h-8" />
-                </motion.div>
-                
-                <motion.div
-                  className="absolute top-6 right-6 text-pink-400/30"
-                  animate={{
-                    y: [0, 10, 0],
-                    rotate: [0, -5, 0]
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 1
-                  }}
-                >
-                  <Palette className="w-8 h-8" />
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
 
         {/* How It Works - Improved with uniform sizing */}
         <section className="py-20 px-8">
@@ -467,8 +505,78 @@ export default function FreelancerPage() {
           </div>
         </section>
 
-        {/* Call to Action Section */}
+        {/* Interactive Workboard Preview Section - Desktop Only */}
+        {/* <section className="py-20 px-8 hidden lg:block">
+          <div className="container mx-auto max-w-6xl">
+            <motion.div
+              className="text-center mb-16"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                Your Interactive Workspace
+              </h2>
+              <p className="text-xl text-white/70 max-w-3xl mx-auto">
+                Experience our intuitive workboard system where you can manage tasks, collaborate with teams, and track progress in real-time
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl p-8 group"
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              whileHover={{ borderColor: 'rgba(168, 85, 247, 0.3)' }}
+            >
+              <InteractiveWorkboardPreview />
+            </motion.div>
+          </div>
+        </section> */}
+
+        {/* Who You Are - Improved */}
         <section className="py-20 px-8">
+          <div className="container mx-auto max-w-6xl">
+            <motion.h2 
+              className="text-4xl md:text-5xl font-bold text-center mb-16"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              Who You Are
+            </motion.h2>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {whoYouAre.map((profile, index) => (
+                <motion.div
+                  key={index}
+                  className="text-center backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 group h-72 flex flex-col justify-between"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6 }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    borderColor: 'rgba(168, 85, 247, 0.4)'
+                  }}
+                >
+                  <div className="text-pink-400 mb-6 flex justify-center group-hover:text-purple-400 transition-colors duration-300">
+                    {profile.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-4 text-white/90 group-hover:text-white transition-colors duration-300">{profile.title}</h3>
+                    <p className="text-white/70 leading-relaxed group-hover:text-white/80 transition-colors duration-300">{profile.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+
+        
+
+        {/* Call to Action Section */}
+        {/* <section className="py-20 px-8">
           <div className="container mx-auto max-w-4xl text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -496,7 +604,7 @@ export default function FreelancerPage() {
               </motion.button>
             </motion.div>
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   );

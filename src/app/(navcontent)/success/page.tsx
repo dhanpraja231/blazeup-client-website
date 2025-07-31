@@ -248,8 +248,8 @@ export default function SuccessPage() {
           <div className="container mx-auto max-w-6xl">
             <motion.div
               className="text-center mb-16"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}
             >
               <h1 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
@@ -398,161 +398,128 @@ export default function SuccessPage() {
           </div>
         </section>
 
-       {/* Voices of Success - Redesigned */}
-       <section className="py-32 px-8">
-          <div className="container mx-auto max-w-7xl">
-            <motion.div
-              className="text-center mb-20"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-5xl md:text-6xl font-bold mb-8">
-                Voices of Success
-              </h2>
-              <p className="text-xl text-white/60 max-w-3xl mx-auto">
-                Real stories from the people who chose to build something extraordinary with us.
-              </p>
-            </motion.div>
+      {/* Voices of Success - Mobile Optimized */}
+<section className="py-10 px-4 md:px-8">
+  <div className="container mx-auto max-w-7xl">
+    <motion.div
+      className="text-center mb-12 md:mb-20"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-8">
+        Voices of Success
+      </h2>
+      <p className="text-lg md:text-xl text-white/60 max-w-3xl mx-auto px-4">
+        Real stories from the people who chose to build something extraordinary with us.
+      </p>
+    </motion.div>
 
-            {/* Featured Testimonial */}
-            <div className="mb-20">
-              <div className="relative max-w-5xl mx-auto">
-                <div className="backdrop-blur-lg bg-gradient-to-br from-white/8 via-white/5 to-white/3 border border-white/10 rounded-3xl overflow-hidden">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentTestimonial}
-                      className="p-16 text-center"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.6 }}
-                    >
-                      {/* Quote Icon */}
-                      <div className="flex justify-center mb-8">
-                        <div className="p-4 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-white/20">
-                          <Quote className="w-8 h-8 text-purple-400" />
-                        </div>
-                      </div>
-                      
-                      {/* Quote */}
-                      <blockquote className="text-2xl md:text-4xl font-light text-white leading-relaxed mb-12 max-w-4xl mx-auto">
-                        "{testimonials[currentTestimonial]?.quote}"
-                      </blockquote>
-                      
-                      {/* Author Info */}
-                      <div className="flex items-center justify-center gap-6 mb-8">
-                        <div className="p-4 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-white/10">
-                          {testimonials[currentTestimonial]?.icon}
-                        </div>
-                        <div className="text-left">
-                          <h4 className="text-2xl font-bold text-white mb-1">
-                            {testimonials[currentTestimonial]?.author}
-                          </h4>
-                          <p className="text-lg text-white/60">
-                            {testimonials[currentTestimonial]?.role}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {/* Impact Badge */}
-                      <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full border border-white/10">
-                        <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400" />
-                        <span className="text-white/80 font-medium">
-                          {testimonials[currentTestimonial]?.impact}
-                        </span>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
+    {/* Featured Testimonial */}
+    <div className="mb-8 md:mb-12">
+      <div className="relative max-w-5xl mx-auto">
+        {/* Main testimonial card */}
+        <div className="backdrop-blur-lg bg-gradient-to-br from-white/8 via-white/5 to-white/3 border border-white/10 rounded-2xl md:rounded-3xl overflow-hidden mx-4 md:mx-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentTestimonial}
+              className="p-6 md:p-12 lg:p-16 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6 }}
+            >
+              {/* Quote Icon */}
+              <div className="flex justify-center mb-6 md:mb-8">
+                <div className="p-3 md:p-4 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-white/20">
+                  <Quote className="w-6 h-6 md:w-8 md:h-8 text-purple-400" />
                 </div>
-                
-                {/* Navigation */}
-                <button
-                  onClick={prevTestimonial}
-                  className="absolute left-6 top-1/2 transform -translate-y-1/2 w-14 h-14 backdrop-blur-lg bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300 group"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white/70 group-hover:text-white transition-colors duration-300" />
-                </button>
-                
-                <button
-                  onClick={nextTestimonial}
-                  className="absolute right-6 top-1/2 transform -translate-y-1/2 w-14 h-14 backdrop-blur-lg bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300 group"
-                >
-                  <ChevronRight className="w-6 h-6 text-white/70 group-hover:text-white transition-colors duration-300" />
-                </button>
               </div>
               
-              {/* Progress Indicators */}
-              <div className="flex justify-center gap-3 mt-8">
-                {testimonials.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`relative h-2 rounded-full transition-all duration-500 ${
-                      index === currentTestimonial ? 'w-16 bg-gradient-to-r from-purple-400 to-pink-400' : 'w-2 bg-white/20 hover:bg-white/40'
-                    }`}
-                    onClick={() => setCurrentTestimonial(index)}
-                  />
-                ))}
+              {/* Quote */}
+              <blockquote className="text-lg md:text-2xl lg:text-4xl font-light text-white leading-relaxed mb-8 md:mb-12 max-w-4xl mx-auto px-2">
+                "{testimonials[currentTestimonial]?.quote}"
+              </blockquote>
+              
+              {/* Author Info */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6 mb-6 md:mb-8">
+                <div className="p-3 md:p-4 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-white/10 flex-shrink-0">
+                  {testimonials[currentTestimonial]?.icon}
+                </div>
+                <div className="text-center sm:text-left">
+                  <h4 className="text-xl md:text-2xl font-bold text-white mb-1">
+                    {testimonials[currentTestimonial]?.author}
+                  </h4>
+                  <p className="text-base md:text-lg text-white/60">
+                    {testimonials[currentTestimonial]?.role}
+                  </p>
+                </div>
               </div>
-            </div>
-
-            {/* Testimonial Mosaic */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {testimonials.slice(0, 6).map((testimonial, index) => (
-                <motion.div
-                  key={index}
-                  className="group relative"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="h-full backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/8 transition-all duration-300 cursor-pointer"
-                       onClick={() => setCurrentTestimonial(index)}>
-                    
-                    {/* Quote Preview */}
-                    <div className="mb-6">
-                      <p className="text-white/80 leading-relaxed line-clamp-3 group-hover:text-white transition-colors duration-300">
-                        "{testimonial.quote.substring(0, 120)}..."
-                      </p>
-                    </div>
-                    
-                    {/* Author */}
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="p-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-white/10 group-hover:scale-110 transition-transform duration-300">
-                        {testimonial.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors duration-300">
-                          {testimonial.author}
-                        </h4>
-                        <p className="text-white/60 text-sm">{testimonial.role}</p>
-                      </div>
-                    </div>
-                    
-                    {/* Category & Rating */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-white/50 uppercase tracking-wider">
-                        {testimonial.category}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Hover Effect */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+              
+              {/* Impact Badge */}
+              <div className="inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full border border-white/10">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex-shrink-0" />
+                <span className="text-white/80 font-medium text-sm md:text-base text-center">
+                  {testimonials[currentTestimonial]?.impact}
+                </span>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        
+        {/* Desktop Navigation - Hidden on mobile */}
+        <button
+          onClick={prevTestimonial}
+          className="hidden md:flex absolute left-6 top-1/2 transform -translate-y-1/2 w-14 h-14 backdrop-blur-lg bg-white/5 border border-white/10 rounded-full items-center justify-center hover:bg-white/10 transition-all duration-300 group"
+        >
+          <ChevronLeft className="w-6 h-6 text-white/70 group-hover:text-white transition-colors duration-300" />
+        </button>
+        
+        <button
+          onClick={nextTestimonial}
+          className="hidden md:flex absolute right-6 top-1/2 transform -translate-y-1/2 w-14 h-14 backdrop-blur-lg bg-white/5 border border-white/10 rounded-full items-center justify-center hover:bg-white/10 transition-all duration-300 group"
+        >
+          <ChevronRight className="w-6 h-6 text-white/70 group-hover:text-white transition-colors duration-300" />
+        </button>
+      </div>
+      
+      {/* Mobile Navigation - Below testimonial */}
+      <div className="flex md:hidden justify-center gap-4 mt-6 px-4">
+        <button
+          onClick={prevTestimonial}
+          className="flex items-center justify-center w-12 h-12 backdrop-blur-lg bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 group"
+        >
+          <ChevronLeft className="w-5 h-5 text-white/70 group-hover:text-white transition-colors duration-300" />
+        </button>
+        
+        <button
+          onClick={nextTestimonial}
+          className="flex items-center justify-center w-12 h-12 backdrop-blur-lg bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 group"
+        >
+          <ChevronRight className="w-5 h-5 text-white/70 group-hover:text-white transition-colors duration-300" />
+        </button>
+      </div>
+      
+      {/* Progress Indicators */}
+      <div className="flex justify-center gap-2 md:gap-3 mt-6 md:mt-8 px-4">
+        {testimonials.map((_, index) => (
+          <button
+            key={index}
+            className={`relative h-2 rounded-full transition-all duration-500 ${
+              index === currentTestimonial 
+                ? 'w-8 md:w-16 bg-gradient-to-r from-purple-400 to-pink-400' 
+                : 'w-2 bg-white/20 hover:bg-white/40'
+            }`}
+            onClick={() => setCurrentTestimonial(index)}
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
 
         {/* Industries We Impact */}
-        <section className="py-20 px-8">
+        <section className="py-10 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
               className="text-4xl md:text-5xl font-bold text-center mb-16"
@@ -592,7 +559,7 @@ export default function SuccessPage() {
         </section>
 
         {/* Testimonial Grid */}
-        <section className="py-20 px-8">
+        {/* <section className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
               className="text-4xl md:text-5xl font-bold text-center mb-16"
@@ -643,10 +610,10 @@ export default function SuccessPage() {
               ))}
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Call to Action */}
-        <section className="py-32 px-8">
+        <section className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.div
               className="text-center"
