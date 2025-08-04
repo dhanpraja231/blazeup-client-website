@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { NAV_ITEMS } from '@/data';
 
 export default function Navbar() {
@@ -45,18 +46,27 @@ export default function Navbar() {
               className="flex items-center space-x-2 cursor-pointer"
               onClick={handleLogoClick}
               whileHover={{ scale: 1.05 }}
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
               <motion.div 
-                className="w-8 h-8 bg-gradient-to-r from-blaze-orange to-rich-purple rounded-lg flex items-center justify-center"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="w-8 h-8 flex items-center justify-center"
+                whileHover={{ scale: 1.25 }}
+                transition={{ duration: 0.3 }}
               >
-                <div className="w-4 h-4 bg-white rounded-sm" />
+                <Image
+                  // src="/image_assets/BlazeUp_fire_colour_no_bg.svg"
+                  src="/image_assets/BlazeUp_fire_bw_no_bg.svg"
+                  alt="BlazeUp Logo"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain"
+                />
               </motion.div>
-              <span className="text-4xl font-bold text-gradient-animated">
+              {/* <span className="text-4xl font-bold text-gradient-animated"> */}
+              <span className="text-3xl font-bold text-gradient-animated">
+              {/* <span className="text-3xl font-bold text-white/80"> */}
                 BlazeUp
               </span>
             </motion.div>
