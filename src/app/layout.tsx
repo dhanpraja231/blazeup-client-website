@@ -17,11 +17,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'BlazeUp',
     description: 'Connect with world-class freelancers who turn ambitious ideas into exceptional results.',
-    url: 'https://blazeup.com',
+    url: 'https://blazeup.app',
     siteName: 'BlazeUp',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/image_assets/BlazeUp_fire_bw_no_bg.svg',
         width: 1200,
         height: 630,
         alt: 'BlazeUp - Premium Freelancer Platform',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'BlazeUp - Transform Your Vision Into Reality',
     description: 'Connect with world-class freelancers who turn ambitious ideas into exceptional results.',
-    images: ['/og-image.jpg'],
+    images: ['/image_assets/BlazeUp_fire_bw_no_bg.svg'],
   },
   robots: {
     index: true,
