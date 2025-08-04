@@ -7,12 +7,7 @@ import { CheckCircle, XCircle, AlertTriangle, Users, Target, Zap, Eye, Monitor, 
 export default function ClientPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  const workboardImages: any = [
-    // "/api/placeholder/800/500",
-    // "/api/placeholder/800/500", 
-    // "/api/placeholder/800/500",
-    // "/api/placeholder/800/500"
-  ];
+  const workboardImages: any = [];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -114,8 +109,11 @@ export default function ClientPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden">
-      {/* Full Screen Animated Background */}
+    <section 
+      id="client"
+      className="min-h-screen bg-black overflow-hidden relative"
+    >
+      {/* Animated Background - Matching Home Page exactly */}
       <div className="fixed inset-0 overflow-hidden">
         <motion.div
           animate={{
@@ -123,23 +121,44 @@ export default function ClientPage() {
             scale: [1, 1.1, 0.9, 1],
           }}
           transition={{
-            duration: 20,
+            duration: 30,
             repeat: Infinity,
             ease: "linear"
           }}
           className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
-              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)
+              radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
+              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 50%)
             `
           }}
         />
+        
+        {/* Floating particles - Matching Home Page */}
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white/20 rounded-full"
+            animate={{
+              x: [0, Math.random() * 100 - 50],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              delay: Math.random() * 5,
+            }}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
       </div>
 
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center px-8 relative z-10 text-white">
+      <div className="min-h-screen flex items-center justify-center px-8 relative z-10 text-white">
         <div className="container mx-auto max-w-6xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -154,24 +173,28 @@ export default function ClientPage() {
             </p>
             
             <motion.button
-              className="group relative px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl overflow-hidden transition-all duration-300"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="group relative px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl hover:shadow-purple-500/25"
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: "0 20px 40px rgba(168, 85, 247, 0.3)"
+              }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleJoinWaitlist}
             >
               <span className="relative z-10 flex items-center gap-2">
                 Join Client Waitlist
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.button>
           </motion.div>
         </div>
-      </section>
+      </div>
 
-      {/* All other sections with dark background */}
+      {/* All other sections with consistent styling */}
       <div className="text-white relative z-10">
-        {/* Key Benefits - Improved */}
-        <section className="py-20 px-8">
+        {/* Key Benefits */}
+        <div className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
               className="text-4xl md:text-5xl font-bold text-center mb-16"
@@ -186,14 +209,14 @@ export default function ClientPage() {
               {keyPoints.map((point, index) => (
                 <motion.div
                   key={index}
-                  className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 group"
+                  className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 group hover:border-white/20"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   whileHover={{ 
                     scale: 1.02, 
                     borderColor: 'rgba(168, 85, 247, 0.4)',
-                    y: -8
+                    transitionDelay: 0
                   }}
                 >
                   <div className="text-purple-400 mb-6 flex justify-center group-hover:text-pink-400 transition-colors duration-300">
@@ -205,10 +228,10 @@ export default function ClientPage() {
               ))}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* How It Works - Improved with uniform sizing */}
-        <section className="py-20 px-8">
+        {/* How It Works */}
+        <div className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
               className="text-4xl md:text-5xl font-bold text-center mb-16"
@@ -250,7 +273,7 @@ export default function ClientPage() {
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
                   <motion.div
-                    className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6 h-64 flex flex-col justify-between hover:bg-white/10 transition-all duration-300 group"
+                    className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-6 h-64 flex flex-col justify-between hover:bg-white/10 transition-all duration-300 group hover:border-white/20"
                     whileHover={{ 
                       scale: 1.05, 
                       borderColor: 'rgba(168, 85, 247, 0.4)',
@@ -267,10 +290,10 @@ export default function ClientPage() {
               ))}
             </div>
           </div>
-        </section>
+        </div>
 
         {/* Workboard Showcase */}
-        <section className="py-20 px-8">
+        <div className="py-20 px-8">
           <div className="container mx-auto max-w-6xl">
             <motion.h2 
               className="text-4xl md:text-5xl font-bold text-center mb-16"
@@ -282,7 +305,7 @@ export default function ClientPage() {
             </motion.h2>
             
             <motion.div 
-              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl overflow-hidden p-8"
+              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl overflow-hidden p-8 hover:border-white/20"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
@@ -332,10 +355,10 @@ export default function ClientPage() {
               </div>
             </motion.div>
           </div>
-        </section>
+        </div>
 
-        {/* Comparison Chart - Improved button placement */}
-        <section className="py-20 px-8">
+        {/* Comparison Chart */}
+        <div className="py-20 px-8">
           <div className="container mx-auto max-w-7xl">
             <div className="flex flex-col lg:flex-row items-center justify-between mb-16 gap-8">
               <motion.h2 
@@ -382,7 +405,7 @@ export default function ClientPage() {
             </div>
 
             <motion.div 
-              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl overflow-hidden"
+              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl overflow-hidden hover:border-white/20"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
@@ -432,16 +455,16 @@ export default function ClientPage() {
               </div>
             </motion.div>
           </div>
-        </section>
+        </div>
 
         {/* Final CTA Section */}
-        <section className="py-20 px-8">
+        <div className="py-20 px-8">
           <div className="container mx-auto max-w-4xl text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl p-12"
+              className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl p-12 hover:border-white/20"
             >
               <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                 Ready to Transform Your Ideas?
@@ -450,17 +473,27 @@ export default function ClientPage() {
                 Join hundreds of visionaries who are already building the future with BlazeUp.
               </p>
               <motion.button
-                className="px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
-                whileHover={{ scale: 1.05 }}
+                className="group relative px-12 py-4 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl hover:shadow-purple-500/25"
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: "0 20px 40px rgba(168, 85, 247, 0.3)"
+                }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleJoinWaitlist}
               >
-                Start Your Journey Today
+                <span className="relative z-10 flex items-center gap-2">
+                  Start Your Journey Today
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.button>
             </motion.div>
           </div>
-        </section>
+        </div>
       </div>
-    </div>
+
+      {/* Bottom Gradient Fade - Matching Home Page */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+    </section>
   );
 }

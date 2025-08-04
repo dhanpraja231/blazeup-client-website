@@ -212,10 +212,10 @@ export default function VisionPage() {
             <div className="grid lg:grid-cols-3 gap-8">
               <motion.div
                 className="group relative backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl p-10 hover:bg-white/10 transition-all duration-500"
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.1 }}
-                whileHover={{ scale: 1.02, y: -10 }}
+                whileHover={{ scale: 1.02 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
@@ -232,10 +232,10 @@ export default function VisionPage() {
 
               <motion.div
                 className="group relative backdrop-blur-lg bg-white/5 border border-white/10 rounded-3xl p-10 hover:bg-white/10 transition-all duration-500"
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                whileHover={{ scale: 1.02, y: -10 }}
+                whileHover={{ scale: 1.02 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
