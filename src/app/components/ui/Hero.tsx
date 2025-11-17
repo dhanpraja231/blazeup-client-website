@@ -7,6 +7,25 @@ import { useRouter } from 'next/navigation';
 // Mock HERO_WORDS data - replace with your actual import
 const HERO_WORDS = ['Dreams', 'Vision', 'Future', 'Success', 'Impact', 'Legacy'];
 
+function pseudoRandom(i: number, seed: number) {
+  return (Math.sin(i * seed) + 1) / 2; // value in [0,1]
+}
+
+const PARTICLES = Array.from({ length: 30 }, (_, i) => {
+  const r1 = pseudoRandom(i, 12.9898);
+  const r2 = pseudoRandom(i, 78.233);
+  const r3 = pseudoRandom(i, 5.398);
+  const r4 = pseudoRandom(i, 45.543);
+
+  return {
+    left: `${r1 * 100}%`,
+    top: `${r2 * 100}%`,
+    xOffset: r3 * 100 - 50,          // [-50, 50]
+    duration: 10 + r4 * 10,          // [10, 20]
+    delay: r1 * 5,                   // [0, 5]
+  };
+});
+
 export default function Hero() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const router = useRouter();
@@ -55,7 +74,7 @@ export default function Hero() {
         />
         
         {/* Floating particles */}
-        {[...Array(15)].map((_, i) => (
+        {/* {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-white/20 rounded-full"
@@ -73,8 +92,29 @@ export default function Hero() {
               top: `${Math.random() * 100}%`,
             }}
           />
+        ))} */}
+        {PARTICLES.map((p, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white/20 rounded-full"
+            animate={{
+              x: [0, p.xOffset],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: p.duration,
+              repeat: Infinity,
+              delay: p.delay,
+            }}
+            style={{
+              left: p.left,
+              top: p.top,
+            }}
+          />
         ))}
       </div>
+
+      
 
       <div className="container mx-auto mb-20 px-8 relative z-10">
         <motion.div
