@@ -93,7 +93,7 @@ export default function Hero() {
             }}
           />
         ))} */}
-        {PARTICLES.map((p, i) => (
+        {/* {PARTICLES.map((p, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-white/20 rounded-full"
@@ -111,7 +111,7 @@ export default function Hero() {
               top: p.top,
             }}
           />
-        ))}
+        ))} */}
       </div>
 
       
