@@ -11,26 +11,50 @@ function pseudoRandom(i: number, seed: number) {
   return (Math.sin(i * seed) + 1) / 2; // value in [0,1]
 }
 
-const PARTICLES = Array.from({ length: 30 }, (_, i) => {
-  const r1 = pseudoRandom(i, 12.9898);
-  const r2 = pseudoRandom(i, 78.233);
-  const r3 = pseudoRandom(i, 5.398);
-  const r4 = pseudoRandom(i, 45.543);
+function FloatingParticles() {
+  // This component is ONLY rendered on the client after mount,
+  // so using Math.random() here is safe.
+  const particles = Array.from({ length: 15 }, (_, i) => ({
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    xOffset: Math.random() * 100 - 50,
+    duration: Math.random() * 10 + 10,
+    delay: Math.random() * 5,
+  }));
 
-  return {
-    left: `${r1 * 100}%`,
-    top: `${r2 * 100}%`,
-    xOffset: r3 * 100 - 50,          // [-50, 50]
-    duration: 10 + r4 * 10,          // [10, 20]
-    delay: r1 * 5,                   // [0, 5]
-  };
-});
+  return (
+    <>
+      {particles.map((p, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 bg-white/20 rounded-full"
+          animate={{
+            x: [0, p.xOffset],
+            opacity: [0, 1, 0],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            delay: p.delay,
+          }}
+          style={{
+            left: p.left,
+            top: p.top,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
 
 export default function Hero() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [showParticles, setShowParticles] = useState(false);
   const router = useRouter();
-
+  
   useEffect(() => {
+    setShowParticles(true);
     const interval = setInterval(() => {
       setCurrentWordIndex((prev) => (prev + 1) % HERO_WORDS.length);
     }, 3000); // Change word every 3 seconds
@@ -93,25 +117,8 @@ export default function Hero() {
             }}
           />
         ))} */}
-        {/* {PARTICLES.map((p, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
-            animate={{
-              x: [0, p.xOffset],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: p.duration,
-              repeat: Infinity,
-              delay: p.delay,
-            }}
-            style={{
-              left: p.left,
-              top: p.top,
-            }}
-          />
-        ))} */}
+        {/* Only render this AFTER mount */}
+        {showParticles && <FloatingParticles />}
       </div>
 
       
