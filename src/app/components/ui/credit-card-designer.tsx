@@ -1,11 +1,34 @@
 'use client';
 
-import React, { useState, useRef, MouseEvent } from 'react';
-import { CreditCard, Type, Circle, Square, Trash2, Move } from 'lucide-react';
+import React, { useState, useRef, MouseEvent, useCallback, useEffect } from 'react';
+import {
+  CreditCard,
+  Type,
+  Circle,
+  Square,
+  Trash2,
+  Move,
+  Undo2,
+  Redo2,
+  RotateCw,
+  Upload,
+  Sparkles,
+  Heart,
+  Star,
+  Zap,
+  Shield,
+  Lock,
+  Globe,
+  Wifi,
+  Battery,
+  Sun,
+  Moon,
+  Cloud
+} from 'lucide-react';
 
 interface Element {
   id: number;
-  type: 'text' | 'cardNumber' | 'circle' | 'rectangle';
+  type: 'text' | 'cardNumber' | 'circle' | 'rectangle' | 'icon' | 'image';
   x: number;
   y: number;
   width: number;
@@ -15,6 +38,9 @@ interface Element {
   fontSize: number;
   backgroundColor: string;
   opacity: number;
+  iconName?: string;
+  imageData?: string;
+  rotation?: number;
 }
 
 interface DraggedElement {
@@ -24,10 +50,16 @@ interface DraggedElement {
 }
 
 interface ComponentType {
-  type: 'text' | 'cardNumber' | 'circle' | 'rectangle';
+  type: 'text' | 'cardNumber' | 'circle' | 'rectangle' | 'icon' | 'image';
   icon: any;
   label: string;
   defaultValue?: string;
+}
+
+interface HistoryState {
+  elements: Element[];
+  cardColor: string;
+  orientation: 'horizontal' | 'vertical';
 }
 
 export default function CreditCardDesigner() {
@@ -35,10 +67,89 @@ export default function CreditCardDesigner() {
   const [selectedElement, setSelectedElement] = useState<number | null>(null);
   const [draggedElement, setDraggedElement] = useState<DraggedElement | null>(null);
   const [cardColor, setCardColor] = useState<string>('#1a1a2e');
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
 
-  const cardWidth = 400;
-  const cardHeight = 250;
+  // History for undo/redo
+  const [history, setHistory] = useState<HistoryState[]>([{
+    elements: [],
+    cardColor: '#1a1a2e',
+    orientation: 'horizontal'
+  }]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const cardWidth = orientation === 'horizontal' ? 400 : 250;
+  const cardHeight = orientation === 'horizontal' ? 250 : 400;
+
+  // Default icons available for use
+  const defaultIcons = [
+    { name: 'Sparkles', component: Sparkles },
+    { name: 'Heart', component: Heart },
+    { name: 'Star', component: Star },
+    { name: 'Zap', component: Zap },
+    { name: 'Shield', component: Shield },
+    { name: 'Lock', component: Lock },
+    { name: 'Globe', component: Globe },
+    { name: 'Wifi', component: Wifi },
+    { name: 'Battery', component: Battery },
+    { name: 'Sun', component: Sun },
+    { name: 'Moon', component: Moon },
+    { name: 'Cloud', component: Cloud },
+  ];
+
+  // Save to history
+  const saveToHistory = useCallback((newElements: Element[], newCardColor: string, newOrientation: 'horizontal' | 'vertical') => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({
+      elements: newElements,
+      cardColor: newCardColor,
+      orientation: newOrientation
+    });
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex]);
+
+  // Undo
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const state = history[newIndex];
+      setElements(state.elements);
+      setCardColor(state.cardColor);
+      setOrientation(state.orientation);
+      setHistoryIndex(newIndex);
+    }
+  }, [historyIndex, history]);
+
+  // Redo
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      const state = history[newIndex];
+      setElements(state.elements);
+      setCardColor(state.cardColor);
+      setOrientation(state.orientation);
+      setHistoryIndex(newIndex);
+    }
+  }, [historyIndex, history]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   // Available components to add
   const components: ComponentType[] = [
@@ -46,6 +157,8 @@ export default function CreditCardDesigner() {
     { type: 'cardNumber', icon: CreditCard, label: 'Card Number', defaultValue: '•••• •••• •••• 1234' },
     { type: 'circle', icon: Circle, label: 'Circle' },
     { type: 'rectangle', icon: Square, label: 'Rectangle' },
+    { type: 'icon', icon: Sparkles, label: 'Icon' },
+    { type: 'image', icon: Upload, label: 'Upload Image' },
   ];
 
   // Gradient presets
@@ -59,21 +172,65 @@ export default function CreditCardDesigner() {
   ];
 
   const addElement = (type: Element['type'], defaultValue = '') => {
+    if (type === 'image') {
+      fileInputRef.current?.click();
+      return;
+    }
+
     const newElement: Element = {
       id: Date.now(),
       type,
       x: 50,
       y: 50,
-      width: type === 'text' || type === 'cardNumber' ? 200 : 80,
-      height: type === 'text' || type === 'cardNumber' ? 30 : 80,
+      width: type === 'text' || type === 'cardNumber' ? 200 : type === 'icon' ? 40 : 80,
+      height: type === 'text' || type === 'cardNumber' ? 30 : type === 'icon' ? 40 : 80,
       content: defaultValue,
-      color: type === 'text' || type === 'cardNumber' ? '#ffffff' : '#ffffff',
+      color: type === 'text' || type === 'cardNumber' || type === 'icon' ? '#ffffff' : '#ffffff',
       fontSize: type === 'cardNumber' ? 20 : 16,
       backgroundColor: type === 'circle' || type === 'rectangle' ? '#ffffff' : 'transparent',
       opacity: type === 'circle' || type === 'rectangle' ? 0.2 : 1,
+      iconName: type === 'icon' ? 'Sparkles' : undefined,
+      rotation: 0,
     };
-    setElements([...elements, newElement]);
+    const newElements = [...elements, newElement];
+    setElements(newElements);
     setSelectedElement(newElement.id);
+    saveToHistory(newElements, cardColor, orientation);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageData = event.target?.result as string;
+      const newElement: Element = {
+        id: Date.now(),
+        type: 'image',
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 100,
+        content: '',
+        color: '#ffffff',
+        fontSize: 16,
+        backgroundColor: 'transparent',
+        opacity: 1,
+        imageData,
+        rotation: 0,
+      };
+      const newElements = [...elements, newElement];
+      setElements(newElements);
+      setSelectedElement(newElement.id);
+      saveToHistory(newElements, cardColor, orientation);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>, elementId: number) => {
@@ -106,16 +263,23 @@ export default function CreditCardDesigner() {
   };
 
   const handleMouseUp = () => {
+    if (draggedElement) {
+      saveToHistory(elements, cardColor, orientation);
+    }
     setDraggedElement(null);
   };
 
   const updateElement = (id: number, updates: Partial<Element>) => {
-    setElements(elements.map(el => el.id === id ? { ...el, ...updates } : el));
+    const newElements = elements.map(el => el.id === id ? { ...el, ...updates } : el);
+    setElements(newElements);
+    saveToHistory(newElements, cardColor, orientation);
   };
 
   const deleteElement = (id: number) => {
-    setElements(elements.filter(el => el.id !== id));
+    const newElements = elements.filter(el => el.id !== id);
+    setElements(newElements);
     setSelectedElement(null);
+    saveToHistory(newElements, cardColor, orientation);
   };
 
   const handleTextDoubleClick = (e: MouseEvent<HTMLDivElement>, elementId: number) => {
@@ -129,12 +293,65 @@ export default function CreditCardDesigner() {
     }
   };
 
+  const toggleOrientation = () => {
+    const newOrientation = orientation === 'horizontal' ? 'vertical' : 'horizontal';
+    setOrientation(newOrientation);
+    saveToHistory(elements, cardColor, newOrientation);
+  };
+
+  const updateCardColor = (color: string) => {
+    setCardColor(color);
+    saveToHistory(elements, color, orientation);
+  };
+
   const selectedElementData = elements.find(el => el.id === selectedElement);
+
+  const getIconComponent = (iconName: string) => {
+    const icon = defaultIcons.find(i => i.name === iconName);
+    return icon?.component || Sparkles;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">Credit Card Designer</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-bold">Credit Card Designer</h1>
+
+          {/* Undo/Redo Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={undo}
+              disabled={historyIndex === 0}
+              className="p-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={redo}
+              disabled={historyIndex === history.length - 1}
+              className="p-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={toggleOrientation}
+              className="p-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors ml-4"
+              title="Toggle Orientation"
+            >
+              <RotateCw className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar - Components */}
@@ -164,7 +381,7 @@ export default function CreditCardDesigner() {
                 {gradients.map(gradient => (
                   <button
                     key={gradient.name}
-                    onClick={() => setCardColor(gradient.value)}
+                    onClick={() => updateCardColor(gradient.value)}
                     className="h-12 rounded-lg border-2 border-slate-700 hover:border-white transition-colors"
                     style={{ background: gradient.value }}
                     title={gradient.name}
@@ -175,7 +392,7 @@ export default function CreditCardDesigner() {
 
             {/* Properties Panel */}
             {selectedElementData && (
-              <div className="bg-slate-800 rounded-lg p-6">
+              <div className="bg-slate-800 rounded-lg p-6 max-h-[600px] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold">Properties</h2>
                   <button
@@ -209,6 +426,98 @@ export default function CreditCardDesigner() {
                           className="w-full"
                         />
                         <div className="text-sm text-slate-400 mt-1">{selectedElementData.fontSize}px</div>
+                      </div>
+                    </>
+                  )}
+
+                  {selectedElementData.type === 'icon' && (
+                    <>
+                      <div>
+                        <label className="block text-sm mb-2">Icon</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {defaultIcons.map(icon => {
+                            const IconComp = icon.component;
+                            return (
+                              <button
+                                key={icon.name}
+                                onClick={() => updateElement(selectedElement!, { iconName: icon.name })}
+                                className={`p-3 rounded-lg border-2 transition-colors ${
+                                  selectedElementData.iconName === icon.name
+                                    ? 'border-blue-400 bg-slate-700'
+                                    : 'border-slate-600 hover:border-slate-500'
+                                }`}
+                              >
+                                <IconComp className="w-6 h-6 mx-auto" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-2">Color</label>
+                        <input
+                          type="color"
+                          value={selectedElementData.color}
+                          onChange={(e) => updateElement(selectedElement!, { color: e.target.value })}
+                          className="w-full h-10 rounded cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-2">Size</label>
+                        <input
+                          type="range"
+                          min="20"
+                          max="100"
+                          value={selectedElementData.width}
+                          onChange={(e) => {
+                            const size = parseInt(e.target.value);
+                            updateElement(selectedElement!, { width: size, height: size });
+                          }}
+                          className="w-full"
+                        />
+                        <div className="text-sm text-slate-400 mt-1">{selectedElementData.width}px</div>
+                      </div>
+                    </>
+                  )}
+
+                  {selectedElementData.type === 'image' && (
+                    <>
+                      <div>
+                        <label className="block text-sm mb-2">Width</label>
+                        <input
+                          type="range"
+                          min="50"
+                          max="300"
+                          value={selectedElementData.width}
+                          onChange={(e) => updateElement(selectedElement!, { width: parseInt(e.target.value) })}
+                          className="w-full"
+                        />
+                        <div className="text-sm text-slate-400 mt-1">{selectedElementData.width}px</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-2">Height</label>
+                        <input
+                          type="range"
+                          min="50"
+                          max="300"
+                          value={selectedElementData.height}
+                          onChange={(e) => updateElement(selectedElement!, { height: parseInt(e.target.value) })}
+                          className="w-full"
+                        />
+                        <div className="text-sm text-slate-400 mt-1">{selectedElementData.height}px</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-2">Opacity</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={selectedElementData.opacity}
+                          onChange={(e) => updateElement(selectedElement!, { opacity: parseFloat(e.target.value) })}
+                          className="w-full"
+                        />
+                        <div className="text-sm text-slate-400 mt-1">{(selectedElementData.opacity * 100).toFixed(0)}%</div>
                       </div>
                     </>
                   )}
@@ -262,13 +571,13 @@ export default function CreditCardDesigner() {
           {/* Canvas */}
           <div className="lg:col-span-3">
             <div className="bg-slate-800 rounded-lg p-8">
-              <div className="flex justify-center">
+              <div className="flex justify-center items-center min-h-[500px]">
                 <div
                   ref={canvasRef}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
-                  className="relative rounded-2xl shadow-2xl overflow-hidden"
+                  className="relative rounded-2xl shadow-2xl overflow-hidden transition-all duration-300"
                   style={{
                     width: cardWidth,
                     height: cardHeight,
@@ -312,6 +621,25 @@ export default function CreditCardDesigner() {
                         </div>
                       )}
 
+                      {element.type === 'icon' && (() => {
+                        const IconComponent = getIconComponent(element.iconName || 'Sparkles');
+                        return (
+                          <IconComponent
+                            className="w-full h-full"
+                            style={{ color: element.color }}
+                          />
+                        );
+                      })()}
+
+                      {element.type === 'image' && element.imageData && (
+                        <img
+                          src={element.imageData}
+                          alt="Uploaded"
+                          className="w-full h-full object-cover rounded"
+                          style={{ opacity: element.opacity }}
+                        />
+                      )}
+
                       {element.type === 'circle' && (
                         <div
                           className="w-full h-full rounded-full"
@@ -343,7 +671,7 @@ export default function CreditCardDesigner() {
               </div>
 
               <div className="mt-6 text-center text-sm text-slate-400">
-                Click components to add • Drag to move • Double-click text to edit • Select to customize
+                Click components to add • Drag to move • Double-click text to edit • Select to customize • {orientation === 'horizontal' ? 'Horizontal' : 'Vertical'} orientation
               </div>
             </div>
           </div>
