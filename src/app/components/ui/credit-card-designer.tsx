@@ -7,12 +7,26 @@ import {
   Sparkles, Heart, Star, Zap, Shield, Lock, Globe, Wifi, Battery,
   Sun, Moon, Cloud, Palette, Image as ImageIcon, ChevronDown,
   FlipHorizontal, AlertTriangle, X, Move, RotateCw, Wand2,
-  Plus, Clipboard,
+  Plus, Clipboard, Layers,
 } from 'lucide-react';
 import { processImageBackground } from './backgroundremoval';
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
+interface PatternState { id: string | null; color: string; opacity: number; scale: number; }
+const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.06, scale: 1 };
+
+// ============ PREDEFINED CARD PATTERNS ============
+const CARD_PATTERNS = [
+  { id: 'geometric', name: 'Geometric', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${60*scale}' height='${60*scale}'><g fill='none' stroke='${color}' stroke-width='0.8'><rect x='${5*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${15*scale})'/><rect x='${35*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${15*scale})'/><rect x='${5*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${45*scale})'/><rect x='${35*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${45*scale})'/><line x1='0' y1='${30*scale}' x2='${60*scale}' y2='${30*scale}'/><line x1='${30*scale}' y1='0' x2='${30*scale}' y2='${60*scale}'/></g></svg>` },
+  { id: 'tessellation', name: 'Tessellation', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${80*scale}' height='${80*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><polygon points='${40*scale},${2*scale} ${78*scale},${20*scale} ${78*scale},${60*scale} ${40*scale},${78*scale} ${2*scale},${60*scale} ${2*scale},${20*scale}'/><line x1='${40*scale}' y1='${2*scale}' x2='${40*scale}' y2='${78*scale}'/><line x1='${2*scale}' y1='${20*scale}' x2='${78*scale}' y2='${60*scale}'/><line x1='${78*scale}' y1='${20*scale}' x2='${2*scale}' y2='${60*scale}'/></g></svg>` },
+  { id: 'waves', name: 'Waves', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${120*scale}' height='${20*scale}'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-linecap='round'><path d='M0,${10*scale} Q${15*scale},${2*scale} ${30*scale},${10*scale} Q${45*scale},${18*scale} ${60*scale},${10*scale} Q${75*scale},${2*scale} ${90*scale},${10*scale} Q${105*scale},${18*scale} ${120*scale},${10*scale}'/></g></svg>` },
+  { id: 'chevron', name: 'Chevron', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${40*scale}' height='${24*scale}'><g fill='none' stroke='${color}' stroke-width='1'><path d='M0,${24*scale} L${20*scale},${12*scale} L${40*scale},${24*scale}'/><path d='M0,${12*scale} L${20*scale},0 L${40*scale},${12*scale}'/></g></svg>` },
+  { id: 'hexagons', name: 'Hexagons', svg: (color: string, scale: number) => { const s = 20 * scale; const h = s * Math.sqrt(3); return `<svg xmlns='http://www.w3.org/2000/svg' width='${s*3}' height='${h}'><g fill='none' stroke='${color}' stroke-width='0.6'><polygon points='${s},0 ${s*2},0 ${s*2.5},${h/2} ${s*2},${h} ${s},${h} ${s*0.5},${h/2}'/><polygon points='${s*2.5},${h/2} ${s*3},0 ${s*3},0'/></g></svg>`; } },
+  { id: 'crosshatch', name: 'Crosshatch', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${20*scale}' height='${20*scale}'><g stroke='${color}' stroke-width='0.5'><line x1='0' y1='0' x2='${20*scale}' y2='${20*scale}'/><line x1='${20*scale}' y1='0' x2='0' y2='${20*scale}'/></g></svg>` },
+  { id: 'circles', name: 'Circles', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${40*scale}' height='${40*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><circle cx='${20*scale}' cy='${20*scale}' r='${8*scale}'/><circle cx='0' cy='0' r='${8*scale}'/><circle cx='${40*scale}' cy='0' r='${8*scale}'/><circle cx='0' cy='${40*scale}' r='${8*scale}'/><circle cx='${40*scale}' cy='${40*scale}' r='${8*scale}'/></g></svg>` },
+  { id: 'topographic', name: 'Topographic', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${100*scale}' height='${100*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><ellipse cx='${50*scale}' cy='${50*scale}' rx='${45*scale}' ry='${30*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${30*scale}' ry='${18*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${15*scale}' ry='${8*scale}'/></g></svg>` },
+];
 interface CardElement {
   id: string;
   type: 'text' | 'cardNumber' | 'circle' | 'rectangle' | 'icon' | 'image';
@@ -223,6 +237,11 @@ export default function CreditCardDesigner() {
   const [editingId, setEditingId] = useState<string | null>(null);
   // Image clipboard
   const [imageClipboard, setImageClipboard] = useState<{ id: string; dataUrl: string; name: string }[]>([]);
+  // Pattern overlay (per face)
+  const [frontPattern, setFrontPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
+  const [backPattern, setBackPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
+  const activePattern = activeFace === 'front' ? frontPattern : backPattern;
+  const setActivePattern = activeFace === 'front' ? setFrontPattern : setBackPattern;
   // Computed card dimensions based on orientation
   const cardW = orientation === 'horizontal' ? CARD.W : CARD.H;
   const cardH = orientation === 'horizontal' ? CARD.H : CARD.W;
@@ -882,7 +901,41 @@ export default function CreditCardDesigner() {
                   </button>))}
               </div>}
             </div>
-            {/* Properties â€” ENHANCED */}
+            {/* Patterns */}
+            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('patterns')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-rose-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Pattern</span></div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'patterns' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedPanel === 'patterns' && <div className="px-3 pb-3 space-y-3">
+                {/* Pattern grid */}
+                <div className="grid grid-cols-4 gap-1.5">
+                  {/* None option */}
+                  <button onClick={() => setActivePattern(p => ({ ...p, id: null }))}
+                    className="h-12 rounded-lg border-2 transition-all flex items-center justify-center text-[10px] text-slate-500"
+                    style={{ borderColor: activePattern.id === null ? 'rgba(244,63,94,.6)' : 'rgba(255,255,255,.06)', background: activePattern.id === null ? 'rgba(244,63,94,.08)' : 'rgba(255,255,255,.03)' }}>
+                    None
+                  </button>
+                  {CARD_PATTERNS.map(p => {
+                    const previewSvg = p.svg('#888888', 0.5);
+                    const encoded = `url("data:image/svg+xml,${encodeURIComponent(previewSvg)}")`;
+                    return (
+                      <button key={p.id} onClick={() => setActivePattern(prev => ({ ...prev, id: p.id }))}
+                        className="h-12 rounded-lg border-2 transition-all overflow-hidden"
+                        style={{ borderColor: activePattern.id === p.id ? 'rgba(244,63,94,.6)' : 'rgba(255,255,255,.06)', backgroundImage: encoded, backgroundSize: 'auto', backgroundColor: 'rgba(255,255,255,.03)' }}
+                        title={p.name} />
+                    );
+                  })}
+                </div>
+                {/* Customization controls */}
+                {activePattern.id && <>
+                  <div><PropLabel>Pattern Color</PropLabel><input type="color" value={activePattern.color} onChange={e => setActivePattern(p => ({ ...p, color: e.target.value }))} className="w-full h-9 rounded-lg cursor-pointer border-0" /></div>
+                  <div><PropLabel>Opacity: {(activePattern.opacity*100).toFixed(0)}%</PropLabel><input type="range" min="0.01" max="0.3" step="0.01" value={activePattern.opacity} onChange={e => setActivePattern(p => ({ ...p, opacity: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
+                  <div><PropLabel>Scale: {activePattern.scale.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="3" step="0.1" value={activePattern.scale} onChange={e => setActivePattern(p => ({ ...p, scale: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
+                </>}
+              </div>}
+            </div>
+            {/* Properties — ENHANCED */}
             {selectedData && <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}><div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium">Properties
@@ -980,6 +1033,14 @@ export default function CreditCardDesigner() {
                     <div className="absolute pointer-events-none" style={{ inset: CARD.MARGIN, border: '1px dashed rgba(255,255,255,.06)', borderRadius: CARD.R - 4 }} />
                     <div className="absolute inset-0 pointer-events-none" style={{ opacity: .04 }}><svg width="100%" height="100%"><pattern id="cp" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#cp)"/></svg></div>
                     <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />
+                    {/* Pattern overlay */}
+                    {activePattern.id && (() => {
+                      const pat = CARD_PATTERNS.find(p => p.id === activePattern.id);
+                      if (!pat) return null;
+                      const svgStr = pat.svg(activePattern.color, activePattern.scale);
+                      const encoded = `url("data:image/svg+xml,${encodeURIComponent(svgStr)}")`;
+                      return <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: encoded, backgroundRepeat: 'repeat', opacity: activePattern.opacity, borderRadius: CARD.R }} />;
+                    })()}
                     <div id="collision-warn" className="absolute top-2 left-1/2 -translate-x-1/2 z-[100] items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-amber-300" style={{ display: 'none', background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.3)', backdropFilter: 'blur(8px)' }} />
                     {isDragOver && <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(99,102,241,.1)', backdropFilter: 'blur(2px)' }}>
                       <div className="text-center"><Upload className="w-8 h-8 text-indigo-400 mx-auto mb-2 animate-bounce" /><p className="text-sm text-indigo-300 font-medium">Drop your logo</p></div>
