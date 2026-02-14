@@ -7,7 +7,7 @@ import {
   Sparkles, Heart, Star, Zap, Shield, Lock, Globe, Wifi, Battery,
   Sun, Moon, Cloud, Palette, Image as ImageIcon, ChevronDown,
   FlipHorizontal, AlertTriangle, X, Move, RotateCw, Wand2,
-  Plus, Clipboard, Layers,
+  Plus, Clipboard, Layers, Link2, Unlink2,
 } from 'lucide-react';
 import { processImageBackground } from './backgroundremoval';
 import ColorPicker from './color-picker';
@@ -111,11 +111,11 @@ function hslToHex(h: number, s: number, l: number): string {
   };
   return `#${f(0)}${f(8)}${f(4)}`;
 }
-function generateSpotlightGradient(hex: string): string {
+function generateSpotlightGradient(hex: string, x = 30, y = 30): string {
   const [h, s, l] = hexToHSL(hex);
   const tint = hslToHex(h, Math.max(s - 5, 0), Math.min(l + 20, 95));
   const shade = hslToHex(h, Math.min(s + 10, 100), Math.max(l - 30, 5));
-  return `radial-gradient(circle at 30% 30%, ${tint}, ${hex}, ${shade})`;
+  return `radial-gradient(circle at ${x}% ${y}%, ${tint}, ${hex}, ${shade})`;
 }
 // ====================== BACKGROUND REMOVAL ======================
 // processImageBackground is now imported from ./backgroundremoval
@@ -229,6 +229,8 @@ export default function CreditCardDesigner() {
   const [collisionWarn, setCollisionWarn] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [spotlightColor, setSpotlightColor] = useState('#1a1a3e');
+  const [spotlightX, setSpotlightX] = useState(30);
+  const [spotlightY, setSpotlightY] = useState(30);
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
   const [showTemplateModal, setShowTemplateModal] = useState(true);
   // Background removal parameters (from backgroundslider.html)
@@ -241,6 +243,8 @@ export default function CreditCardDesigner() {
   // Pattern overlay (per face)
   const [frontPattern, setFrontPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
   const [backPattern, setBackPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
+  // Sync faces toggle
+  const [syncFaces, setSyncFaces] = useState(false);
   const activePattern = activeFace === 'front' ? frontPattern : backPattern;
   const setActivePattern = activeFace === 'front' ? setFrontPattern : setBackPattern;
   // Computed card dimensions based on orientation
@@ -272,6 +276,12 @@ export default function CreditCardDesigner() {
     const t = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(t);
   }, [toast]);
+  // ---- sync front → back ----
+  useEffect(() => {
+    if (!syncFaces) return;
+    setBackBg(frontBg);
+    setBackPattern({ ...frontPattern });
+  }, [syncFaces, frontBg, frontPattern]);
   // ---- history ----
   const snap = useCallback((): HistoryState => ({
     frontElements: activeFace === 'front' ? elementsRef.current : frontElements,
@@ -874,17 +884,32 @@ export default function CreditCardDesigner() {
                     style={{ background: g.value, borderColor: cardBg === g.value ? 'rgba(99,102,241,.7)' : 'rgba(255,255,255,.06)' }} title={g.name}>
                     <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white/50 font-medium opacity-0 group-hover:opacity-100 transition-opacity">{g.name}</span>
                   </button>))}</div>
+                {/* Custom solid color */}
+                <div className="pt-2 border-t border-white/5">
+                  <PropLabel>Custom Solid Color</PropLabel>
+                  <div className="flex gap-2 items-center">
+                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="flex-1" />
+                    <button onClick={() => { setCardBg(spotlightColor); pushHistory(); }}
+                      className="px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-purple-500/20 shrink-0" style={{ background: 'rgba(168,85,247,.1)', border: '1px solid rgba(168,85,247,.2)' }}>
+                      Apply
+                    </button>
+                  </div>
+                </div>
                 {/* Spotlight gradient */}
                 <div className="pt-2 border-t border-white/5">
                   <PropLabel>Spotlight Gradient</PropLabel>
                   <div className="flex gap-2 items-center">
                     <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="w-10 shrink-0" />
-                    <button onClick={() => { const g = generateSpotlightGradient(spotlightColor); setCardBg(g); pushHistory(); }}
+                    <button onClick={() => { const g = generateSpotlightGradient(spotlightColor, spotlightX, spotlightY); setCardBg(g); pushHistory(); }}
                       className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-indigo-500/20" style={{ background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.2)' }}>
                       Apply Spotlight
                     </button>
                   </div>
-                  <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor), border: '1px solid rgba(255,255,255,.06)' }} />
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => setSpotlightX(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
+                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => setSpotlightY(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
+                  </div>
+                  <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: '1px solid rgba(255,255,255,.06)' }} />
                 </div>
               </div>}
             </div>
@@ -1020,6 +1045,13 @@ export default function CreditCardDesigner() {
                     style={{ background: activeFace === f ? 'rgba(99,102,241,.15)' : 'transparent', color: activeFace === f ? '#818cf8' : '#64748b', border: activeFace === f ? '1px solid rgba(99,102,241,.3)' : '1px solid transparent' }}>
                     {f === 'front' ? 'Front Face' : 'Back Face'}
                   </button>))}
+                <button onClick={() => setSyncFaces(s => !s)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-1"
+                  style={{ background: syncFaces ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.03)', border: syncFaces ? '1px solid rgba(34,197,94,.3)' : '1px solid rgba(255,255,255,.06)', color: syncFaces ? '#4ade80' : '#64748b' }}
+                  title={syncFaces ? 'Front → Back sync ON: back face mirrors front styles' : 'Sync styles from front to back face'}>
+                  {syncFaces ? <Link2 className="w-3 h-3" /> : <Unlink2 className="w-3 h-3" />}
+                  {syncFaces ? 'Synced' : 'Sync'}
+                </button>
                 <span className="text-[10px] text-slate-600 ml-2">ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
               </div>
               <div className="flex justify-center items-center" style={{ minHeight: 380, perspective: 1200 }}>

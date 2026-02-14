@@ -55,10 +55,33 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
   const [hsv, setHsv] = useState<[number, number, number]>(() => hexToHsv(value));
   const [hexInput, setHexInput] = useState(value);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const satRef = useRef<HTMLDivElement>(null);
   const hueRef = useRef<HTMLDivElement>(null);
   const draggingSat = useRef(false);
   const draggingHue = useRef(false);
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null);
+
+  // Compute popup position when opening
+  useEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const popupH = 420; // approximate height
+    const popupW = 260;
+    const viewH = window.innerHeight;
+    const viewW = window.innerWidth;
+    // Default: below trigger, aligned left
+    let top = rect.bottom + 8;
+    let left = rect.left;
+    // Flip up if near bottom
+    if (top + popupH > viewH - 20) top = rect.top - popupH - 8;
+    // Clamp to viewport edges
+    if (left + popupW > viewW - 10) left = viewW - popupW - 10;
+    if (left < 10) left = 10;
+    if (top < 10) top = 10;
+    setPopupPos({ top, left });
+  }, [open]);
 
   // Sync from parent when value changes externally
   useEffect(() => {
@@ -74,7 +97,8 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node) &&
+          popupRef.current && !popupRef.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -127,23 +151,13 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
     document.addEventListener('mouseup', onUp);
   }, [handleHueMove]);
 
-  // ---- Hex input ----
-  const onHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setHexInput(v);
-    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-      const newHsv = hexToHsv(v);
-      setHsv(newHsv);
-      onChange(v.toLowerCase());
-    }
-  };
-
   const currentHex = hsvToHex(hsv[0], hsv[1], hsv[2]);
 
   return (
-    <div ref={wrapperRef} className={`relative ${className || ''}`} style={{ zIndex: open ? 200 : 'auto' }}>
+    <div ref={wrapperRef} className={`relative ${className || ''}`}>
       {/* Swatch trigger button */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full h-9 rounded-lg cursor-pointer border border-white/10 hover:border-white/20 transition-all relative overflow-hidden group"
@@ -158,10 +172,11 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
         </span>
       </button>
 
-      {/* Popup */}
-      {open && (
-        <div className="absolute left-0 top-full mt-2 w-[260px] rounded-2xl overflow-hidden shadow-2xl"
-          style={{ background: 'rgba(15,17,30,.96)', border: '1px solid rgba(255,255,255,.08)', backdropFilter: 'blur(20px)', zIndex: 210 }}
+      {/* Popup — rendered with fixed positioning to escape overflow:hidden */}
+      {open && popupPos && (
+        <div ref={popupRef}
+          className="w-[260px] rounded-2xl shadow-2xl"
+          style={{ position: 'fixed', top: popupPos.top, left: popupPos.left, background: 'rgba(15,17,30,.96)', border: '1px solid rgba(255,255,255,.08)', backdropFilter: 'blur(20px)', zIndex: 9999 }}
           onClick={e => e.stopPropagation()}>
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,.06)' }}>
@@ -174,11 +189,8 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
             <div ref={satRef} onMouseDown={onSatDown}
               className="relative w-full h-[140px] rounded-xl cursor-crosshair overflow-hidden"
               style={{ background: hueToHex(hsv[0]) }}>
-              {/* White → transparent left-to-right */}
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #fff, transparent)' }} />
-              {/* Transparent → black top-to-bottom */}
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent, #000)' }} />
-              {/* Picker dot */}
               <div className="absolute w-4 h-4 rounded-full border-2 border-white shadow-lg pointer-events-none"
                 style={{ left: `${hsv[1] * 100}%`, top: `${(1 - hsv[2]) * 100}%`, transform: 'translate(-50%,-50%)', boxShadow: '0 0 0 1px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.4)' }} />
             </div>
