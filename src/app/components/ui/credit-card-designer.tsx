@@ -261,6 +261,8 @@ export default function CreditCardDesigner() {
   const dragRef = useRef<{ id: string; offsetX: number; offsetY: number; startX: number; startY: number } | null>(null);
   const clickedElementRef = useRef(false); // F1: track if click originated from element
   const rafRef = useRef<number>(0); // requestAnimationFrame ID for smooth drag
+  const canvasWrapperRef = useRef<HTMLDivElement>(null); // wrapper for sticky scroll
+  const canvasOriginalTop = useRef<number>(0); // cached original top offset
   const elements = activeFace === 'front' ? frontElements : backElements;
   const setElements = activeFace === 'front' ? setFrontElements : setBackElements;
   const cardBg = activeFace === 'front' ? frontBg : backBg;
@@ -312,6 +314,30 @@ export default function CreditCardDesigner() {
     if (flipContainerRef.current) gsap.fromTo(flipContainerRef.current, { scale: .8, opacity: 0, rotateY: -15 }, { scale: 1, opacity: 1, rotateY: 0, duration: .8, ease: 'power3.out' });
     gsap.fromTo('.sidebar-item', { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: .4, stagger: .06, ease: 'power2.out', delay: .3 });
     setTimeout(() => { gsap.fromTo('.card-element', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .5, stagger: .08, ease: 'back.out(1.7)', delay: .1 }); }, 400);
+  }, []);
+  // ---- GSAP sticky canvas on scroll ----
+  useEffect(() => {
+    const wrapper = canvasWrapperRef.current;
+    if (!wrapper) return;
+    // Cache the original offset top once after layout
+    const cacheTop = () => {
+      gsap.set(wrapper, { y: 0 });
+      canvasOriginalTop.current = wrapper.getBoundingClientRect().top + window.scrollY;
+    };
+    cacheTop();
+    const onScroll = () => {
+      if (window.innerWidth < 1024) { gsap.set(wrapper, { y: 0 }); return; }
+      const scrollY = window.scrollY;
+      const pinStart = canvasOriginalTop.current - 32; // 32px top margin
+      if (scrollY > pinStart) {
+        gsap.to(wrapper, { y: scrollY - pinStart, duration: 0.25, ease: 'power2.out', overwrite: true });
+      } else {
+        gsap.to(wrapper, { y: 0, duration: 0.25, ease: 'power2.out', overwrite: true });
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', cacheTop);
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', cacheTop); };
   }, []);
   // ---- collision ----
   const checkCollision = useCallback((x: number, y: number, w: number, h: number, cw: number): string | null => {
@@ -742,7 +768,7 @@ export default function CreditCardDesigner() {
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* ===== SIDEBAR ===== */}
           <div className="lg:col-span-3 space-y-3">
             {/* Components */}
@@ -853,7 +879,7 @@ export default function CreditCardDesigner() {
             </div></div>}
           </div>
           {/* ===== CANVAS ===== */}
-          <div className="lg:col-span-9 lg:sticky lg:top-8 lg:self-start">
+          <div ref={canvasWrapperRef} className="lg:col-span-9" style={{ willChange: 'transform' }}>
             <div className="rounded-2xl p-6 md:p-10" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
               <div className="flex items-center justify-center gap-2 mb-6">
                 {(['front','back'] as CardFace[]).map(f => (
