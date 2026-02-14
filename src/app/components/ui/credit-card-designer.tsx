@@ -7,6 +7,7 @@ import {
   Sparkles, Heart, Star, Zap, Shield, Lock, Globe, Wifi, Battery,
   Sun, Moon, Cloud, Palette, Image as ImageIcon, ChevronDown,
   FlipHorizontal, AlertTriangle, X, Move, RotateCw, Wand2,
+  Plus, Clipboard,
 } from 'lucide-react';
 import { processImageBackground } from './backgroundremoval';
 // ====================== TYPES ======================
@@ -23,6 +24,7 @@ interface CardElement {
   rotation: number; fontFamily?: string; letterSpacing?: number;
   fontWeight?: number;
   isHardware?: boolean;
+  isPositionLocked?: boolean;
   isBackgroundRemoved?: boolean;
   originalImageData?: string;
   isLinkedGroup?: boolean;
@@ -161,12 +163,12 @@ const CARD_TEMPLATES = [
 
 function createFrontTemplate(): CardElement[] {
   return [
-    // Bank name/logo — FIXED top-left (hardware = not movable)
-    { id: 'hw-bankname', type: 'text', face: 'front', x: CARD.MARGIN, y: CARD.MARGIN, width: 200, height: 26, content: 'BLAZEUP BANK', color: '#fff', fontSize: 17, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 4, fontWeight: 600, isHardware: true },
-    // EMV Chip — ISO 7816: 9.5mm left, 18.5mm top, 11mm width, 8.5mm height → 47.5px, 92.5px, 55px, 42.5px
+    // Bank name/logo — position locked but resizable & styleable
+    { id: 'hw-bankname', type: 'text', face: 'front', x: CARD.MARGIN, y: CARD.MARGIN, width: 200, height: 26, content: 'BLAZEUP BANK', color: '#fff', fontSize: 17, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 4, fontWeight: 600, isPositionLocked: true },
+    // EMV Chip — ISO 7816: fully locked hardware
     { id: 'hw-chip', type: 'image', face: 'front', x: 47.5, y: 92.5, width: 55, height: 42.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'CHIP', isHardware: true },
-    // Contactless icon — beside chip
-    { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90, isHardware: true },
+    // Contactless / NFC icon — fully movable & resizable
+    { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
     // Account holder name — MOVABLE
     { id: uid(), type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
   ];
@@ -219,6 +221,8 @@ export default function CreditCardDesigner() {
   const [bgRemovalFade, setBgRemovalFade] = useState(0.10);
   const [bgRemovalKeepInternal, setBgRemovalKeepInternal] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Image clipboard
+  const [imageClipboard, setImageClipboard] = useState<{ id: string; dataUrl: string; name: string }[]>([]);
   // Computed card dimensions based on orientation
   const cardW = orientation === 'horizontal' ? CARD.W : CARD.H;
   const cardH = orientation === 'horizontal' ? CARD.H : CARD.W;
@@ -230,6 +234,7 @@ export default function CreditCardDesigner() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const flipContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const clipboardInputRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<{ id: string; offsetX: number; offsetY: number; startX: number; startY: number } | null>(null);
   const clickedElementRef = useRef(false); // F1: track if click originated from element
   const rafRef = useRef<number>(0); // requestAnimationFrame ID for smooth drag
@@ -448,6 +453,36 @@ export default function CreditCardDesigner() {
     const f = e.target.files?.[0]; if (!f) return; processImageFile(f);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+  // ---- image clipboard ----
+  const addToClipboard = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setImageClipboard(prev => [...prev, { id: uid(), dataUrl, name: file.name }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  const removeFromClipboard = (id: string) => {
+    setImageClipboard(prev => prev.filter(img => img.id !== id));
+  };
+  const addClipboardImageToCard = (dataUrl: string) => {
+    const el: CardElement = {
+      id: uid(), type: 'image', face: activeFace, x: 160, y: activeFace === 'back' ? 120 : 80,
+      width: 80, height: 80, content: '', color: '#fff', fontSize: 16,
+      backgroundColor: 'transparent', opacity: 1, imageData: dataUrl, rotation: 0,
+    };
+    const next = [...elementsRef.current, el];
+    setElements(next); setSelectedElement(el.id); pushHistory();
+    requestAnimationFrame(() => { const d = document.getElementById(`el-${el.id}`); if (d) gsap.fromTo(d, { scale: 0, opacity: 0, y: -30 }, { scale: 1, opacity: 1, y: 0, duration: .6, ease: 'elastic.out(1,.5)' }); });
+  };
+  const handleClipboardUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    addToClipboard(e.target.files);
+    if (clipboardInputRef.current) clipboardInputRef.current.value = '';
+  };
   // ---- file drag onto card ----
   const handleDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation();
     if (e.dataTransfer.types.includes('Files')) { setIsDragOver(true);
@@ -458,13 +493,16 @@ export default function CreditCardDesigner() {
       gsap.to(flipContainerRef.current, { scale: 1, boxShadow: '0 25px 60px rgba(0,0,0,.4)', duration: .3, ease: 'power2.out' }); }};
   const handleFileDrop = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false);
     if (flipContainerRef.current) gsap.to(flipContainerRef.current, { scale: 1, boxShadow: '0 25px 60px rgba(0,0,0,.4)', duration: .4, ease: 'elastic.out(1,.6)' });
+    // Check for clipboard drag data first
+    const clipboardData = e.dataTransfer.getData('text/clipboard-image');
+    if (clipboardData) { addClipboardImageToCard(clipboardData); return; }
     const f = e.dataTransfer.files?.[0]; if (f?.type.startsWith('image/')) processImageFile(f); };
   // ---- element dragging (zero-overhead: everything cached on mousedown) ----
   const handleElementMouseDown = (e: React.MouseEvent, elId: string) => {
     e.preventDefault(); e.stopPropagation();
     clickedElementRef.current = true;
     const el = elements.find(i => i.id === elId);
-    if (!el || el.isHardware) { setSelectedElement(elId); return; }
+    if (!el || el.isHardware || el.isPositionLocked) { setSelectedElement(elId); return; }
     const canvas = canvasRef.current; if (!canvas) return;
     // Cache EVERYTHING once — zero lookups in onMove
     const cachedRect = canvas.getBoundingClientRect();
@@ -686,6 +724,7 @@ export default function CreditCardDesigner() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#111128] to-[#0d0d20] text-white p-4 md:p-8" style={{ fontFamily: "'Inter',system-ui,sans-serif" }}>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+      <input ref={clipboardInputRef} type="file" accept="image/*" multiple onChange={handleClipboardUpload} className="hidden" />
 
       {/* ===== TEMPLATE SELECTION MODAL ===== */}
       {showTemplateModal && (
@@ -769,6 +808,40 @@ export default function CreditCardDesigner() {
                   <span className="text-sm text-slate-300 group-hover:text-white transition-colors">{c.label}</span>
                 </button>); })}</div>}
             </div>
+            {/* Image Clipboard */}
+            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('clipboard')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2"><Clipboard className="w-4 h-4 text-emerald-400" /><span className="text-sm font-medium">Image Clipboard</span>
+                  {imageClipboard.length > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{imageClipboard.length}</span>}
+                </div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'clipboard' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedPanel === 'clipboard' && <div className="px-3 pb-3 space-y-2">
+                <button onClick={() => clipboardInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-dashed border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all text-sm text-slate-400 hover:text-emerald-400">
+                  <Plus className="w-4 h-4" /> Upload Images
+                </button>
+                {imageClipboard.length === 0 && <p className="text-[11px] text-slate-600 text-center py-2">Upload images to your clipboard, then click or drag them onto the card</p>}
+                {imageClipboard.length > 0 && <div className="grid grid-cols-3 gap-1.5">
+                  {imageClipboard.map(img => (
+                    <div key={img.id} className="relative group rounded-lg overflow-hidden border border-white/6 hover:border-emerald-500/40 transition-all cursor-grab aspect-square"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('text/clipboard-image', img.dataUrl); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => addClipboardImageToCard(img.dataUrl)}
+                      title={`${img.name} — Click to add or drag onto card`}>
+                      <img src={img.dataUrl} alt={img.name} className="w-full h-full object-cover" draggable={false} />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                        <Plus className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); removeFromClipboard(img.id); }}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-400" style={{ zIndex: 10 }}>
+                        <X className="w-2.5 h-2.5 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>}
+              </div>}
+            </div>
             {/* Background + Spotlight */}
             <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
               <button onClick={() => togglePanel('background')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
@@ -812,16 +885,20 @@ export default function CreditCardDesigner() {
             {/* Properties â€” ENHANCED */}
             {selectedData && <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}><div className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium">Properties {selectedData.isHardware && <span className="text-[10px] text-amber-400 ml-1">FIXED</span>}</span>
-                {!selectedData.isHardware && <button onClick={() => deleteElement(selectedElement!)} className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
+                <span className="text-sm font-medium">Properties
+                  {selectedData.isHardware && <span className="text-[10px] text-amber-400 ml-1">FIXED</span>}
+                  {selectedData.isPositionLocked && <span className="text-[10px] text-cyan-400 ml-1">POS LOCKED</span>}
+                </span>
+                {!selectedData.isHardware && !selectedData.isPositionLocked && <button onClick={() => deleteElement(selectedElement!)} className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
               </div>
-              {selectedData.isHardware && <p className="text-[11px] text-slate-500">Hardware element â€” position locked</p>}
+              {selectedData.isHardware && <p className="text-[11px] text-slate-500">Hardware element — fully locked</p>}
               {!selectedData.isHardware && <div className="space-y-3">
-                {/* Position & Size (all types) */}
-                <div className="grid grid-cols-2 gap-2">
+                {/* Position sliders — hidden for position-locked elements */}
+                {!selectedData.isPositionLocked && <div className="grid grid-cols-2 gap-2">
                   <div><PropLabel>X: {Math.round(selectedData.x)}</PropLabel><input type="range" min="0" max={CARD.W} value={selectedData.x} onChange={e => updateElement(selectedElement!, { x: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
                   <div><PropLabel>Y: {Math.round(selectedData.y)}</PropLabel><input type="range" min="0" max={CARD.H} value={selectedData.y} onChange={e => updateElement(selectedElement!, { y: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
-                </div>
+                </div>}
+                {/* Size sliders — always shown */}
                 <div className="grid grid-cols-2 gap-2">
                   <div><PropLabel>W: {Math.round(selectedData.width)}</PropLabel><input type="range" min="20" max="400" value={selectedData.width} onChange={e => updateElement(selectedElement!, { width: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
                   <div><PropLabel>H: {Math.round(selectedData.height)}</PropLabel><input type="range" min="20" max="260" value={selectedData.height} onChange={e => updateElement(selectedElement!, { height: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
@@ -859,11 +936,11 @@ export default function CreditCardDesigner() {
                   {/* Background removal sliders — integrated from backgroundslider.html */}
                   <div className="space-y-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
                     <div>
-                      <PropLabel>Tolerance: {bgRemovalTolerance.toFixed(2)}</PropLabel>
+                      <PropLabel>Tolerance - Color Sensitivity: {bgRemovalTolerance.toFixed(2)}</PropLabel>
                       <input type="range" min="0" max="0.5" step="0.01" value={bgRemovalTolerance} onChange={e => { const v = parseFloat(e.target.value); setBgRemovalTolerance(v); reapplyBgRemoval(v, bgRemovalFade, bgRemovalKeepInternal); }} className="w-full accent-indigo-500" />
                     </div>
                     <div>
-                      <PropLabel>Fade: {bgRemovalFade.toFixed(2)}</PropLabel>
+                      <PropLabel>Fade - Edge Smoothness: {bgRemovalFade.toFixed(2)}</PropLabel>
                       <input type="range" min="0" max="0.5" step="0.01" value={bgRemovalFade} onChange={e => { const v = parseFloat(e.target.value); setBgRemovalFade(v); reapplyBgRemoval(bgRemovalTolerance, v, bgRemovalKeepInternal); }} className="w-full accent-indigo-500" />
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -913,17 +990,17 @@ export default function CreditCardDesigner() {
                         onDoubleClick={e => { if (el.type === 'text' || el.type === 'cardNumber') handleTextDoubleClick(e, el.id); }}
                         className={`card-element absolute select-none ${selectedElement === el.id && !el.isHardware ? 'ring-1 ring-indigo-400/60' : ''}`}
                         style={{ left: el.x, top: el.y, width: el.width, height: el.height,
-                          cursor: el.isHardware ? 'default' : 'grab',
+                          cursor: el.isHardware ? 'default' : el.isPositionLocked ? 'pointer' : 'grab',
                           transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
                           zIndex: el.isHardware ? 60 : selectedElement === el.id ? 50 : 1 }}>
-                        {/* Inline delete button */}
-                        {selectedElement === el.id && !el.isHardware && (
+                        {/* Inline delete button — not for hardware or position-locked */}
+                        {selectedElement === el.id && !el.isHardware && !el.isPositionLocked && (
                           <button onMouseDown={e => { e.stopPropagation(); clickedElementRef.current = true; deleteElement(el.id); }}
                             className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center shadow-lg hover:bg-red-400 transition-colors" style={{ zIndex: 110 }}>
                             <X className="w-3 h-3 text-white" />
                           </button>
                         )}
-                        {/* Resize handles */}
+                        {/* Resize handles — shown for non-hardware (including position-locked) */}
                         {selectedElement === el.id && !el.isHardware && <>
                           <div onMouseDown={e => handleResizeMouseDown(e, el.id, 'se')} style={resizeHandleStyle('se')} />
                           <div onMouseDown={e => handleResizeMouseDown(e, el.id, 'sw')} style={resizeHandleStyle('sw')} />
