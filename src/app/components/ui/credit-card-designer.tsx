@@ -222,10 +222,10 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   return [
     // Magnetic stripe — thickness 12.5mm (62.5px); 5mm (25px) from top (landscape) or right (portrait)
     { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 25 - 62.5 : 0, y: isV ? 0 : 25, width: isV ? 62.5 : cw, height: isV ? ch : 62.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
-    // Hologram — bottom-right; in vertical mode shifted left to avoid magstripe overlap
-    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 100 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
-    // Network logo — moved left to avoiding overlapping hologram (which is at cw-100 or cw-54)
-    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 170 : cw - 130, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
+    // Hologram — bottom-right; in vertical mode shifted left to clear magstripe (magstripe left edge = cw-87.5)
+    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
+    // Network logo — 4px gap left of hologram
+    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
     // Linked account info group — moves as one unit
     { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 240, height: acctH + 24, content: acctContent, color: '#fff', fontSize: isV ? 13 : 14, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
     { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 2, width: 100, height: 16, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
