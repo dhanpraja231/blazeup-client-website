@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { processImageBackground } from './backgroundremoval';
 import ColorPicker from './color-picker';
+import { CARD_LAYOUTS, type LayoutId } from './layouts';
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
@@ -247,6 +248,12 @@ export default function CreditCardDesigner() {
   const [syncFaces, setSyncFaces] = useState(false);
   const activePattern = activeFace === 'front' ? frontPattern : backPattern;
   const setActivePattern = activeFace === 'front' ? setFrontPattern : setBackPattern;
+  // Layout state (per face)
+  interface LayoutState { id: LayoutId; baseColor: string; overlayColor: string; }
+  const [frontLayout, setFrontLayout] = useState<LayoutState>({ id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
+  const [backLayout, setBackLayout] = useState<LayoutState>({ id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
+  const activeLayout = activeFace === 'front' ? frontLayout : backLayout;
+  const setActiveLayout = activeFace === 'front' ? setFrontLayout : setBackLayout;
   // Computed card dimensions based on orientation
   const cardW = orientation === 'horizontal' ? CARD.W : CARD.H;
   const cardH = orientation === 'horizontal' ? CARD.H : CARD.W;
@@ -281,7 +288,8 @@ export default function CreditCardDesigner() {
     if (!syncFaces) return;
     setBackBg(frontBg);
     setBackPattern({ ...frontPattern });
-  }, [syncFaces, frontBg, frontPattern]);
+    setBackLayout({ ...frontLayout });
+  }, [syncFaces, frontBg, frontPattern, frontLayout]);
   // ---- history ----
   const snap = useCallback((): HistoryState => ({
     frontElements: activeFace === 'front' ? elementsRef.current : frontElements,
@@ -913,6 +921,46 @@ export default function CreditCardDesigner() {
                 </div>
               </div>}
             </div>
+            {/* Card Layout */}
+            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('layout')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2"><FlipHorizontal className="w-4 h-4 text-amber-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Layout</span></div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'layout' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedPanel === 'layout' && <div className="px-3 pb-3 space-y-3">
+                {/* Layout preview grid */}
+                <div className="grid grid-cols-3 gap-1.5">
+                  {CARD_LAYOUTS.map(lay => {
+                    const clip = lay.clipPath[orientation];
+                    return (
+                      <button key={lay.id}
+                        onClick={() => {
+                          setActiveLayout(prev => ({ ...prev, id: lay.id }));
+                          if (lay.id !== 'none') {
+                            setCardBg(activeLayout.baseColor);
+                            pushHistory();
+                          }
+                        }}
+                        className="h-14 rounded-lg border-2 transition-all relative overflow-hidden group"
+                        style={{ borderColor: activeLayout.id === lay.id ? 'rgba(245,158,11,.6)' : 'rgba(255,255,255,.06)', background: lay.id === 'none' ? 'rgba(255,255,255,.03)' : activeLayout.baseColor }}>
+                        {/* Overlay preview */}
+                        {lay.id !== 'none' && <div className="absolute inset-0" style={{ background: activeLayout.overlayColor, clipPath: clip }} />}
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] text-white/60 font-medium opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ textShadow: '0 1px 3px rgba(0,0,0,.8)' }}>{lay.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Color controls — only when a layout is selected */}
+                {activeLayout.id !== 'none' && <>
+                  <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); }} /></div>
+                  <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => setActiveLayout(prev => ({ ...prev, overlayColor: v }))} /></div>
+                  <button onClick={() => { setCardBg(activeLayout.baseColor); pushHistory(); }}
+                    className="w-full px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-amber-500/20" style={{ background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)' }}>
+                    Apply Layout
+                  </button>
+                </>}
+              </div>}
+            </div>
             {/* Network */}
             <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
               <button onClick={() => togglePanel('network')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
@@ -1045,7 +1093,7 @@ export default function CreditCardDesigner() {
                     style={{ background: activeFace === f ? 'rgba(99,102,241,.15)' : 'transparent', color: activeFace === f ? '#818cf8' : '#64748b', border: activeFace === f ? '1px solid rgba(99,102,241,.3)' : '1px solid transparent' }}>
                     {f === 'front' ? 'Front Face' : 'Back Face'}
                   </button>))}
-                <button onClick={() => setSyncFaces(s => !s)}
+                <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON — back mirrors front styles' : 'Sync OFF — faces are independent', type: 'info' }); }}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-1"
                   style={{ background: syncFaces ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.03)', border: syncFaces ? '1px solid rgba(34,197,94,.3)' : '1px solid rgba(255,255,255,.06)', color: syncFaces ? '#4ade80' : '#64748b' }}
                   title={syncFaces ? 'Front → Back sync ON: back face mirrors front styles' : 'Sync styles from front to back face'}>
@@ -1073,6 +1121,12 @@ export default function CreditCardDesigner() {
                       const svgStr = pat.svg(activePattern.color, activePattern.scale);
                       const encoded = `url("data:image/svg+xml,${encodeURIComponent(svgStr)}")`;
                       return <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: encoded, backgroundRepeat: 'repeat', opacity: activePattern.opacity, borderRadius: CARD.R }} />;
+                    })()}
+                    {/* Layout overlay */}
+                    {activeLayout.id !== 'none' && (() => {
+                      const lay = CARD_LAYOUTS.find(l => l.id === activeLayout.id);
+                      if (!lay) return null;
+                      return <div className="absolute inset-0 pointer-events-none" style={{ background: activeLayout.overlayColor, clipPath: lay.clipPath[orientation], borderRadius: CARD.R }} />;
                     })()}
                     <div id="collision-warn" className="absolute top-2 left-1/2 -translate-x-1/2 z-[100] items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-amber-300" style={{ display: 'none', background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.3)', backdropFilter: 'blur(8px)' }} />
                     {isDragOver && <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(99,102,241,.1)', backdropFilter: 'blur(2px)' }}>
