@@ -2,6 +2,8 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import gsap from 'gsap';
+import AITemplateGenerator from './AITemplateGenerator';
+import AICardGenerator from './AICardGenerator';
 import {
   CreditCard, Type, Circle, Square, Trash2, Undo2, Redo2, Upload,
   Sparkles, Heart, Star, Zap, Shield, Lock, Globe, Wifi, Battery,
@@ -186,7 +188,7 @@ function createFrontTemplate(): CardElement[] {
     // Contactless / NFC icon — fully movable & resizable
     { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
     // Account holder name — MOVABLE
-    { id: uid(), type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
+    { id: 'hw-cardholder-name', type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
   ];
 }
 
@@ -214,10 +216,12 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
     { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 2, width: 100, height: 16, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     { id: 'hw-expiry', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 18, width: 140, height: 16, content: 'VALID THRU: 12/28', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     // Fine print
-    { id: uid(), type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
+    { id: 'hw-fine-print', type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
   ];
 }
 export default function CreditCardDesigner() {
+    // Add this to your state declarations (around line 280)
+    const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [activeFace, setActiveFace] = useState<CardFace>('front');
   const [network, setNetwork] = useState<NetworkType>('Visa');
   const [frontElements, setFrontElements] = useState<CardElement[]>(() => createFrontTemplate());
@@ -797,10 +801,13 @@ export default function CreditCardDesigner() {
               ))}
             </div>
             <div className="mt-8 flex justify-center gap-4">
-              <button onClick={() => { setToast({ message: 'AI template generation coming soon!', type: 'info' }); }}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-indigo-500/20">
-                <Wand2 className="w-4 h-4" /> Generate with AI
-              </button>
+            <button onClick={() => {
+              setShowTemplateModal(false);
+              setShowAIGenerator(true);
+            }}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-indigo-500/20">
+              <Wand2 className="w-4 h-4" /> Generate with AI
+            </button>
               <button onClick={() => setShowTemplateModal(false)}
                 className="px-6 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors"
                 style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)' }}>
@@ -810,6 +817,20 @@ export default function CreditCardDesigner() {
           </div>
         </div>
       )}
+    {/* ===== AI TEMPLATE GENERATOR MODAL ===== */}
+    {showAIGenerator && (
+      <AITemplateGenerator
+        onTemplateSelect={(design) => {
+          setFrontElements(design.frontElements);
+          setBackElements(design.backElements);
+          setFrontBg(design.frontBg);
+          setBackBg(design.backBg);
+          setShowAIGenerator(false);
+          pushHistory();
+        }}
+        onClose={() => setShowAIGenerator(false)}
+      />
+    )}
       {/* Toast */}
       {toast && <div className="fixed bottom-6 right-6 z-[200] flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl animate-in slide-in-from-right" style={{
         background: toast.type === 'warn' ? 'rgba(245,158,11,.15)' : toast.type === 'error' ? 'rgba(239,68,68,.15)' : 'rgba(99,102,241,.15)',
@@ -844,6 +865,34 @@ export default function CreditCardDesigner() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* ===== SIDEBAR ===== */}
           <div className="lg:col-span-3 space-y-3">
+
+{/* ===== AI CARD GENERATOR ===== */}
+<div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+  <button onClick={() => togglePanel('ai-generator')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+    <div className="flex items-center gap-2">
+      <Sparkles className="w-4 h-4 text-purple-400" />
+      <span className="text-sm font-medium">AI Card Generator</span>
+    </div>
+    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'ai-generator' ? 'rotate-180' : ''}`} />
+  </button>
+  {expandedPanel === 'ai-generator' && (
+    <div className="px-3 pb-3">
+      <AICardGenerator
+        onDesignGenerated={(design) => {
+          if (activeFace === 'front') {
+            setFrontElements(design.elements);
+            setFrontBg(design.cardColor);
+          } else {
+            setBackElements(design.elements);
+            setBackBg(design.cardColor);
+          }
+          pushHistory();
+        }}
+      />
+    </div>
+  )}
+</div>
+
             {/* Components */}
             <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
               <button onClick={() => togglePanel('components')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">

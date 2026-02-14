@@ -25,11 +25,13 @@ export default function AICardGenerator({ onDesignGenerated }: AICardGeneratorPr
 
   const fetchStatus = async () => {
     try {
+      console.log('📊 Fetching generation status...');
       const response = await fetch('/api/generate-card');
       const data = await response.json();
+      console.log('📊 Status response:', data);
       setStatus(data);
     } catch (err) {
-      console.error('Failed to fetch status:', err);
+      console.error('❌ Failed to fetch status:', err);
     }
   };
 
@@ -67,7 +69,13 @@ export default function AICardGenerator({ onDesignGenerated }: AICardGeneratorPr
   };
 
   const handleGenerate = async () => {
+    console.log('🚀 Generate button clicked!');
+    console.log('Logo file:', logoFile);
+    console.log('Company name:', companyName);
+    console.log('Status:', status);
+
     if (!logoFile) {
+      console.error('❌ No logo file uploaded');
       setError('Please upload a logo first');
       return;
     }
@@ -76,8 +84,11 @@ export default function AICardGenerator({ onDesignGenerated }: AICardGeneratorPr
     setError(null);
 
     try {
+      console.log('📦 Converting logo to base64...');
       const logoBase64 = await fileToBase64(logoFile);
+      console.log('✅ Logo converted, length:', logoBase64.length);
 
+      console.log('🌐 Sending POST request to /api/generate-card...');
       const response = await fetch('/api/generate-card', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,126 +98,144 @@ export default function AICardGenerator({ onDesignGenerated }: AICardGeneratorPr
         }),
       });
 
+      console.log('📥 Response status:', response.status, response.statusText);
+
       const data = await response.json();
+      console.log('📄 Response data:', data);
 
       if (!response.ok) {
+        console.error('❌ API error:', data.error);
         throw new Error(data.error || 'Failed to generate design');
       }
 
+      console.log('✅ Design generated successfully!');
+      console.log('Design data:', data.design);
+
+      // Pass the design to parent component
       onDesignGenerated(data.design);
+
+      // Refresh status
       await fetchStatus();
 
+      // Reset form
       setLogoFile(null);
       setLogoPreview(null);
       setCompanyName('');
 
     } catch (err: any) {
+      console.error('💥 Error in handleGenerate:', err);
+      console.error('Error stack:', err.stack);
       setError(err.message || 'Failed to generate card design');
     } finally {
       setIsGenerating(false);
+      console.log('🏁 Generation process complete');
     }
   };
 
   return (
-    <div className="bg-slate-800 rounded-lg p-6 space-y-4">
-      <div className="flex items-center gap-3 mb-4">
-        <Sparkles className="w-6 h-6 text-purple-400" />
-        <h2 className="text-xl font-semibold">AI Card Generator</h2>
-      </div>
+    <div className="rounded-2xl overflow-hidden sidebar-item" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', backdropFilter: 'blur(20px)' }}>
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <Sparkles className="w-5 h-5 text-purple-400" />
+          <h3 className="text-sm font-semibold">AI Card Generator</h3>
+        </div>
 
-      {status && (
-        <div className={`rounded-lg p-3 text-sm ${
-          status.canGenerate
-            ? 'bg-green-500/10 border border-green-500/30'
-            : 'bg-red-500/10 border border-red-500/30'
-        }`}>
-          <div className="flex items-start gap-2">
-            <Info className={`w-4 h-4 mt-0.5 ${
-              status.canGenerate ? 'text-green-400' : 'text-red-400'
-            }`} />
-            <div>
-              {status.hasGeneratedThisMonth ? (
-                <p className="text-red-300 font-medium">
-                  You've already used your free generation this month
-                </p>
-              ) : status.remaining > 0 ? (
-                <p className="text-green-300">
-                  <span className="font-semibold">{status.remaining}</span> free designs remaining this month
-                </p>
-              ) : (
-                <p className="text-red-300 font-medium">
-                  Monthly limit reached (1,000 designs)
-                </p>
-              )}
+        {status && (
+          <div className={`rounded-lg p-2.5 text-xs mb-3 ${
+            status.canGenerate
+              ? 'bg-green-500/10 border border-green-500/30'
+              : 'bg-red-500/10 border border-red-500/30'
+          }`}>
+            <div className="flex items-start gap-2">
+              <Info className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${
+                status.canGenerate ? 'text-green-400' : 'text-red-400'
+              }`} />
+              <div className="flex-1 min-w-0">
+                {status.hasGeneratedThisMonth ? (
+                  <p className="text-red-300 font-medium">
+                    Already used this month
+                  </p>
+                ) : status.remaining > 0 ? (
+                  <p className="text-green-300">
+                    <span className="font-semibold">{status.remaining}</span> remaining
+                  </p>
+                ) : (
+                  <p className="text-red-300 font-medium">
+                    Monthly limit reached
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium mb-2">Company Logo</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleLogoChange}
-          className="block w-full text-sm text-slate-400
-            file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
-            file:text-sm file:font-semibold file:bg-purple-600 file:text-white
-            hover:file:bg-purple-700 file:cursor-pointer cursor-pointer"
-          disabled={isGenerating || !status?.canGenerate}
-        />
-      </div>
-
-      {logoPreview && (
-        <div className="bg-slate-700 rounded-lg p-4 flex justify-center">
-          <img src={logoPreview} alt="Logo" className="max-h-32 object-contain" />
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium mb-2">Company Name (Optional)</label>
-        <input
-          type="text"
-          value={companyName}
-          onChange={(e) => setCompanyName(e.target.value)}
-          placeholder="Acme Corp"
-          className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg
-            focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-          disabled={isGenerating || !status?.canGenerate}
-        />
-      </div>
-
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-300">{error}</p>
-        </div>
-      )}
-
-      <button
-        onClick={handleGenerate}
-        disabled={!logoFile || isGenerating || !status?.canGenerate}
-        className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600
-          hover:from-purple-700 hover:to-pink-700 rounded-lg font-semibold
-          transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-          flex items-center justify-center gap-2"
-      >
-        {isGenerating ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Generating Design...
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-5 h-5" />
-            Generate AI Design
-          </>
         )}
-      </button>
 
-      <p className="text-xs text-slate-400 text-center">
-        1 free generation per month • {status?.remaining || 0} remaining globally
-      </p>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium mb-1.5 text-slate-400">Company Logo</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoChange}
+              className="block w-full text-xs text-slate-400
+                file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0
+                file:text-xs file:font-semibold file:bg-purple-600 file:text-white
+                hover:file:bg-purple-700 file:cursor-pointer cursor-pointer"
+              disabled={isGenerating || !status?.canGenerate}
+            />
+          </div>
+
+          {logoPreview && (
+            <div className="bg-slate-700/50 rounded-lg p-3 flex justify-center">
+              <img src={logoPreview} alt="Logo" className="max-h-20 object-contain" />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium mb-1.5 text-slate-400">Company Name (Optional)</label>
+            <input
+              type="text"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="Acme Corp"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-purple-500 text-white text-sm"
+              disabled={isGenerating || !status?.canGenerate}
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-2.5 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-300">{error}</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleGenerate}
+            disabled={!logoFile || isGenerating || !status?.canGenerate}
+            className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600
+              hover:from-purple-700 hover:to-pink-700 rounded-lg font-semibold text-sm
+              transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+              flex items-center justify-center gap-2"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Generate Design
+              </>
+            )}
+          </button>
+
+          <p className="text-[10px] text-slate-500 text-center">
+            1 free/month • {status?.remaining || 0} remaining globally
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
