@@ -210,23 +210,23 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   const isV = orient === 'vertical';
 
   // Magstripe: landscape = horizontal band at 28px from top; portrait = vertical bar on RIGHT edge with padding
-  // Account info: landscape = bottom-left; portrait = left side near top
+  // Account info: landscape = mid-left area; portrait = left side near top
   const acctX = isV ? 24 : 24;
-  const acctY = isV ? 28 : ch - 110;
+  const acctY = isV ? 28 : ch - 90;
   const acctContent = isV ? '4532\n8720\n1456\n7890' : '4532  8720  1456  7890';
-  const acctH = isV ? 80 : 24;
+  const acctH = isV ? 70 : 20;
 
   return [
     // Magnetic stripe — landscape: ISO 5.54mm top (28px), full width; portrait: right edge with 8px padding, full height
     { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 56 : 0, y: isV ? 0 : 28, width: isV ? 48 : cw, height: isV ? ch : 48, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
-    // Hologram — bottom-right (landscape) / bottom-left (portrait)
-    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? 24 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
-    // Network logo — bottom-right (landscape) / bottom-left (portrait)
-    { id: 'hw-network', type: 'text', face: 'back', x: isV ? 64 : cw - 80, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
+    // Hologram — bottom-right; in vertical mode shifted left to avoid magstripe overlap
+    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 100 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
+    // Network logo — beside hologram; in vertical mode shifted left to avoid magstripe overlap
+    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 130 : cw - 80, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
     // Linked account info group — moves as one unit
-    { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 300, height: acctH + 50, content: acctContent, color: '#fff', fontSize: isV ? 14 : 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
-    { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 4, width: 120, height: 18, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 11, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
-    { id: 'hw-expiry', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 26, width: 160, height: 18, content: 'VALID THRU: 12/28', color: 'rgba(255,255,255,.7)', fontSize: 11, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
+    { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 240, height: acctH + 24, content: acctContent, color: '#fff', fontSize: isV ? 13 : 14, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
+    { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 2, width: 100, height: 16, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
+    { id: 'hw-expiry', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 18, width: 140, height: 16, content: 'VALID THRU: 12/28', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     // Fine print
     { id: uid(), type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
   ];
@@ -338,7 +338,34 @@ export default function CreditCardDesigner() {
     requestAnimationFrame(() => { const d = document.getElementById(`el-${el.id}`); if (d) gsap.fromTo(d, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .4, ease: 'back.out(2)' }); });
   };
   const updateElement = (id: string, updates: Partial<CardElement>) => {
-    setElements(prev => prev.map(el => el.id === id ? { ...el, ...updates } : el));
+    setElements(prev => {
+      const target = prev.find(el => el.id === id);
+      if (!target) return prev;
+      // If this element is part of a linked group, propagate certain changes to siblings
+      if (target.isLinkedGroup) {
+        const dx = updates.x !== undefined ? updates.x - target.x : 0;
+        const dy = updates.y !== undefined ? updates.y - target.y : 0;
+        // Font properties that propagate to all siblings (NOT fontSize — that stays independent)
+        const sharedFontUpdates: Partial<CardElement> = {};
+        if (updates.fontFamily !== undefined) sharedFontUpdates.fontFamily = updates.fontFamily;
+        if (updates.fontWeight !== undefined) sharedFontUpdates.fontWeight = updates.fontWeight;
+        if (updates.letterSpacing !== undefined) sharedFontUpdates.letterSpacing = updates.letterSpacing;
+        if (updates.color !== undefined) sharedFontUpdates.color = updates.color;
+        const hasPositionDelta = dx !== 0 || dy !== 0;
+        const hasSharedFontUpdates = Object.keys(sharedFontUpdates).length > 0;
+        return prev.map(el => {
+          if (el.id === id) return { ...el, ...updates };
+          if (el.isLinkedGroup) {
+            const sibUpdates: Partial<CardElement> = {};
+            if (hasPositionDelta) { sibUpdates.x = el.x + dx; sibUpdates.y = el.y + dy; }
+            if (hasSharedFontUpdates) Object.assign(sibUpdates, sharedFontUpdates);
+            if (Object.keys(sibUpdates).length > 0) return { ...el, ...sibUpdates };
+          }
+          return el;
+        });
+      }
+      return prev.map(el => el.id === id ? { ...el, ...updates } : el);
+    });
     pushHistory();
   };
   const deleteElement = (id: string) => {
@@ -487,6 +514,15 @@ export default function CreditCardDesigner() {
     const startMx = e.clientX, startMy = e.clientY;
     const rect = canvas.getBoundingClientRect();
     const sx = cardW / rect.width, sy = cardH / rect.height;
+    // Cache linked group siblings for group resize
+    const isGroup = el.isLinkedGroup;
+    const siblings: { id: string; dom: HTMLElement; dx: number; dy: number }[] = [];
+    if (isGroup) {
+      elements.filter(s => s.isLinkedGroup && s.id !== elId).forEach(s => {
+        const sd = document.getElementById(`el-${s.id}`);
+        if (sd) siblings.push({ id: s.id, dom: sd, dx: s.x - startX, dy: s.y - startY });
+      });
+    }
     const onMove = (ev: MouseEvent) => {
       const dx = (ev.clientX - startMx) * sx, dy = (ev.clientY - startMy) * sy;
       let nw = startW, nh = startH, nx = startX, ny = startY;
@@ -496,13 +532,31 @@ export default function CreditCardDesigner() {
       if (corner.includes('n')) { nh = Math.max(20, startH - dy); ny = startY + startH - nh; }
       const md = document.getElementById(`el-${elId}`);
       if (md) { md.style.width = `${nw}px`; md.style.height = `${nh}px`; md.style.left = `${nx}px`; md.style.top = `${ny}px`; }
+      // Move linked siblings along with position change from resize
+      if (isGroup) {
+        const posDx = nx - startX, posDy = ny - startY;
+        for (const s of siblings) {
+          s.dom.style.left = `${startX + s.dx + posDx}px`;
+          s.dom.style.top = `${startY + s.dy + posDy}px`;
+        }
+      }
     };
     const onUp = () => {
       const md = document.getElementById(`el-${elId}`);
       if (md) {
         const fw = parseFloat(md.style.width), fh = parseFloat(md.style.height);
         const fl = parseFloat(md.style.left), ft = parseFloat(md.style.top);
-        setElements(prev => prev.map(i => i.id === elId ? { ...i, width: fw, height: fh, x: fl, y: ft } : i));
+        if (isGroup) {
+          const posDx = fl - startX, posDy = ft - startY;
+          setElements(prev => prev.map(i => {
+            if (i.id === elId) return { ...i, width: fw, height: fh, x: fl, y: ft };
+            const sib = siblings.find(s => s.id === i.id);
+            if (sib) return { ...i, x: startX + sib.dx + posDx, y: startY + sib.dy + posDy };
+            return i;
+          }));
+        } else {
+          setElements(prev => prev.map(i => i.id === elId ? { ...i, width: fw, height: fh, x: fl, y: ft } : i));
+        }
         pushHistory();
       }
       window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp);
@@ -775,7 +829,7 @@ export default function CreditCardDesigner() {
             </div></div>}
           </div>
           {/* ===== CANVAS ===== */}
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-9 lg:sticky lg:top-8 lg:self-start">
             <div className="rounded-2xl p-6 md:p-10" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
               <div className="flex items-center justify-center gap-2 mb-6">
                 {(['front','back'] as CardFace[]).map(f => (
