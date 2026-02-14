@@ -38,8 +38,8 @@ interface Toast { message: string; type: 'info' | 'warn' | 'error'; }
 const CARD = { W: 428, H: 270, R: 16, MARGIN: 15 };
 const uid = () => `el-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const KEEP_OUT: Record<string, KeepOutZone> = {
-  chip:      { x: 24, y: 55, w: 56, h: 44, label: 'EMV Chip' },
-  magstripe: { x: 0,  y: 0,  w: CARD.W, h: 48, label: 'Magnetic Stripe' },
+  chip:      { x: 47.5, y: 92.5, w: 55, h: 42.5, label: 'EMV Chip' },
+  magstripe: { x: 0,  y: 0,  w: CARD.W, h: 62.5, label: 'Magnetic Stripe' },
 };
 const GRADIENTS = [
   { name: 'Obsidian', value: 'linear-gradient(135deg,#0f0f1a 0%,#1a1a3e 50%,#0d0d2b 100%)' },
@@ -155,15 +155,18 @@ function ChipSVG({ w, h }: { w: number; h: number }) {
 function MagstripeSVG({ width, height, vertical }: { width?: number; height?: number; vertical?: boolean }) {
   if (vertical) {
     const h = height || CARD.W;
+    const w = width || 62.5;
     return (
-      <div style={{ width: 48, height: h, background: 'linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-        <div style={{ position: 'absolute', left: 6, top: 0, bottom: 0, width: 36, background: '#111', borderLeft: '1px solid #333', borderRight: '1px solid #333' }} />
+      <div style={{ width: w, height: h, background: 'linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
+        <div style={{ position: 'absolute', left: (w - 36) / 2, top: 0, bottom: 0, width: 36, background: '#111', borderLeft: '1px solid #333', borderRight: '1px solid #333' }} />
       </div>
     );
   }
+  const w = width || CARD.W;
+  const h = height || 62.5;
   return (
-    <div style={{ width: width || CARD.W, height: 48, background: 'linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 6, left: 0, right: 0, height: 36, background: '#111', borderTop: '1px solid #333', borderBottom: '1px solid #333' }} />
+    <div style={{ width: w, height: h, background: 'linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: (h - 36) / 2, left: 0, right: 0, height: 36, background: '#111', borderTop: '1px solid #333', borderBottom: '1px solid #333' }} />
     </div>
   );
 }
@@ -195,8 +198,8 @@ function createFrontTemplate(): CardElement[] {
   return [
     // Bank name/logo — FIXED top-left (hardware = not movable)
     { id: 'hw-bankname', type: 'text', face: 'front', x: CARD.MARGIN, y: CARD.MARGIN, width: 200, height: 26, content: 'BLAZEUP BANK', color: '#fff', fontSize: 17, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 4, fontWeight: 600, isHardware: true },
-    // EMV Chip — ISO 7816: 8.63mm left, 25.40mm top, 13mm × 18mm → 43px, 127px, 65×90
-    { id: 'hw-chip', type: 'image', face: 'front', x: 43, y: 127, width: 65, height: 90, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'CHIP', isHardware: true },
+    // EMV Chip — ISO 7816: 9.5mm left, 18.5mm top, 11mm width, 8.5mm height → 47.5px, 92.5px, 55px, 42.5px
+    { id: 'hw-chip', type: 'image', face: 'front', x: 47.5, y: 92.5, width: 55, height: 42.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'CHIP', isHardware: true },
     // Contactless icon — beside chip
     { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90, isHardware: true },
     // Account holder name — MOVABLE
@@ -217,8 +220,8 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   const acctH = isV ? 70 : 20;
 
   return [
-    // Magnetic stripe — landscape: ISO 5.54mm top (28px), full width; portrait: right edge with 8px padding, full height
-    { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 56 : 0, y: isV ? 0 : 28, width: isV ? 48 : cw, height: isV ? ch : 48, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
+    // Magnetic stripe — thickness 12.5mm (62.5px); 5mm (25px) from top (landscape) or right (portrait)
+    { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 25 - 62.5 : 0, y: isV ? 0 : 25, width: isV ? 62.5 : cw, height: isV ? ch : 62.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
     // Hologram — bottom-right; in vertical mode shifted left to avoid magstripe overlap
     { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 100 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
     // Network logo — beside hologram; in vertical mode shifted left to avoid magstripe overlap
@@ -340,7 +343,10 @@ export default function CreditCardDesigner() {
   // ---- collision ----
   const checkCollision = useCallback((x: number, y: number, w: number, h: number, cw: number): string | null => {
     const chipZone = { ...KEEP_OUT.chip };
-    const magZone = { ...KEEP_OUT.magstripe, w: cw };
+    // Dynamic magstripe zone based on orientation
+    const magZone = orientation === 'vertical' 
+      ? { x: cw - 25 - 62.5, y: 0, w: 62.5, h: CARD.W, label: 'Magnetic Stripe' }
+      : { x: 0, y: 25, w: cw, h: 62.5, label: 'Magnetic Stripe' };
     const zones = activeFace === 'front' ? [chipZone] : [magZone];
     for (const z of zones) { if (x < z.x + z.w && x + w > z.x && y < z.y + z.h && y + h > z.y) return z.label; }
     return null;
