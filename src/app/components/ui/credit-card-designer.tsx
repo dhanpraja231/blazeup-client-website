@@ -152,7 +152,15 @@ function ChipSVG({ w, h }: { w: number; h: number }) {
     </svg>
   );
 }
-function MagstripeSVG({ width }: { width?: number }) {
+function MagstripeSVG({ width, height, vertical }: { width?: number; height?: number; vertical?: boolean }) {
+  if (vertical) {
+    const h = height || CARD.W;
+    return (
+      <div style={{ width: 48, height: h, background: 'linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
+        <div style={{ position: 'absolute', left: 6, top: 0, bottom: 0, width: 36, background: '#111', borderLeft: '1px solid #333', borderRight: '1px solid #333' }} />
+      </div>
+    );
+  }
   return (
     <div style={{ width: width || CARD.W, height: 48, background: 'linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
       <div style={{ position: 'absolute', top: 6, left: 0, right: 0, height: 36, background: '#111', borderTop: '1px solid #333', borderBottom: '1px solid #333' }} />
@@ -201,23 +209,20 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   const ch = orient === 'horizontal' ? CARD.H : CARD.W;
   const isV = orient === 'vertical';
 
-  // Account info position: landscape = bottom-left, portrait = top-left below magstripe
-  const acctX = 24;
-  const acctY = isV ? 64 : ch - 110;
-  // Account number display: portrait = 4 lines (4 digits each), landscape = single line
+  // Magstripe: landscape = horizontal band at 28px from top; portrait = vertical bar on RIGHT edge with padding
+  // Account info: landscape = bottom-left; portrait = left side near top
+  const acctX = isV ? 24 : 24;
+  const acctY = isV ? 28 : ch - 110;
   const acctContent = isV ? '4532\n8720\n1456\n7890' : '4532  8720  1456  7890';
   const acctH = isV ? 80 : 24;
 
-  // Magstripe position: ISO spec 5.54mm from top = 28px, always horizontal full-width
-  const magY = 28;
-
   return [
-    // Magnetic stripe — ISO: 5.54mm top, 9.52mm height (48px), always full card width
-    { id: 'hw-magstripe', type: 'image', face: 'back', x: 0, y: magY, width: cw, height: 48, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
-    // Hologram
-    { id: 'hw-hologram', type: 'image', face: 'back', x: cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
-    // Network logo — FIXED bottom-right
-    { id: 'hw-network', type: 'text', face: 'back', x: cw - 80, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
+    // Magnetic stripe — landscape: ISO 5.54mm top (28px), full width; portrait: right edge with 8px padding, full height
+    { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 56 : 0, y: isV ? 0 : 28, width: isV ? 48 : cw, height: isV ? ch : 48, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
+    // Hologram — bottom-right (landscape) / bottom-left (portrait)
+    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? 24 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
+    // Network logo — bottom-right (landscape) / bottom-left (portrait)
+    { id: 'hw-network', type: 'text', face: 'back', x: isV ? 64 : cw - 80, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
     // Linked account info group — moves as one unit
     { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 300, height: acctH + 50, content: acctContent, color: '#fff', fontSize: isV ? 14 : 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
     { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 4, width: 120, height: 18, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 11, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
@@ -450,14 +455,15 @@ export default function CreditCardDesigner() {
           const warnEl = document.getElementById('collision-warn');
           if (warnEl) { warnEl.style.display = 'flex'; warnEl.textContent = `Overlapping ${hit}`; setTimeout(() => { warnEl.style.display = 'none'; }, 2000); }
         }
-        // Update all linked siblings positions
+        // Update all linked siblings positions — anchor to cached offsets, not state (prevents drift after resize)
         if (isGroup) {
           for (const s of siblings) {
-            gsap.set(s.dom, { x: 0, y: 0, left: s.dx + origX + dx, top: s.dy + origY + dy });
+            gsap.set(s.dom, { x: 0, y: 0, left: fx + s.dx, top: fy + s.dy });
           }
           setElements(prev => prev.map(i => {
             if (i.id === did) return { ...i, x: fx, y: fy };
-            if (i.isLinkedGroup) return { ...i, x: i.x + dx, y: i.y + dy };
+            const sib = siblings.find(s => s.id === i.id);
+            if (sib) return { ...i, x: fx + sib.dx, y: fy + sib.dy };
             return i;
           }));
         } else {
@@ -575,7 +581,7 @@ export default function CreditCardDesigner() {
   const bs = { background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)' };
   const renderHardware = (el: CardElement) => {
     if (el.imageData === 'CHIP') return <ChipSVG w={el.width} h={el.height} />;
-    if (el.imageData === 'MAGSTRIPE') return <MagstripeSVG width={el.width} />;
+    if (el.imageData === 'MAGSTRIPE') return <MagstripeSVG width={el.width} height={el.height} vertical={orientation === 'vertical'} />;
     if (el.imageData === 'HOLOGRAM') return <HologramSVG />;
     return null;
   };
