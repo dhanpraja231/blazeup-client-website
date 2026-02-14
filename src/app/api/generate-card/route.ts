@@ -18,6 +18,19 @@ async function generateCardDesign(logoBase64: string, companyName?: string): Pro
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
 
+  // Extract just the base64 data without the data URL prefix
+  const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, '');
+
+  // Detect the image type
+  let mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' = 'image/png';
+  if (logoBase64.startsWith('data:image/jpeg') || logoBase64.startsWith('data:image/jpg')) {
+    mediaType = 'image/jpeg';
+  } else if (logoBase64.startsWith('data:image/gif')) {
+    mediaType = 'image/gif';
+  } else if (logoBase64.startsWith('data:image/webp')) {
+    mediaType = 'image/webp';
+  }
+
   const prompt = `You are a professional credit card designer. Generate a beautiful, modern credit card design as JSON.
 
 ${companyName ? `Company Name: ${companyName}` : ''}
@@ -84,8 +97,11 @@ Return ONLY a JSON object with this exact structure:
 
 Create a professional, visually striking design. Use elegant gradients. Include decorative elements if appropriate. Each element needs a unique timestamp-based id.`;
 
+  console.log('Image type detected:', mediaType);
+  console.log('Base64 data length:', base64Data.length);
+
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 4000,
     messages: [
       {
@@ -95,8 +111,8 @@ Create a professional, visually striking design. Use elegant gradients. Include 
             type: 'image',
             source: {
               type: 'base64',
-              media_type: 'image/png',
-              data: logoBase64.replace(/^data:image\/\w+;base64,/, ''),
+              media_type: mediaType,
+              data: base64Data,
             },
           },
           {
@@ -215,6 +231,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Card generation error:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error status:', error.status);
+
+    // Log the full error object
+    if (error.error) {
+      console.error('API Error details:', JSON.stringify(error.error, null, 2));
+    }
 
     if (error.message?.includes('rate_limit')) {
       return NextResponse.json(
@@ -224,7 +248,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to generate card design. Please try again.' },
+      {
+        error: 'Failed to generate card design. Please try again.',
+        details: error.message || 'Unknown error'
+      },
       { status: 500 }
     );
   }
