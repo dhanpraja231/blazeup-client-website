@@ -1,0 +1,41 @@
+<!-- NOTE: These controls (Tolerance, Fade, Keep Internal) are now integrated\r\n     into credit-card-designer.tsx as React state + UI. This file is kept as reference. -->\r\n<input
+  type="file"
+  id="fileInput"
+  accept="image/*"
+  style="margin-bottom: 20px"
+/>
+
+<div class="controls">
+  <label>Tolerance: <span id="tolDisplay">0.05</span></label>
+  <input
+    type="range"
+    id="tolInput"
+    min="0"
+    max="0.5"
+    step="0.01"
+    value="0.05"
+  />
+
+  <label>Fade: <span id="fadeDisplay">0.10</span></label>
+  <input
+    type="range"
+    id="fadeInput"
+    min="0"
+    max="0.5"
+    step="0.01"
+    value="0.10"
+  />
+
+  <label
+    ><input type="checkbox" id="keepInternalInput" checked /> Keep
+    Internal</label
+  >
+  <label
+    ><input type="checkbox" id="checkerModeInput" /> Checkerboard Mode</label
+  >
+</div>
+
+<img
+  id="resultImage"
+  style="margin-top: 20px; max-width: 100%; border: 1px solid #ccc"
+/>

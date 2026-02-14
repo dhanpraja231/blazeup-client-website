@@ -7,10 +7,28 @@ import {
   Sparkles, Heart, Star, Zap, Shield, Lock, Globe, Wifi, Battery,
   Sun, Moon, Cloud, Palette, Image as ImageIcon, ChevronDown,
   FlipHorizontal, AlertTriangle, X, Move, RotateCw, Wand2,
+  Plus, Clipboard, Layers, Link2, Unlink2,
 } from 'lucide-react';
+import { processImageBackground } from './backgroundremoval';
+import ColorPicker from './color-picker';
+import { CARD_LAYOUTS, type LayoutId } from './layouts';
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
+interface PatternState { id: string | null; color: string; opacity: number; scale: number; }
+const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.06, scale: 1 };
+
+// ============ PREDEFINED CARD PATTERNS ============
+const CARD_PATTERNS = [
+  { id: 'geometric', name: 'Geometric', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${60*scale}' height='${60*scale}'><g fill='none' stroke='${color}' stroke-width='0.8'><rect x='${5*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${15*scale})'/><rect x='${35*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${15*scale})'/><rect x='${5*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${45*scale})'/><rect x='${35*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${45*scale})'/><line x1='0' y1='${30*scale}' x2='${60*scale}' y2='${30*scale}'/><line x1='${30*scale}' y1='0' x2='${30*scale}' y2='${60*scale}'/></g></svg>` },
+  { id: 'tessellation', name: 'Tessellation', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${80*scale}' height='${80*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><polygon points='${40*scale},${2*scale} ${78*scale},${20*scale} ${78*scale},${60*scale} ${40*scale},${78*scale} ${2*scale},${60*scale} ${2*scale},${20*scale}'/><line x1='${40*scale}' y1='${2*scale}' x2='${40*scale}' y2='${78*scale}'/><line x1='${2*scale}' y1='${20*scale}' x2='${78*scale}' y2='${60*scale}'/><line x1='${78*scale}' y1='${20*scale}' x2='${2*scale}' y2='${60*scale}'/></g></svg>` },
+  { id: 'waves', name: 'Waves', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${120*scale}' height='${20*scale}'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-linecap='round'><path d='M0,${10*scale} Q${15*scale},${2*scale} ${30*scale},${10*scale} Q${45*scale},${18*scale} ${60*scale},${10*scale} Q${75*scale},${2*scale} ${90*scale},${10*scale} Q${105*scale},${18*scale} ${120*scale},${10*scale}'/></g></svg>` },
+  { id: 'chevron', name: 'Chevron', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${40*scale}' height='${24*scale}'><g fill='none' stroke='${color}' stroke-width='1'><path d='M0,${24*scale} L${20*scale},${12*scale} L${40*scale},${24*scale}'/><path d='M0,${12*scale} L${20*scale},0 L${40*scale},${12*scale}'/></g></svg>` },
+  { id: 'hexagons', name: 'Hexagons', svg: (color: string, scale: number) => { const s = 20 * scale; const h = s * Math.sqrt(3); return `<svg xmlns='http://www.w3.org/2000/svg' width='${s*3}' height='${h}'><g fill='none' stroke='${color}' stroke-width='0.6'><polygon points='${s},0 ${s*2},0 ${s*2.5},${h/2} ${s*2},${h} ${s},${h} ${s*0.5},${h/2}'/><polygon points='${s*2.5},${h/2} ${s*3},0 ${s*3},0'/></g></svg>`; } },
+  { id: 'crosshatch', name: 'Crosshatch', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${20*scale}' height='${20*scale}'><g stroke='${color}' stroke-width='0.5'><line x1='0' y1='0' x2='${20*scale}' y2='${20*scale}'/><line x1='${20*scale}' y1='0' x2='0' y2='${20*scale}'/></g></svg>` },
+  { id: 'circles', name: 'Circles', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${40*scale}' height='${40*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><circle cx='${20*scale}' cy='${20*scale}' r='${8*scale}'/><circle cx='0' cy='0' r='${8*scale}'/><circle cx='${40*scale}' cy='0' r='${8*scale}'/><circle cx='0' cy='${40*scale}' r='${8*scale}'/><circle cx='${40*scale}' cy='${40*scale}' r='${8*scale}'/></g></svg>` },
+  { id: 'topographic', name: 'Topographic', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${100*scale}' height='${100*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><ellipse cx='${50*scale}' cy='${50*scale}' rx='${45*scale}' ry='${30*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${30*scale}' ry='${18*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${15*scale}' ry='${8*scale}'/></g></svg>` },
+];
 interface CardElement {
   id: string;
   type: 'text' | 'cardNumber' | 'circle' | 'rectangle' | 'icon' | 'image';
@@ -22,6 +40,7 @@ interface CardElement {
   rotation: number; fontFamily?: string; letterSpacing?: number;
   fontWeight?: number;
   isHardware?: boolean;
+  isPositionLocked?: boolean;
   isBackgroundRemoved?: boolean;
   originalImageData?: string;
   isLinkedGroup?: boolean;
@@ -38,8 +57,8 @@ interface Toast { message: string; type: 'info' | 'warn' | 'error'; }
 const CARD = { W: 428, H: 270, R: 16, MARGIN: 15 };
 const uid = () => `el-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const KEEP_OUT: Record<string, KeepOutZone> = {
-  chip:      { x: 24, y: 55, w: 56, h: 44, label: 'EMV Chip' },
-  magstripe: { x: 0,  y: 0,  w: CARD.W, h: 48, label: 'Magnetic Stripe' },
+  chip:      { x: 47.5, y: 92.5, w: 55, h: 42.5, label: 'EMV Chip' },
+  magstripe: { x: 0,  y: 0,  w: CARD.W, h: 62.5, label: 'Magnetic Stripe' },
 };
 const GRADIENTS = [
   { name: 'Obsidian', value: 'linear-gradient(135deg,#0f0f1a 0%,#1a1a3e 50%,#0d0d2b 100%)' },
@@ -93,50 +112,14 @@ function hslToHex(h: number, s: number, l: number): string {
   };
   return `#${f(0)}${f(8)}${f(4)}`;
 }
-function generateSpotlightGradient(hex: string): string {
+function generateSpotlightGradient(hex: string, x = 30, y = 30): string {
   const [h, s, l] = hexToHSL(hex);
   const tint = hslToHex(h, Math.max(s - 5, 0), Math.min(l + 20, 95));
   const shade = hslToHex(h, Math.min(s + 10, 100), Math.max(l - 30, 5));
-  return `radial-gradient(circle at 30% 30%, ${tint}, ${hex}, ${shade})`;
+  return `radial-gradient(circle at ${x}% ${y}%, ${tint}, ${hex}, ${shade})`;
 }
 // ====================== BACKGROUND REMOVAL ======================
-function processImageBackground(dataUrl: string): Promise<string | null> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width; canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { resolve(null); return; }
-      ctx.drawImage(img, 0, 0);
-      const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const px = data.data;
-      const w = canvas.width, h = canvas.height;
-      const corners = [
-        [px[0], px[1], px[2]],
-        [px[(w - 1) * 4], px[(w - 1) * 4 + 1], px[(w - 1) * 4 + 2]],
-        [px[(h - 1) * w * 4], px[(h - 1) * w * 4 + 1], px[(h - 1) * w * 4 + 2]],
-        [px[((h - 1) * w + w - 1) * 4], px[((h - 1) * w + w - 1) * 4 + 1], px[((h - 1) * w + w - 1) * 4 + 2]],
-      ];
-      const tol = 255 * 0.05;
-      const ref = corners[0];
-      const allMatch = corners.every(c =>
-        Math.abs(c[0] - ref[0]) <= tol && Math.abs(c[1] - ref[1]) <= tol && Math.abs(c[2] - ref[2]) <= tol
-      );
-      if (!allMatch) { resolve(null); return; }
-      for (let i = 0; i < px.length; i += 4) {
-        if (Math.abs(px[i] - ref[0]) <= tol && Math.abs(px[i + 1] - ref[1]) <= tol && Math.abs(px[i + 2] - ref[2]) <= tol) {
-          px[i + 3] = 0;
-        }
-      }
-      ctx.putImageData(data, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = () => resolve(null);
-    img.src = dataUrl;
-  });
-}
+// processImageBackground is now imported from ./backgroundremoval
 // ====================== SVG COMPONENTS ======================
 function ChipSVG({ w, h }: { w: number; h: number }) {
   return (
@@ -155,15 +138,18 @@ function ChipSVG({ w, h }: { w: number; h: number }) {
 function MagstripeSVG({ width, height, vertical }: { width?: number; height?: number; vertical?: boolean }) {
   if (vertical) {
     const h = height || CARD.W;
+    const w = width || 62.5;
     return (
-      <div style={{ width: 48, height: h, background: 'linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-        <div style={{ position: 'absolute', left: 6, top: 0, bottom: 0, width: 36, background: '#111', borderLeft: '1px solid #333', borderRight: '1px solid #333' }} />
+      <div style={{ width: w, height: h, background: 'linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
+        <div style={{ position: 'absolute', left: (w - 36) / 2, top: 0, bottom: 0, width: 36, background: '#111', borderLeft: '1px solid #333', borderRight: '1px solid #333' }} />
       </div>
     );
   }
+  const w = width || CARD.W;
+  const h = height || 62.5;
   return (
-    <div style={{ width: width || CARD.W, height: 48, background: 'linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 6, left: 0, right: 0, height: 36, background: '#111', borderTop: '1px solid #333', borderBottom: '1px solid #333' }} />
+    <div style={{ width: w, height: h, background: 'linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: (h - 36) / 2, left: 0, right: 0, height: 36, background: '#111', borderTop: '1px solid #333', borderBottom: '1px solid #333' }} />
     </div>
   );
 }
@@ -193,12 +179,12 @@ const CARD_TEMPLATES = [
 
 function createFrontTemplate(): CardElement[] {
   return [
-    // Bank name/logo — FIXED top-left (hardware = not movable)
-    { id: 'hw-bankname', type: 'text', face: 'front', x: CARD.MARGIN, y: CARD.MARGIN, width: 200, height: 26, content: 'BLAZEUP BANK', color: '#fff', fontSize: 17, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 4, fontWeight: 600, isHardware: true },
-    // EMV Chip — ISO 7816: 8.63mm left, 25.40mm top, 13mm × 18mm → 43px, 127px, 65×90
-    { id: 'hw-chip', type: 'image', face: 'front', x: 43, y: 127, width: 65, height: 90, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'CHIP', isHardware: true },
-    // Contactless icon — beside chip
-    { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90, isHardware: true },
+    // Bank name/logo — position locked but resizable & styleable
+    { id: 'hw-bankname', type: 'text', face: 'front', x: CARD.MARGIN, y: CARD.MARGIN, width: 200, height: 26, content: 'BLAZEUP BANK', color: '#fff', fontSize: 17, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 4, fontWeight: 600, isPositionLocked: true },
+    // EMV Chip — ISO 7816: fully locked hardware
+    { id: 'hw-chip', type: 'image', face: 'front', x: 47.5, y: 92.5, width: 55, height: 42.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'CHIP', isHardware: true },
+    // Contactless / NFC icon — fully movable & resizable
+    { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
     // Account holder name — MOVABLE
     { id: uid(), type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
   ];
@@ -210,23 +196,23 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   const isV = orient === 'vertical';
 
   // Magstripe: landscape = horizontal band at 28px from top; portrait = vertical bar on RIGHT edge with padding
-  // Account info: landscape = bottom-left; portrait = left side near top
+  // Account info: landscape = mid-left area; portrait = left side near top
   const acctX = isV ? 24 : 24;
-  const acctY = isV ? 28 : ch - 110;
+  const acctY = isV ? 28 : ch - 90;
   const acctContent = isV ? '4532\n8720\n1456\n7890' : '4532  8720  1456  7890';
-  const acctH = isV ? 80 : 24;
+  const acctH = isV ? 70 : 20;
 
   return [
-    // Magnetic stripe — landscape: ISO 5.54mm top (28px), full width; portrait: right edge with 8px padding, full height
-    { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 56 : 0, y: isV ? 0 : 28, width: isV ? 48 : cw, height: isV ? ch : 48, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
-    // Hologram — bottom-right (landscape) / bottom-left (portrait)
-    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? 24 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
-    // Network logo — bottom-right (landscape) / bottom-left (portrait)
-    { id: 'hw-network', type: 'text', face: 'back', x: isV ? 64 : cw - 80, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
+    // Magnetic stripe — thickness 12.5mm (62.5px); 5mm (25px) from top (landscape) or right (portrait)
+    { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 25 - 62.5 : 0, y: isV ? 0 : 25, width: isV ? 62.5 : cw, height: isV ? ch : 62.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
+    // Hologram — bottom-right; in vertical mode shifted left to clear magstripe (magstripe left edge = cw-87.5)
+    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
+    // Network logo — 4px gap left of hologram
+    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
     // Linked account info group — moves as one unit
-    { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 300, height: acctH + 50, content: acctContent, color: '#fff', fontSize: isV ? 14 : 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
-    { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 4, width: 120, height: 18, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 11, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
-    { id: 'hw-expiry', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 26, width: 160, height: 18, content: 'VALID THRU: 12/28', color: 'rgba(255,255,255,.7)', fontSize: 11, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
+    { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 240, height: acctH + 24, content: acctContent, color: '#fff', fontSize: isV ? 13 : 14, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
+    { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 2, width: 100, height: 16, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
+    { id: 'hw-expiry', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 18, width: 140, height: 16, content: 'VALID THRU: 12/28', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     // Fine print
     { id: uid(), type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
   ];
@@ -244,9 +230,31 @@ export default function CreditCardDesigner() {
   const [collisionWarn, setCollisionWarn] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [spotlightColor, setSpotlightColor] = useState('#1a1a3e');
+  const [spotlightX, setSpotlightX] = useState(30);
+  const [spotlightY, setSpotlightY] = useState(30);
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
   const [showTemplateModal, setShowTemplateModal] = useState(true);
+  const [canvasLightMode, setCanvasLightMode] = useState(false);
+  // Background removal parameters (from backgroundslider.html)
+  const [bgRemovalTolerance, setBgRemovalTolerance] = useState(0.05);
+  const [bgRemovalFade, setBgRemovalFade] = useState(0.10);
+  const [bgRemovalKeepInternal, setBgRemovalKeepInternal] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Image clipboard
+  const [imageClipboard, setImageClipboard] = useState<{ id: string; dataUrl: string; name: string }[]>([]);
+  // Pattern overlay (per face)
+  const [frontPattern, setFrontPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
+  const [backPattern, setBackPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
+  // Sync faces toggle
+  const [syncFaces, setSyncFaces] = useState(false);
+  const activePattern = activeFace === 'front' ? frontPattern : backPattern;
+  const setActivePattern = activeFace === 'front' ? setFrontPattern : setBackPattern;
+  // Layout state (per face)
+  interface LayoutState { id: LayoutId; baseColor: string; overlayColor: string; }
+  const [frontLayout, setFrontLayout] = useState<LayoutState>({ id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
+  const [backLayout, setBackLayout] = useState<LayoutState>({ id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
+  const activeLayout = activeFace === 'front' ? frontLayout : backLayout;
+  const setActiveLayout = activeFace === 'front' ? setFrontLayout : setBackLayout;
   // Computed card dimensions based on orientation
   const cardW = orientation === 'horizontal' ? CARD.W : CARD.H;
   const cardH = orientation === 'horizontal' ? CARD.H : CARD.W;
@@ -258,9 +266,12 @@ export default function CreditCardDesigner() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const flipContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const clipboardInputRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<{ id: string; offsetX: number; offsetY: number; startX: number; startY: number } | null>(null);
   const clickedElementRef = useRef(false); // F1: track if click originated from element
   const rafRef = useRef<number>(0); // requestAnimationFrame ID for smooth drag
+  const canvasWrapperRef = useRef<HTMLDivElement>(null); // wrapper for sticky scroll
+  const canvasOriginalTop = useRef<number>(0); // cached original top offset
   const elements = activeFace === 'front' ? frontElements : backElements;
   const setElements = activeFace === 'front' ? setFrontElements : setBackElements;
   const cardBg = activeFace === 'front' ? frontBg : backBg;
@@ -273,6 +284,13 @@ export default function CreditCardDesigner() {
     const t = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(t);
   }, [toast]);
+  // ---- sync front → back ----
+  useEffect(() => {
+    if (!syncFaces) return;
+    setBackBg(frontBg);
+    setBackPattern({ ...frontPattern });
+    setBackLayout({ ...frontLayout });
+  }, [syncFaces, frontBg, frontPattern, frontLayout]);
   // ---- history ----
   const snap = useCallback((): HistoryState => ({
     frontElements: activeFace === 'front' ? elementsRef.current : frontElements,
@@ -313,10 +331,35 @@ export default function CreditCardDesigner() {
     gsap.fromTo('.sidebar-item', { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: .4, stagger: .06, ease: 'power2.out', delay: .3 });
     setTimeout(() => { gsap.fromTo('.card-element', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .5, stagger: .08, ease: 'back.out(1.7)', delay: .1 }); }, 400);
   }, []);
+  // ---- GSAP sticky canvas on scroll ----
+  useEffect(() => {
+    const wrapper = canvasWrapperRef.current;
+    if (!wrapper) return;
+    // gsap.quickTo creates a single reusable tween that smoothly interpolates — no jitter
+    const setY = gsap.quickTo(wrapper, 'y', { duration: 0.4, ease: 'power3' });
+    // Cache the original offset top once after layout
+    const cacheTop = () => {
+      gsap.set(wrapper, { y: 0 });
+      canvasOriginalTop.current = wrapper.getBoundingClientRect().top + window.scrollY;
+    };
+    cacheTop();
+    const onScroll = () => {
+      if (window.innerWidth < 1024) { setY(0); return; }
+      const scrollY = window.scrollY;
+      const pinStart = canvasOriginalTop.current - 32;
+      setY(scrollY > pinStart ? scrollY - pinStart : 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', cacheTop);
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', cacheTop); };
+  }, []);
   // ---- collision ----
   const checkCollision = useCallback((x: number, y: number, w: number, h: number, cw: number): string | null => {
     const chipZone = { ...KEEP_OUT.chip };
-    const magZone = { ...KEEP_OUT.magstripe, w: cw };
+    // Dynamic magstripe zone based on orientation
+    const magZone = orientation === 'vertical' 
+      ? { x: cw - 25 - 62.5, y: 0, w: 62.5, h: CARD.W, label: 'Magnetic Stripe' }
+      : { x: 0, y: 25, w: cw, h: 62.5, label: 'Magnetic Stripe' };
     const zones = activeFace === 'front' ? [chipZone] : [magZone];
     for (const z of zones) { if (x < z.x + z.w && x + w > z.x && y < z.y + z.h && y + h > z.y) return z.label; }
     return null;
@@ -338,7 +381,58 @@ export default function CreditCardDesigner() {
     requestAnimationFrame(() => { const d = document.getElementById(`el-${el.id}`); if (d) gsap.fromTo(d, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .4, ease: 'back.out(2)' }); });
   };
   const updateElement = (id: string, updates: Partial<CardElement>) => {
-    setElements(prev => prev.map(el => el.id === id ? { ...el, ...updates } : el));
+    setElements(prev => {
+      const target = prev.find(el => el.id === id);
+      if (!target) return prev;
+      // If this element is part of a linked group, propagate certain changes to siblings
+      if (target.isLinkedGroup) {
+        const dx = updates.x !== undefined ? updates.x - target.x : 0;
+        const dy = updates.y !== undefined ? updates.y - target.y : 0;
+        // Font properties that propagate to all siblings (NOT fontSize — that stays independent)
+        const sharedFontUpdates: Partial<CardElement> = {};
+        if (updates.fontFamily !== undefined) sharedFontUpdates.fontFamily = updates.fontFamily;
+        if (updates.fontWeight !== undefined) sharedFontUpdates.fontWeight = updates.fontWeight;
+        if (updates.letterSpacing !== undefined) sharedFontUpdates.letterSpacing = updates.letterSpacing;
+        if (updates.color !== undefined) sharedFontUpdates.color = updates.color;
+        const hasPositionDelta = dx !== 0 || dy !== 0;
+        const hasSharedFontUpdates = Object.keys(sharedFontUpdates).length > 0;
+        const fontSizeChanged = updates.fontSize !== undefined;
+        // Apply direct updates + shared font updates first
+        let next = prev.map(el => {
+          if (el.id === id) return { ...el, ...updates };
+          if (el.isLinkedGroup) {
+            const sibUpdates: Partial<CardElement> = {};
+            if (hasPositionDelta) { sibUpdates.x = el.x + dx; sibUpdates.y = el.y + dy; }
+            if (hasSharedFontUpdates) Object.assign(sibUpdates, sharedFontUpdates);
+            if (Object.keys(sibUpdates).length > 0) return { ...el, ...sibUpdates };
+          }
+          return el;
+        });
+        // Reflow: when fontSize changes, auto-adjust heights and reposition to prevent overlap
+        if (fontSizeChanged) {
+          const groupEls = next.filter(el => el.isLinkedGroup).sort((a, b) => a.y - b.y);
+          if (groupEls.length > 0) {
+            let curY = groupEls[0].y;
+            const gap = 4;
+            const reflowed = new Map<string, { y: number; height: number }>();
+            for (const gel of groupEls) {
+              const lines = (gel.content?.split('\n') || ['']).length;
+              const lineH = Math.round(gel.fontSize * 1.4);
+              const newH = Math.max(lines * lineH + 4, 16);
+              reflowed.set(gel.id, { y: curY, height: newH });
+              curY += newH + gap;
+            }
+            next = next.map(el => {
+              const r = reflowed.get(el.id);
+              if (r) return { ...el, y: r.y, height: r.height };
+              return el;
+            });
+          }
+        }
+        return next;
+      }
+      return prev.map(el => el.id === id ? { ...el, ...updates } : el);
+    });
     pushHistory();
   };
   const deleteElement = (id: string) => {
@@ -359,12 +453,25 @@ export default function CreditCardDesigner() {
       updateElement(elId, { imageData: el.originalImageData, isBackgroundRemoved: false, originalImageData: undefined });
       return;
     }
-    const result = await processImageBackground(el.imageData);
+    
+    const result = await processImageBackground(el.imageData, bgRemovalTolerance, bgRemovalFade, bgRemovalKeepInternal);
     if (result) {
       updateElement(elId, { originalImageData: el.imageData, imageData: result, isBackgroundRemoved: true });
       setToast({ message: 'Background removed successfully!', type: 'info' });
     } else {
       setToast({ message: 'Could not auto-detect solid background. Please use a transparent PNG.', type: 'warn' });
+    }
+  };
+  // Re-apply background removal with updated parameters (called when sliders/checkbox change)
+  const reapplyBgRemoval = async (tol: number, fade: number, keepInt: boolean) => {
+    if (!selectedElement) return;
+    const el = elements.find(i => i.id === selectedElement);
+    if (!el || !el.isBackgroundRemoved || !el.originalImageData) return;
+    console.log('reapply bg removal');
+    const result = await processImageBackground(el.originalImageData, tol, fade, keepInt);
+    console.log('result', result);
+    if (result) {
+      updateElement(selectedElement, { imageData: result });
     }
   };
   // ---- image upload ----
@@ -385,6 +492,36 @@ export default function CreditCardDesigner() {
     const f = e.target.files?.[0]; if (!f) return; processImageFile(f);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+  // ---- image clipboard ----
+  const addToClipboard = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setImageClipboard(prev => [...prev, { id: uid(), dataUrl, name: file.name }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  const removeFromClipboard = (id: string) => {
+    setImageClipboard(prev => prev.filter(img => img.id !== id));
+  };
+  const addClipboardImageToCard = (dataUrl: string) => {
+    const el: CardElement = {
+      id: uid(), type: 'image', face: activeFace, x: 160, y: activeFace === 'back' ? 120 : 80,
+      width: 80, height: 80, content: '', color: '#fff', fontSize: 16,
+      backgroundColor: 'transparent', opacity: 1, imageData: dataUrl, rotation: 0,
+    };
+    const next = [...elementsRef.current, el];
+    setElements(next); setSelectedElement(el.id); pushHistory();
+    requestAnimationFrame(() => { const d = document.getElementById(`el-${el.id}`); if (d) gsap.fromTo(d, { scale: 0, opacity: 0, y: -30 }, { scale: 1, opacity: 1, y: 0, duration: .6, ease: 'elastic.out(1,.5)' }); });
+  };
+  const handleClipboardUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    addToClipboard(e.target.files);
+    if (clipboardInputRef.current) clipboardInputRef.current.value = '';
+  };
   // ---- file drag onto card ----
   const handleDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation();
     if (e.dataTransfer.types.includes('Files')) { setIsDragOver(true);
@@ -395,13 +532,16 @@ export default function CreditCardDesigner() {
       gsap.to(flipContainerRef.current, { scale: 1, boxShadow: '0 25px 60px rgba(0,0,0,.4)', duration: .3, ease: 'power2.out' }); }};
   const handleFileDrop = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false);
     if (flipContainerRef.current) gsap.to(flipContainerRef.current, { scale: 1, boxShadow: '0 25px 60px rgba(0,0,0,.4)', duration: .4, ease: 'elastic.out(1,.6)' });
+    // Check for clipboard drag data first
+    const clipboardData = e.dataTransfer.getData('text/clipboard-image');
+    if (clipboardData) { addClipboardImageToCard(clipboardData); return; }
     const f = e.dataTransfer.files?.[0]; if (f?.type.startsWith('image/')) processImageFile(f); };
   // ---- element dragging (zero-overhead: everything cached on mousedown) ----
   const handleElementMouseDown = (e: React.MouseEvent, elId: string) => {
     e.preventDefault(); e.stopPropagation();
     clickedElementRef.current = true;
     const el = elements.find(i => i.id === elId);
-    if (!el || el.isHardware) { setSelectedElement(elId); return; }
+    if (!el || el.isHardware || el.isPositionLocked) { setSelectedElement(elId); return; }
     const canvas = canvasRef.current; if (!canvas) return;
     // Cache EVERYTHING once — zero lookups in onMove
     const cachedRect = canvas.getBoundingClientRect();
@@ -487,6 +627,15 @@ export default function CreditCardDesigner() {
     const startMx = e.clientX, startMy = e.clientY;
     const rect = canvas.getBoundingClientRect();
     const sx = cardW / rect.width, sy = cardH / rect.height;
+    // Cache linked group siblings for group resize
+    const isGroup = el.isLinkedGroup;
+    const siblings: { id: string; dom: HTMLElement; dx: number; dy: number }[] = [];
+    if (isGroup) {
+      elements.filter(s => s.isLinkedGroup && s.id !== elId).forEach(s => {
+        const sd = document.getElementById(`el-${s.id}`);
+        if (sd) siblings.push({ id: s.id, dom: sd, dx: s.x - startX, dy: s.y - startY });
+      });
+    }
     const onMove = (ev: MouseEvent) => {
       const dx = (ev.clientX - startMx) * sx, dy = (ev.clientY - startMy) * sy;
       let nw = startW, nh = startH, nx = startX, ny = startY;
@@ -496,13 +645,31 @@ export default function CreditCardDesigner() {
       if (corner.includes('n')) { nh = Math.max(20, startH - dy); ny = startY + startH - nh; }
       const md = document.getElementById(`el-${elId}`);
       if (md) { md.style.width = `${nw}px`; md.style.height = `${nh}px`; md.style.left = `${nx}px`; md.style.top = `${ny}px`; }
+      // Move linked siblings along with position change from resize
+      if (isGroup) {
+        const posDx = nx - startX, posDy = ny - startY;
+        for (const s of siblings) {
+          s.dom.style.left = `${startX + s.dx + posDx}px`;
+          s.dom.style.top = `${startY + s.dy + posDy}px`;
+        }
+      }
     };
     const onUp = () => {
       const md = document.getElementById(`el-${elId}`);
       if (md) {
         const fw = parseFloat(md.style.width), fh = parseFloat(md.style.height);
         const fl = parseFloat(md.style.left), ft = parseFloat(md.style.top);
-        setElements(prev => prev.map(i => i.id === elId ? { ...i, width: fw, height: fh, x: fl, y: ft } : i));
+        if (isGroup) {
+          const posDx = fl - startX, posDy = ft - startY;
+          setElements(prev => prev.map(i => {
+            if (i.id === elId) return { ...i, width: fw, height: fh, x: fl, y: ft };
+            const sib = siblings.find(s => s.id === i.id);
+            if (sib) return { ...i, x: startX + sib.dx + posDx, y: startY + sib.dy + posDy };
+            return i;
+          }));
+        } else {
+          setElements(prev => prev.map(i => i.id === elId ? { ...i, width: fw, height: fh, x: fl, y: ft } : i));
+        }
         pushHistory();
       }
       window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp);
@@ -552,6 +719,15 @@ export default function CreditCardDesigner() {
     setBackElements(createBackTemplate(orientation, network));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orientation]);
+  // Rotate EMV chip in-place when orientation changes (keep same x,y — just rotate 90°)
+  useEffect(() => {
+    setFrontElements(prev => prev.map(el =>
+      el.id === 'hw-chip'
+        ? { ...el, rotation: orientation === 'vertical' ? 90 : 0 }
+        : el
+    ));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orientation]);
   const handleSelectTemplate = (idx: number) => {
     const t = CARD_TEMPLATES[idx];
     setFrontBg(t.bg); setBackBg(t.backBg);
@@ -596,6 +772,7 @@ export default function CreditCardDesigner() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#111128] to-[#0d0d20] text-white p-4 md:p-8" style={{ fontFamily: "'Inter',system-ui,sans-serif" }}>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+      <input ref={clipboardInputRef} type="file" accept="image/*" multiple onChange={handleClipboardUpload} className="hidden" />
 
       {/* ===== TEMPLATE SELECTION MODAL ===== */}
       {showTemplateModal && (
@@ -664,7 +841,7 @@ export default function CreditCardDesigner() {
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* ===== SIDEBAR ===== */}
           <div className="lg:col-span-3 space-y-3">
             {/* Components */}
@@ -679,6 +856,40 @@ export default function CreditCardDesigner() {
                   <span className="text-sm text-slate-300 group-hover:text-white transition-colors">{c.label}</span>
                 </button>); })}</div>}
             </div>
+            {/* Image Clipboard */}
+            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('clipboard')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2"><Clipboard className="w-4 h-4 text-emerald-400" /><span className="text-sm font-medium">Image Clipboard</span>
+                  {imageClipboard.length > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{imageClipboard.length}</span>}
+                </div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'clipboard' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedPanel === 'clipboard' && <div className="px-3 pb-3 space-y-2">
+                <button onClick={() => clipboardInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-dashed border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all text-sm text-slate-400 hover:text-emerald-400">
+                  <Plus className="w-4 h-4" /> Upload Images
+                </button>
+                {imageClipboard.length === 0 && <p className="text-[11px] text-slate-600 text-center py-2">Upload images to your clipboard, then click or drag them onto the card</p>}
+                {imageClipboard.length > 0 && <div className="grid grid-cols-3 gap-1.5">
+                  {imageClipboard.map(img => (
+                    <div key={img.id} className="relative group rounded-lg overflow-hidden border border-white/6 hover:border-emerald-500/40 transition-all cursor-grab aspect-square"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('text/clipboard-image', img.dataUrl); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => addClipboardImageToCard(img.dataUrl)}
+                      title={`${img.name} — Click to add or drag onto card`}>
+                      <img src={img.dataUrl} alt={img.name} className="w-full h-full object-cover" draggable={false} />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                        <Plus className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); removeFromClipboard(img.id); }}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-400" style={{ zIndex: 10 }}>
+                        <X className="w-2.5 h-2.5 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>}
+              </div>}
+            </div>
             {/* Background + Spotlight */}
             <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
               <button onClick={() => togglePanel('background')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
@@ -691,18 +902,73 @@ export default function CreditCardDesigner() {
                     style={{ background: g.value, borderColor: cardBg === g.value ? 'rgba(99,102,241,.7)' : 'rgba(255,255,255,.06)' }} title={g.name}>
                     <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white/50 font-medium opacity-0 group-hover:opacity-100 transition-opacity">{g.name}</span>
                   </button>))}</div>
+                {/* Custom solid color */}
+                <div className="pt-2 border-t border-white/5">
+                  <PropLabel>Custom Solid Color</PropLabel>
+                  <div className="flex gap-2 items-center">
+                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="flex-1" />
+                    <button onClick={() => { setCardBg(spotlightColor); pushHistory(); }}
+                      className="px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-purple-500/20 shrink-0" style={{ background: 'rgba(168,85,247,.1)', border: '1px solid rgba(168,85,247,.2)' }}>
+                      Apply
+                    </button>
+                  </div>
+                </div>
                 {/* Spotlight gradient */}
                 <div className="pt-2 border-t border-white/5">
                   <PropLabel>Spotlight Gradient</PropLabel>
                   <div className="flex gap-2 items-center">
-                    <input type="color" value={spotlightColor} onChange={e => setSpotlightColor(e.target.value)} className="w-10 h-9 rounded-lg cursor-pointer border-0 shrink-0" />
-                    <button onClick={() => { const g = generateSpotlightGradient(spotlightColor); setCardBg(g); pushHistory(); }}
+                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="w-10 shrink-0" />
+                    <button onClick={() => { const g = generateSpotlightGradient(spotlightColor, spotlightX, spotlightY); setCardBg(g); pushHistory(); }}
                       className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-indigo-500/20" style={{ background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.2)' }}>
                       Apply Spotlight
                     </button>
                   </div>
-                  <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor), border: '1px solid rgba(255,255,255,.06)' }} />
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => setSpotlightX(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
+                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => setSpotlightY(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
+                  </div>
+                  <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: '1px solid rgba(255,255,255,.06)' }} />
                 </div>
+              </div>}
+            </div>
+            {/* Card Layout */}
+            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('layout')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2"><FlipHorizontal className="w-4 h-4 text-amber-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Layout</span></div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'layout' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedPanel === 'layout' && <div className="px-3 pb-3 space-y-3">
+                {/* Layout preview grid */}
+                <div className="grid grid-cols-3 gap-1.5">
+                  {CARD_LAYOUTS.map(lay => {
+                    const clip = lay.clipPath[orientation];
+                    return (
+                      <button key={lay.id}
+                        onClick={() => {
+                          setActiveLayout(prev => ({ ...prev, id: lay.id }));
+                          if (lay.id !== 'none') {
+                            setCardBg(activeLayout.baseColor);
+                            pushHistory();
+                          }
+                        }}
+                        className="h-14 rounded-lg border-2 transition-all relative overflow-hidden group"
+                        style={{ borderColor: activeLayout.id === lay.id ? 'rgba(245,158,11,.6)' : 'rgba(255,255,255,.06)', background: lay.id === 'none' ? 'rgba(255,255,255,.03)' : activeLayout.baseColor }}>
+                        {/* Overlay preview */}
+                        {lay.id !== 'none' && <div className="absolute inset-0" style={{ background: activeLayout.overlayColor, clipPath: clip }} />}
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] text-white/60 font-medium opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ textShadow: '0 1px 3px rgba(0,0,0,.8)' }}>{lay.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Color controls — only when a layout is selected */}
+                {activeLayout.id !== 'none' && <>
+                  <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); }} /></div>
+                  <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => setActiveLayout(prev => ({ ...prev, overlayColor: v }))} /></div>
+                  <button onClick={() => { setCardBg(activeLayout.baseColor); pushHistory(); }}
+                    className="w-full px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-amber-500/20" style={{ background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)' }}>
+                    Apply Layout
+                  </button>
+                </>}
               </div>}
             </div>
             {/* Network */}
@@ -719,19 +985,57 @@ export default function CreditCardDesigner() {
                   </button>))}
               </div>}
             </div>
-            {/* Properties â€” ENHANCED */}
+            {/* Patterns */}
+            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('patterns')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-rose-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Pattern</span></div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'patterns' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedPanel === 'patterns' && <div className="px-3 pb-3 space-y-3">
+                {/* Pattern grid */}
+                <div className="grid grid-cols-4 gap-1.5">
+                  {/* None option */}
+                  <button onClick={() => setActivePattern(p => ({ ...p, id: null }))}
+                    className="h-12 rounded-lg border-2 transition-all flex items-center justify-center text-[10px] text-slate-500"
+                    style={{ borderColor: activePattern.id === null ? 'rgba(244,63,94,.6)' : 'rgba(255,255,255,.06)', background: activePattern.id === null ? 'rgba(244,63,94,.08)' : 'rgba(255,255,255,.03)' }}>
+                    None
+                  </button>
+                  {CARD_PATTERNS.map(p => {
+                    const previewSvg = p.svg('#888888', 0.5);
+                    const encoded = `url("data:image/svg+xml,${encodeURIComponent(previewSvg)}")`;
+                    return (
+                      <button key={p.id} onClick={() => setActivePattern(prev => ({ ...prev, id: p.id }))}
+                        className="h-12 rounded-lg border-2 transition-all overflow-hidden"
+                        style={{ borderColor: activePattern.id === p.id ? 'rgba(244,63,94,.6)' : 'rgba(255,255,255,.06)', backgroundImage: encoded, backgroundSize: 'auto', backgroundColor: 'rgba(255,255,255,.03)' }}
+                        title={p.name} />
+                    );
+                  })}
+                </div>
+                {/* Customization controls */}
+                {activePattern.id && <>
+                  <div><PropLabel>Pattern Color</PropLabel><ColorPicker value={activePattern.color} onChange={v => setActivePattern(p => ({ ...p, color: v }))} /></div>
+                  <div><PropLabel>Opacity: {(activePattern.opacity*100).toFixed(0)}%</PropLabel><input type="range" min="0.01" max="0.3" step="0.01" value={activePattern.opacity} onChange={e => setActivePattern(p => ({ ...p, opacity: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
+                  <div><PropLabel>Scale: {activePattern.scale.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="3" step="0.1" value={activePattern.scale} onChange={e => setActivePattern(p => ({ ...p, scale: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
+                </>}
+              </div>}
+            </div>
+            {/* Properties — ENHANCED */}
             {selectedData && <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}><div className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium">Properties {selectedData.isHardware && <span className="text-[10px] text-amber-400 ml-1">FIXED</span>}</span>
-                {!selectedData.isHardware && <button onClick={() => deleteElement(selectedElement!)} className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
+                <span className="text-sm font-medium">Properties
+                  {selectedData.isHardware && <span className="text-[10px] text-amber-400 ml-1">FIXED</span>}
+                  {selectedData.isPositionLocked && <span className="text-[10px] text-cyan-400 ml-1">POS LOCKED</span>}
+                </span>
+                {!selectedData.isHardware && !selectedData.isPositionLocked && <button onClick={() => deleteElement(selectedElement!)} className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
               </div>
-              {selectedData.isHardware && <p className="text-[11px] text-slate-500">Hardware element â€” position locked</p>}
+              {selectedData.isHardware && <p className="text-[11px] text-slate-500">Hardware element — fully locked</p>}
               {!selectedData.isHardware && <div className="space-y-3">
-                {/* Position & Size (all types) */}
-                <div className="grid grid-cols-2 gap-2">
+                {/* Position sliders — hidden for position-locked elements */}
+                {!selectedData.isPositionLocked && <div className="grid grid-cols-2 gap-2">
                   <div><PropLabel>X: {Math.round(selectedData.x)}</PropLabel><input type="range" min="0" max={CARD.W} value={selectedData.x} onChange={e => updateElement(selectedElement!, { x: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
                   <div><PropLabel>Y: {Math.round(selectedData.y)}</PropLabel><input type="range" min="0" max={CARD.H} value={selectedData.y} onChange={e => updateElement(selectedElement!, { y: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
-                </div>
+                </div>}
+                {/* Size sliders — always shown */}
                 <div className="grid grid-cols-2 gap-2">
                   <div><PropLabel>W: {Math.round(selectedData.width)}</PropLabel><input type="range" min="20" max="400" value={selectedData.width} onChange={e => updateElement(selectedElement!, { width: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
                   <div><PropLabel>H: {Math.round(selectedData.height)}</PropLabel><input type="range" min="20" max="260" value={selectedData.height} onChange={e => updateElement(selectedElement!, { height: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
@@ -740,7 +1044,7 @@ export default function CreditCardDesigner() {
                 <div><PropLabel>Opacity: {(selectedData.opacity*100).toFixed(0)}%</PropLabel><input type="range" min="0" max="1" step=".05" value={selectedData.opacity} onChange={e => updateElement(selectedElement!, { opacity: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
                 {/* Text / CardNumber */}
                 {(selectedData.type === 'text' || selectedData.type === 'cardNumber') && <>
-                  <div><PropLabel>Text Color</PropLabel><input type="color" value={selectedData.color} onChange={e => updateElement(selectedElement!, { color: e.target.value })} className="w-full h-9 rounded-lg cursor-pointer border-0" /></div>
+                  <div><PropLabel>Text Color</PropLabel><ColorPicker value={selectedData.color} onChange={v => updateElement(selectedElement!, { color: v })} /></div>
                   <div><PropLabel>Font Size: {selectedData.fontSize}px</PropLabel><input type="range" min="6" max="48" value={selectedData.fontSize} onChange={e => updateElement(selectedElement!, { fontSize: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
                   <div><PropLabel>Font Family</PropLabel><select value={selectedData.fontFamily || "'Inter',sans-serif"} onChange={e => updateElement(selectedElement!, { fontFamily: e.target.value })} className="w-full bg-white/5 rounded-lg p-2 text-xs border border-white/10 text-white">
                     {FONT_FAMILIES.map(f => <option key={f.name} value={f.value} className="bg-[#1a1a2e]">{f.name}</option>)}
@@ -756,7 +1060,7 @@ export default function CreditCardDesigner() {
                     <button key={ic.name} onClick={() => updateElement(selectedElement!, { iconName: ic.name })} className="p-2 rounded-lg border transition-all"
                       style={{ borderColor: selectedData.iconName === ic.name ? 'rgba(99,102,241,.6)' : 'rgba(255,255,255,.06)', background: selectedData.iconName === ic.name ? 'rgba(99,102,241,.1)' : 'transparent' }}>
                       <IC className="w-4 h-4 mx-auto text-slate-300" /></button>); })}</div></div>
-                  <div><PropLabel>Color</PropLabel><input type="color" value={selectedData.color} onChange={e => updateElement(selectedElement!, { color: e.target.value })} className="w-full h-9 rounded-lg cursor-pointer border-0" /></div>
+                  <div><PropLabel>Color</PropLabel><ColorPicker value={selectedData.color} onChange={v => updateElement(selectedElement!, { color: v })} /></div>
                 </>}
                 {/* Image */}
                 {selectedData.type === 'image' && <>
@@ -766,17 +1070,39 @@ export default function CreditCardDesigner() {
                       <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: selectedData.isBackgroundRemoved ? 22 : 2 }} />
                     </button>
                   </div>
+                  {/* Background removal sliders — integrated from backgroundslider.html */}
+                  <div className="space-y-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
+                    <div>
+                      <PropLabel>Tolerance - Color Sensitivity: {bgRemovalTolerance.toFixed(2)}</PropLabel>
+                      <input type="range" min="0" max="0.5" step="0.01" value={bgRemovalTolerance} onChange={e => { const v = parseFloat(e.target.value); setBgRemovalTolerance(v); reapplyBgRemoval(v, bgRemovalFade, bgRemovalKeepInternal); }} className="w-full accent-indigo-500" />
+                    </div>
+                    <div>
+                      <PropLabel>Fade - Edge Smoothness: {bgRemovalFade.toFixed(2)}</PropLabel>
+                      <input type="range" min="0" max="0.5" step="0.01" value={bgRemovalFade} onChange={e => { const v = parseFloat(e.target.value); setBgRemovalFade(v); reapplyBgRemoval(bgRemovalTolerance, v, bgRemovalKeepInternal); }} className="w-full accent-indigo-500" />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={bgRemovalKeepInternal} onChange={e => { const v = e.target.checked; setBgRemovalKeepInternal(v); reapplyBgRemoval(bgRemovalTolerance, bgRemovalFade, v); }} className="w-4 h-4 rounded accent-indigo-500" />
+                      <span className="text-xs text-slate-400">Keep Internal Pixels</span>
+                    </label>
+                  </div>
                 </>}
                 {/* Shapes */}
                 {(selectedData.type === 'circle' || selectedData.type === 'rectangle') && <>
-                  <div><PropLabel>Fill Color</PropLabel><input type="color" value={selectedData.backgroundColor} onChange={e => updateElement(selectedElement!, { backgroundColor: e.target.value })} className="w-full h-9 rounded-lg cursor-pointer border-0" /></div>
+                  <div><PropLabel>Fill Color</PropLabel><ColorPicker value={selectedData.backgroundColor} onChange={v => updateElement(selectedElement!, { backgroundColor: v })} /></div>
                 </>}
               </div>}
             </div></div>}
           </div>
           {/* ===== CANVAS ===== */}
-          <div className="lg:col-span-9">
-            <div className="rounded-2xl p-6 md:p-10" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+          <div ref={canvasWrapperRef} className="lg:col-span-9" style={{ willChange: 'transform' }}>
+            <div className="rounded-2xl p-6 md:p-10 transition-colors duration-300" style={{
+              backgroundColor: canvasLightMode ? '#ffffff' : '#09090b',
+              backgroundImage: canvasLightMode
+                ? 'radial-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px)'
+                : 'radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px)',
+              backgroundSize: '20px 20px',
+              border: canvasLightMode ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.04)'
+            }}>
               <div className="flex items-center justify-center gap-2 mb-6">
                 {(['front','back'] as CardFace[]).map(f => (
                   <button key={f} onClick={() => { if (f !== activeFace) flipCard(); }}
@@ -784,7 +1110,21 @@ export default function CreditCardDesigner() {
                     style={{ background: activeFace === f ? 'rgba(99,102,241,.15)' : 'transparent', color: activeFace === f ? '#818cf8' : '#64748b', border: activeFace === f ? '1px solid rgba(99,102,241,.3)' : '1px solid transparent' }}>
                     {f === 'front' ? 'Front Face' : 'Back Face'}
                   </button>))}
-                <span className="text-[10px] text-slate-600 ml-2">ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
+                <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON — back mirrors front styles' : 'Sync OFF — faces are independent', type: 'info' }); }}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-1"
+                  style={{ background: syncFaces ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.03)', border: syncFaces ? '1px solid rgba(34,197,94,.3)' : '1px solid rgba(255,255,255,.06)', color: syncFaces ? '#4ade80' : '#64748b' }}
+                  title={syncFaces ? 'Front → Back sync ON: back face mirrors front styles' : 'Sync styles from front to back face'}>
+                  {syncFaces ? <Link2 className="w-3 h-3" /> : <Unlink2 className="w-3 h-3" />}
+                  {syncFaces ? 'Synced' : 'Sync'}
+                </button>
+                <span className={`text-[10px] ml-2 ${canvasLightMode ? 'text-slate-400' : 'text-slate-600'}`}>ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
+                <button onClick={() => setCanvasLightMode(p => !p)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-auto"
+                  style={{ background: canvasLightMode ? 'rgba(250,204,21,.12)' : 'rgba(255,255,255,.03)', border: canvasLightMode ? '1px solid rgba(250,204,21,.3)' : '1px solid rgba(255,255,255,.06)', color: canvasLightMode ? '#facc15' : '#64748b' }}
+                  title={canvasLightMode ? 'Switch to dark canvas' : 'Switch to light canvas'}>
+                  {canvasLightMode ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
+                  {canvasLightMode ? 'Light' : 'Dark'}
+                </button>
               </div>
               <div className="flex justify-center items-center" style={{ minHeight: 380, perspective: 1200 }}>
                 <div ref={flipContainerRef} style={{ transformStyle: 'preserve-3d' }}
@@ -798,6 +1138,20 @@ export default function CreditCardDesigner() {
                     <div className="absolute pointer-events-none" style={{ inset: CARD.MARGIN, border: '1px dashed rgba(255,255,255,.06)', borderRadius: CARD.R - 4 }} />
                     <div className="absolute inset-0 pointer-events-none" style={{ opacity: .04 }}><svg width="100%" height="100%"><pattern id="cp" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#cp)"/></svg></div>
                     <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />
+                    {/* Pattern overlay */}
+                    {activePattern.id && (() => {
+                      const pat = CARD_PATTERNS.find(p => p.id === activePattern.id);
+                      if (!pat) return null;
+                      const svgStr = pat.svg(activePattern.color, activePattern.scale);
+                      const encoded = `url("data:image/svg+xml,${encodeURIComponent(svgStr)}")`;
+                      return <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: encoded, backgroundRepeat: 'repeat', opacity: activePattern.opacity, borderRadius: CARD.R }} />;
+                    })()}
+                    {/* Layout overlay */}
+                    {activeLayout.id !== 'none' && (() => {
+                      const lay = CARD_LAYOUTS.find(l => l.id === activeLayout.id);
+                      if (!lay) return null;
+                      return <div className="absolute inset-0 pointer-events-none" style={{ background: activeLayout.overlayColor, clipPath: lay.clipPath[orientation], borderRadius: CARD.R }} />;
+                    })()}
                     <div id="collision-warn" className="absolute top-2 left-1/2 -translate-x-1/2 z-[100] items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-amber-300" style={{ display: 'none', background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.3)', backdropFilter: 'blur(8px)' }} />
                     {isDragOver && <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(99,102,241,.1)', backdropFilter: 'blur(2px)' }}>
                       <div className="text-center"><Upload className="w-8 h-8 text-indigo-400 mx-auto mb-2 animate-bounce" /><p className="text-sm text-indigo-300 font-medium">Drop your logo</p></div>
@@ -808,17 +1162,17 @@ export default function CreditCardDesigner() {
                         onDoubleClick={e => { if (el.type === 'text' || el.type === 'cardNumber') handleTextDoubleClick(e, el.id); }}
                         className={`card-element absolute select-none ${selectedElement === el.id && !el.isHardware ? 'ring-1 ring-indigo-400/60' : ''}`}
                         style={{ left: el.x, top: el.y, width: el.width, height: el.height,
-                          cursor: el.isHardware ? 'default' : 'grab',
+                          cursor: el.isHardware ? 'default' : el.isPositionLocked ? 'pointer' : 'grab',
                           transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
                           zIndex: el.isHardware ? 60 : selectedElement === el.id ? 50 : 1 }}>
-                        {/* Inline delete button */}
-                        {selectedElement === el.id && !el.isHardware && (
+                        {/* Inline delete button — not for hardware or position-locked */}
+                        {selectedElement === el.id && !el.isHardware && !el.isPositionLocked && (
                           <button onMouseDown={e => { e.stopPropagation(); clickedElementRef.current = true; deleteElement(el.id); }}
                             className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center shadow-lg hover:bg-red-400 transition-colors" style={{ zIndex: 110 }}>
                             <X className="w-3 h-3 text-white" />
                           </button>
                         )}
-                        {/* Resize handles */}
+                        {/* Resize handles — shown for non-hardware (including position-locked) */}
                         {selectedElement === el.id && !el.isHardware && <>
                           <div onMouseDown={e => handleResizeMouseDown(e, el.id, 'se')} style={resizeHandleStyle('se')} />
                           <div onMouseDown={e => handleResizeMouseDown(e, el.id, 'sw')} style={resizeHandleStyle('sw')} />
