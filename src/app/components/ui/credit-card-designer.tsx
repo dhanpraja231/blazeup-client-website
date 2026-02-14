@@ -8,6 +8,7 @@ import {
   Sun, Moon, Cloud, Palette, Image as ImageIcon, ChevronDown,
   FlipHorizontal, AlertTriangle, X, Move, RotateCw, Wand2,
 } from 'lucide-react';
+import { processImageBackground } from './backgroundremoval';
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
@@ -100,43 +101,7 @@ function generateSpotlightGradient(hex: string): string {
   return `radial-gradient(circle at 30% 30%, ${tint}, ${hex}, ${shade})`;
 }
 // ====================== BACKGROUND REMOVAL ======================
-function processImageBackground(dataUrl: string): Promise<string | null> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width; canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { resolve(null); return; }
-      ctx.drawImage(img, 0, 0);
-      const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const px = data.data;
-      const w = canvas.width, h = canvas.height;
-      const corners = [
-        [px[0], px[1], px[2]],
-        [px[(w - 1) * 4], px[(w - 1) * 4 + 1], px[(w - 1) * 4 + 2]],
-        [px[(h - 1) * w * 4], px[(h - 1) * w * 4 + 1], px[(h - 1) * w * 4 + 2]],
-        [px[((h - 1) * w + w - 1) * 4], px[((h - 1) * w + w - 1) * 4 + 1], px[((h - 1) * w + w - 1) * 4 + 2]],
-      ];
-      const tol = 255 * 0.05;
-      const ref = corners[0];
-      const allMatch = corners.every(c =>
-        Math.abs(c[0] - ref[0]) <= tol && Math.abs(c[1] - ref[1]) <= tol && Math.abs(c[2] - ref[2]) <= tol
-      );
-      if (!allMatch) { resolve(null); return; }
-      for (let i = 0; i < px.length; i += 4) {
-        if (Math.abs(px[i] - ref[0]) <= tol && Math.abs(px[i + 1] - ref[1]) <= tol && Math.abs(px[i + 2] - ref[2]) <= tol) {
-          px[i + 3] = 0;
-        }
-      }
-      ctx.putImageData(data, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = () => resolve(null);
-    img.src = dataUrl;
-  });
-}
+// processImageBackground is now imported from ./backgroundremoval
 // ====================== SVG COMPONENTS ======================
 function ChipSVG({ w, h }: { w: number; h: number }) {
   return (
@@ -249,6 +214,10 @@ export default function CreditCardDesigner() {
   const [spotlightColor, setSpotlightColor] = useState('#1a1a3e');
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
   const [showTemplateModal, setShowTemplateModal] = useState(true);
+  // Background removal parameters (from backgroundslider.html)
+  const [bgRemovalTolerance, setBgRemovalTolerance] = useState(0.05);
+  const [bgRemovalFade, setBgRemovalFade] = useState(0.10);
+  const [bgRemovalKeepInternal, setBgRemovalKeepInternal] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   // Computed card dimensions based on orientation
   const cardW = orientation === 'horizontal' ? CARD.W : CARD.H;
@@ -440,12 +409,25 @@ export default function CreditCardDesigner() {
       updateElement(elId, { imageData: el.originalImageData, isBackgroundRemoved: false, originalImageData: undefined });
       return;
     }
-    const result = await processImageBackground(el.imageData);
+    
+    const result = await processImageBackground(el.imageData, bgRemovalTolerance, bgRemovalFade, bgRemovalKeepInternal);
     if (result) {
       updateElement(elId, { originalImageData: el.imageData, imageData: result, isBackgroundRemoved: true });
       setToast({ message: 'Background removed successfully!', type: 'info' });
     } else {
       setToast({ message: 'Could not auto-detect solid background. Please use a transparent PNG.', type: 'warn' });
+    }
+  };
+  // Re-apply background removal with updated parameters (called when sliders/checkbox change)
+  const reapplyBgRemoval = async (tol: number, fade: number, keepInt: boolean) => {
+    if (!selectedElement) return;
+    const el = elements.find(i => i.id === selectedElement);
+    if (!el || !el.isBackgroundRemoved || !el.originalImageData) return;
+    console.log('reapply bg removal');
+    const result = await processImageBackground(el.originalImageData, tol, fade, keepInt);
+    console.log('result', result);
+    if (result) {
+      updateElement(selectedElement, { imageData: result });
     }
   };
   // ---- image upload ----
@@ -873,6 +855,21 @@ export default function CreditCardDesigner() {
                     <button onClick={() => toggleBgRemoval(selectedElement!)} className="relative w-10 h-5 rounded-full transition-colors" style={{ background: selectedData.isBackgroundRemoved ? '#6366f1' : 'rgba(255,255,255,.1)' }}>
                       <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: selectedData.isBackgroundRemoved ? 22 : 2 }} />
                     </button>
+                  </div>
+                  {/* Background removal sliders — integrated from backgroundslider.html */}
+                  <div className="space-y-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
+                    <div>
+                      <PropLabel>Tolerance: {bgRemovalTolerance.toFixed(2)}</PropLabel>
+                      <input type="range" min="0" max="0.5" step="0.01" value={bgRemovalTolerance} onChange={e => { const v = parseFloat(e.target.value); setBgRemovalTolerance(v); reapplyBgRemoval(v, bgRemovalFade, bgRemovalKeepInternal); }} className="w-full accent-indigo-500" />
+                    </div>
+                    <div>
+                      <PropLabel>Fade: {bgRemovalFade.toFixed(2)}</PropLabel>
+                      <input type="range" min="0" max="0.5" step="0.01" value={bgRemovalFade} onChange={e => { const v = parseFloat(e.target.value); setBgRemovalFade(v); reapplyBgRemoval(bgRemovalTolerance, v, bgRemovalKeepInternal); }} className="w-full accent-indigo-500" />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={bgRemovalKeepInternal} onChange={e => { const v = e.target.checked; setBgRemovalKeepInternal(v); reapplyBgRemoval(bgRemovalTolerance, bgRemovalFade, v); }} className="w-4 h-4 rounded accent-indigo-500" />
+                      <span className="text-xs text-slate-400">Keep Internal Pixels</span>
+                    </label>
                   </div>
                 </>}
                 {/* Shapes */}
