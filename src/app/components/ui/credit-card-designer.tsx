@@ -319,6 +319,8 @@ export default function CreditCardDesigner() {
   useEffect(() => {
     const wrapper = canvasWrapperRef.current;
     if (!wrapper) return;
+    // gsap.quickTo creates a single reusable tween that smoothly interpolates — no jitter
+    const setY = gsap.quickTo(wrapper, 'y', { duration: 0.4, ease: 'power3' });
     // Cache the original offset top once after layout
     const cacheTop = () => {
       gsap.set(wrapper, { y: 0 });
@@ -326,14 +328,10 @@ export default function CreditCardDesigner() {
     };
     cacheTop();
     const onScroll = () => {
-      if (window.innerWidth < 1024) { gsap.set(wrapper, { y: 0 }); return; }
+      if (window.innerWidth < 1024) { setY(0); return; }
       const scrollY = window.scrollY;
-      const pinStart = canvasOriginalTop.current - 32; // 32px top margin
-      if (scrollY > pinStart) {
-        gsap.to(wrapper, { y: scrollY - pinStart, duration: 0.25, ease: 'power2.out', overwrite: true });
-      } else {
-        gsap.to(wrapper, { y: 0, duration: 0.25, ease: 'power2.out', overwrite: true });
-      }
+      const pinStart = canvasOriginalTop.current - 32;
+      setY(scrollY > pinStart ? scrollY - pinStart : 0);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', cacheTop);
