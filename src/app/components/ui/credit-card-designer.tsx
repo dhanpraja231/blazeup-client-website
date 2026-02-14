@@ -353,7 +353,9 @@ export default function CreditCardDesigner() {
         if (updates.color !== undefined) sharedFontUpdates.color = updates.color;
         const hasPositionDelta = dx !== 0 || dy !== 0;
         const hasSharedFontUpdates = Object.keys(sharedFontUpdates).length > 0;
-        return prev.map(el => {
+        const fontSizeChanged = updates.fontSize !== undefined;
+        // Apply direct updates + shared font updates first
+        let next = prev.map(el => {
           if (el.id === id) return { ...el, ...updates };
           if (el.isLinkedGroup) {
             const sibUpdates: Partial<CardElement> = {};
@@ -363,6 +365,28 @@ export default function CreditCardDesigner() {
           }
           return el;
         });
+        // Reflow: when fontSize changes, auto-adjust heights and reposition to prevent overlap
+        if (fontSizeChanged) {
+          const groupEls = next.filter(el => el.isLinkedGroup).sort((a, b) => a.y - b.y);
+          if (groupEls.length > 0) {
+            let curY = groupEls[0].y;
+            const gap = 4;
+            const reflowed = new Map<string, { y: number; height: number }>();
+            for (const gel of groupEls) {
+              const lines = (gel.content?.split('\n') || ['']).length;
+              const lineH = Math.round(gel.fontSize * 1.4);
+              const newH = Math.max(lines * lineH + 4, 16);
+              reflowed.set(gel.id, { y: curY, height: newH });
+              curY += newH + gap;
+            }
+            next = next.map(el => {
+              const r = reflowed.get(el.id);
+              if (r) return { ...el, y: r.y, height: r.height };
+              return el;
+            });
+          }
+        }
+        return next;
       }
       return prev.map(el => el.id === id ? { ...el, ...updates } : el);
     });
