@@ -10,6 +10,7 @@ import {
   Plus, Clipboard, Layers,
 } from 'lucide-react';
 import { processImageBackground } from './backgroundremoval';
+import ColorPicker from './color-picker';
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
@@ -877,7 +878,7 @@ export default function CreditCardDesigner() {
                 <div className="pt-2 border-t border-white/5">
                   <PropLabel>Spotlight Gradient</PropLabel>
                   <div className="flex gap-2 items-center">
-                    <input type="color" value={spotlightColor} onChange={e => setSpotlightColor(e.target.value)} className="w-10 h-9 rounded-lg cursor-pointer border-0 shrink-0" />
+                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="w-10 shrink-0" />
                     <button onClick={() => { const g = generateSpotlightGradient(spotlightColor); setCardBg(g); pushHistory(); }}
                       className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-indigo-500/20" style={{ background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.2)' }}>
                       Apply Spotlight
@@ -929,7 +930,7 @@ export default function CreditCardDesigner() {
                 </div>
                 {/* Customization controls */}
                 {activePattern.id && <>
-                  <div><PropLabel>Pattern Color</PropLabel><input type="color" value={activePattern.color} onChange={e => setActivePattern(p => ({ ...p, color: e.target.value }))} className="w-full h-9 rounded-lg cursor-pointer border-0" /></div>
+                  <div><PropLabel>Pattern Color</PropLabel><ColorPicker value={activePattern.color} onChange={v => setActivePattern(p => ({ ...p, color: v }))} /></div>
                   <div><PropLabel>Opacity: {(activePattern.opacity*100).toFixed(0)}%</PropLabel><input type="range" min="0.01" max="0.3" step="0.01" value={activePattern.opacity} onChange={e => setActivePattern(p => ({ ...p, opacity: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
                   <div><PropLabel>Scale: {activePattern.scale.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="3" step="0.1" value={activePattern.scale} onChange={e => setActivePattern(p => ({ ...p, scale: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
                 </>}
@@ -960,7 +961,7 @@ export default function CreditCardDesigner() {
                 <div><PropLabel>Opacity: {(selectedData.opacity*100).toFixed(0)}%</PropLabel><input type="range" min="0" max="1" step=".05" value={selectedData.opacity} onChange={e => updateElement(selectedElement!, { opacity: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
                 {/* Text / CardNumber */}
                 {(selectedData.type === 'text' || selectedData.type === 'cardNumber') && <>
-                  <div><PropLabel>Text Color</PropLabel><input type="color" value={selectedData.color} onChange={e => updateElement(selectedElement!, { color: e.target.value })} className="w-full h-9 rounded-lg cursor-pointer border-0" /></div>
+                  <div><PropLabel>Text Color</PropLabel><ColorPicker value={selectedData.color} onChange={v => updateElement(selectedElement!, { color: v })} /></div>
                   <div><PropLabel>Font Size: {selectedData.fontSize}px</PropLabel><input type="range" min="6" max="48" value={selectedData.fontSize} onChange={e => updateElement(selectedElement!, { fontSize: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
                   <div><PropLabel>Font Family</PropLabel><select value={selectedData.fontFamily || "'Inter',sans-serif"} onChange={e => updateElement(selectedElement!, { fontFamily: e.target.value })} className="w-full bg-white/5 rounded-lg p-2 text-xs border border-white/10 text-white">
                     {FONT_FAMILIES.map(f => <option key={f.name} value={f.value} className="bg-[#1a1a2e]">{f.name}</option>)}
@@ -976,7 +977,7 @@ export default function CreditCardDesigner() {
                     <button key={ic.name} onClick={() => updateElement(selectedElement!, { iconName: ic.name })} className="p-2 rounded-lg border transition-all"
                       style={{ borderColor: selectedData.iconName === ic.name ? 'rgba(99,102,241,.6)' : 'rgba(255,255,255,.06)', background: selectedData.iconName === ic.name ? 'rgba(99,102,241,.1)' : 'transparent' }}>
                       <IC className="w-4 h-4 mx-auto text-slate-300" /></button>); })}</div></div>
-                  <div><PropLabel>Color</PropLabel><input type="color" value={selectedData.color} onChange={e => updateElement(selectedElement!, { color: e.target.value })} className="w-full h-9 rounded-lg cursor-pointer border-0" /></div>
+                  <div><PropLabel>Color</PropLabel><ColorPicker value={selectedData.color} onChange={v => updateElement(selectedElement!, { color: v })} /></div>
                 </>}
                 {/* Image */}
                 {selectedData.type === 'image' && <>
@@ -1004,7 +1005,7 @@ export default function CreditCardDesigner() {
                 </>}
                 {/* Shapes */}
                 {(selectedData.type === 'circle' || selectedData.type === 'rectangle') && <>
-                  <div><PropLabel>Fill Color</PropLabel><input type="color" value={selectedData.backgroundColor} onChange={e => updateElement(selectedElement!, { backgroundColor: e.target.value })} className="w-full h-9 rounded-lg cursor-pointer border-0" /></div>
+                  <div><PropLabel>Fill Color</PropLabel><ColorPicker value={selectedData.backgroundColor} onChange={v => updateElement(selectedElement!, { backgroundColor: v })} /></div>
                 </>}
               </div>}
             </div></div>}
