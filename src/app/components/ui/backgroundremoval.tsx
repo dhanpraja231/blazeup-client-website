@@ -1,20 +1,12 @@
 /**
- * Background removal with configurable tolerance, fade, and keep-internal support.
- * Ported from the inline function in credit-card-designer.tsx and extended with
- * parameters originally defined in backgroundslider.html.
- */
-
-/**
  * Remove a solid-coloured background from an image.
+ * Uses Euclidean distance for better color matching and skips strict corner checks.
  *
- * @param dataUrl     Base-64 data-URL of the source image.
- * @param tolerance   0–0.5  How different a pixel can be from the corner colour and
- *                    still be considered "background". Mapped to 0–127.5 in pixel space.
- * @param fade        0–0.5  Width of the soft-edge zone beyond the hard tolerance.
- *                    Pixels in this zone get partial alpha instead of full transparency.
- * @param keepInternal When true only border-connected background pixels are cleared
- *                     (flood-fill); when false every matching pixel is cleared globally.
- * @returns           A PNG data-URL with the background removed, or null on failure.
+ * @param dataUrl      Base-64 data-URL of the source image.
+ * @param tolerance    0–0.5  Sensitivity to background color matching.
+ * @param fade         0–0.5  Width of the soft-edge zone (anti-aliasing).
+ * @param keepInternal If true, uses Flood Fill to protect inner parts of the logo.
+ * @returns            A PNG data-URL with the background removed, or null on failure.
  */
 export function processImageBackground(
   dataUrl: string,
@@ -27,13 +19,11 @@ export function processImageBackground(
     img.crossOrigin = 'anonymous';
 
     img.onload = () => {
-        console.log('img loaded');
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext('2d');
-      if (!ctx) {
-         console.log('no ctx match');  resolve(null); return; }
+      if (!ctx) { resolve(null); return; }
 
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -41,99 +31,88 @@ export function processImageBackground(
       const w = canvas.width;
       const h = canvas.height;
 
-      // --- Detect reference colour from corners ---
-      const corners = [
-        [px[0], px[1], px[2]],
-        [px[(w - 1) * 4], px[(w - 1) * 4 + 1], px[(w - 1) * 4 + 2]],
-        [px[(h - 1) * w * 4], px[(h - 1) * w * 4 + 1], px[(h - 1) * w * 4 + 2]],
-        [px[((h - 1) * w + w - 1) * 4], px[((h - 1) * w + w - 1) * 4 + 1], px[((h - 1) * w + w - 1) * 4 + 2]],
-      ];
+      // 1. Get Reference Color (Top-Left corner only - no strict safety check)
+      const ref = [px[0], px[1], px[2]]; 
 
-      const tol = 255 * tolerance;
-      const ref = corners[0];
+      // 2. Setup Thresholds (Euclidean 3D Space)
+      // Max possible distance in RGB space is sqrt(255^2 * 3) ≈ 441.6
+      const maxDist = Math.sqrt(255 * 255 * 3);
+      const tolDist = maxDist * tolerance;
+      const fadeDist = maxDist * fade;
+      const totalLimit = tolDist + fadeDist;
 
-      // Corner detection uses a generous fixed tolerance (0.20) so that JPEG
-      // compression artefacts on coloured backgrounds don't cause false rejection.
-      // The user's tolerance slider controls only the pixel-clearing step below.
-      const cornerTol = 255 * Math.max(tolerance, 0.20);
-
-      // All four corners must roughly match for auto-detection to fire
-      const allMatch = corners.every(
-        (c) =>
-          Math.abs(c[0] - ref[0]) <= cornerTol &&
-          Math.abs(c[1] - ref[1]) <= cornerTol &&
-          Math.abs(c[2] - ref[2]) <= cornerTol,
-      );
-      if (!allMatch) {
-         
-        console.log('not all match'); 
-        resolve(null);return; }
-
-      const fadePx = 255 * fade;
-
-      // --- Helper: distance of a pixel from the reference colour ---
-      const dist = (i: number) =>
-        Math.max(
-          Math.abs(px[i] - ref[0]),
-          Math.abs(px[i + 1] - ref[1]),
-          Math.abs(px[i + 2] - ref[2]),
+      // Helper: Calculate 3D Euclidean distance of pixel i from reference
+      const dist = (i: number) => {
+        return Math.sqrt(
+          Math.pow(px[i] - ref[0], 2) +
+          Math.pow(px[i + 1] - ref[1], 2) +
+          Math.pow(px[i + 2] - ref[2], 2)
         );
+      };
+
+      // --- STRATEGY SELECTION ---
 
       if (!keepInternal) {
-        // ---- Global mode: clear every pixel that matches ----
+        // MODE A: GLOBAL REMOVAL (Linear Scan)
         for (let i = 0; i < px.length; i += 4) {
           const d = dist(i);
-          if (d <= tol) {
-            px[i + 3] = 0;
-          } else if (fadePx > 0 && d <= tol + fadePx) {
-            // Soft edge: partial alpha proportional to distance past the tolerance
-            const alpha = Math.round(((d - tol) / fadePx) * 255);
-            px[i + 3] = Math.min(px[i + 3], alpha);
+
+          if (d <= tolDist) {
+            px[i + 3] = 0; // Fully transparent
+          } else if (d <= totalLimit) {
+            // Soft Edge Blending (Cubic Easing)
+            const factor = (d - tolDist) / fadeDist;
+            const alpha = Math.floor(255 * Math.pow(factor, 3));
+            px[i + 3] = alpha; 
           }
         }
       } else {
-        // ---- Flood-fill mode: only clear border-connected pixels ----
-        const total = w * h;
-        const visited = new Uint8Array(total); // 0 = unvisited, 1 = queued/visited
-
-        // Seed queue with all border pixels that match the background
+        // MODE B: FLOOD FILL (Contiguous Removal)
+        const visited = new Uint8Array(w * h); 
         const queue: number[] = [];
-        const tryEnqueue = (x: number, y: number) => {
+
+        // Seed Function
+        const seed = (x: number, y: number) => {
           const idx = y * w + x;
           if (visited[idx]) return;
-          const pi = idx * 4;
-          const d = dist(pi);
-          if (d <= tol + fadePx) {
-            visited[idx] = 1;
+          
+          const i = idx * 4;
+          const d = dist(i);
+
+          // If it's within the "fade" zone or closer, it's valid to flood into
+          if (d <= totalLimit) {
             queue.push(idx);
+            visited[idx] = 1;
           }
         };
 
-        // Top & bottom rows
-        for (let x = 0; x < w; x++) { tryEnqueue(x, 0); tryEnqueue(x, h - 1); }
-        // Left & right columns
-        for (let y = 0; y < h; y++) { tryEnqueue(0, y); tryEnqueue(w - 1, y); }
+        // Seed all borders (Top, Bottom, Left, Right)
+        for (let x = 0; x < w; x++) { seed(x, 0); seed(x, h - 1); }
+        for (let y = 1; y < h - 1; y++) { seed(0, y); seed(w - 1, y); }
 
-        // BFS
+        // BFS Loop
         while (queue.length > 0) {
           const idx = queue.pop()!;
-          const pi = idx * 4;
-          const d = dist(pi);
+          const i = idx * 4;
+          const d = dist(i);
 
-          if (d <= tol) {
-            px[pi + 3] = 0;
-          } else if (fadePx > 0 && d <= tol + fadePx) {
-            const alpha = Math.round(((d - tol) / fadePx) * 255);
-            px[pi + 3] = Math.min(px[pi + 3], alpha);
+          // Apply Transparency
+          if (d <= tolDist) {
+            px[i + 3] = 0;
+          } else if (d <= totalLimit) {
+            const factor = (d - tolDist) / fadeDist;
+            const alpha = Math.floor(255 * Math.pow(factor, 3));
+            px[i + 3] = alpha;
           }
 
-          // Expand to 4-connected neighbours
+          // Expand to neighbors
           const x = idx % w;
           const y = (idx - x) / w;
-          if (x > 0) tryEnqueue(x - 1, y);
-          if (x < w - 1) tryEnqueue(x + 1, y);
-          if (y > 0) tryEnqueue(x, y - 1);
-          if (y < h - 1) tryEnqueue(x, y + 1);
+
+          if (x > 0) seed(x - 1, y);
+          if (x < w - 1) seed(x + 1, y);
+          if (y > 0) seed(x, y - 1);
+          if (y < h - 1) seed(x, y + 1);
         }
       }
 
