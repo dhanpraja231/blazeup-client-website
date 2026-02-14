@@ -234,6 +234,7 @@ export default function CreditCardDesigner() {
   const [spotlightY, setSpotlightY] = useState(30);
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
   const [showTemplateModal, setShowTemplateModal] = useState(true);
+  const [canvasLightMode, setCanvasLightMode] = useState(false);
   // Background removal parameters (from backgroundslider.html)
   const [bgRemovalTolerance, setBgRemovalTolerance] = useState(0.05);
   const [bgRemovalFade, setBgRemovalFade] = useState(0.10);
@@ -718,6 +719,15 @@ export default function CreditCardDesigner() {
     setBackElements(createBackTemplate(orientation, network));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orientation]);
+  // Rotate EMV chip in-place when orientation changes (keep same x,y — just rotate 90°)
+  useEffect(() => {
+    setFrontElements(prev => prev.map(el =>
+      el.id === 'hw-chip'
+        ? { ...el, rotation: orientation === 'vertical' ? 90 : 0 }
+        : el
+    ));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orientation]);
   const handleSelectTemplate = (idx: number) => {
     const t = CARD_TEMPLATES[idx];
     setFrontBg(t.bg); setBackBg(t.backBg);
@@ -1085,7 +1095,14 @@ export default function CreditCardDesigner() {
           </div>
           {/* ===== CANVAS ===== */}
           <div ref={canvasWrapperRef} className="lg:col-span-9" style={{ willChange: 'transform' }}>
-            <div className="rounded-2xl p-6 md:p-10" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+            <div className="rounded-2xl p-6 md:p-10 transition-colors duration-300" style={{
+              backgroundColor: canvasLightMode ? '#ffffff' : '#09090b',
+              backgroundImage: canvasLightMode
+                ? 'radial-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px)'
+                : 'radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px)',
+              backgroundSize: '20px 20px',
+              border: canvasLightMode ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.04)'
+            }}>
               <div className="flex items-center justify-center gap-2 mb-6">
                 {(['front','back'] as CardFace[]).map(f => (
                   <button key={f} onClick={() => { if (f !== activeFace) flipCard(); }}
@@ -1100,7 +1117,14 @@ export default function CreditCardDesigner() {
                   {syncFaces ? <Link2 className="w-3 h-3" /> : <Unlink2 className="w-3 h-3" />}
                   {syncFaces ? 'Synced' : 'Sync'}
                 </button>
-                <span className="text-[10px] text-slate-600 ml-2">ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
+                <span className={`text-[10px] ml-2 ${canvasLightMode ? 'text-slate-400' : 'text-slate-600'}`}>ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
+                <button onClick={() => setCanvasLightMode(p => !p)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-auto"
+                  style={{ background: canvasLightMode ? 'rgba(250,204,21,.12)' : 'rgba(255,255,255,.03)', border: canvasLightMode ? '1px solid rgba(250,204,21,.3)' : '1px solid rgba(255,255,255,.06)', color: canvasLightMode ? '#facc15' : '#64748b' }}
+                  title={canvasLightMode ? 'Switch to dark canvas' : 'Switch to light canvas'}>
+                  {canvasLightMode ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
+                  {canvasLightMode ? 'Light' : 'Dark'}
+                </button>
               </div>
               <div className="flex justify-center items-center" style={{ minHeight: 380, perspective: 1200 }}>
                 <div ref={flipContainerRef} style={{ transformStyle: 'preserve-3d' }}
