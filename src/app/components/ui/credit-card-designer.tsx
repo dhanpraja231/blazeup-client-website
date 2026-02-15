@@ -16,7 +16,7 @@ import { CARD_LAYOUTS, type LayoutId } from './layouts';
 
 // ====================== FEATURE FLAGS ======================
 // Set to true to enable AI template generator, false to disable
-const ENABLE_AI_TEMPLATES = true;
+const ENABLE_AI_TEMPLATES = false;
 
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
@@ -205,7 +205,7 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   // Account info: landscape = mid-left area; portrait = left side near top
   const acctX = isV ? 24 : 24;
   const acctY = isV ? 28 : ch - 90;
-  const acctContent = isV ? '4532\n8720\n1456\n7890' : '4532  8720  1456  7890';
+  const acctContent = isV ? 'XXXX\nXXXX\nXXXX\nXXXX' : 'XXXX  XXXX  XXXX  XXXX';
   const acctH = isV ? 70 : 20;
 
   return [
@@ -754,7 +754,7 @@ export default function CreditCardDesigner() {
   const selectedData = elements.find(el => el.id === selectedElement);
   const comps = [
     { type: 'text' as const, icon: Type, label: 'Text', dv: 'Double click to edit' },
-    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: '•••• •••• •••• 1234' },
+    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: 'XXXX XXXX XXXX XXXX' },
     { type: 'circle' as const, icon: Circle, label: 'Circle', dv: '' },
     { type: 'rectangle' as const, icon: Square, label: 'Rectangle', dv: '' },
     { type: 'icon' as const, icon: Sparkles, label: 'Icon', dv: '' },
@@ -805,15 +805,30 @@ export default function CreditCardDesigner() {
               ))}
             </div>
             <div className="mt-8 flex justify-center gap-4">
-            {ENABLE_AI_TEMPLATES && (
-              <button onClick={() => {
-                setShowTemplateModal(false);
-                setShowAIGenerator(true);
-              }}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-indigo-500/20">
-                <Wand2 className="w-4 h-4" /> Generate with AI
-              </button>
-            )}
+              <div className="relative group">
+                <button
+                  onClick={() => {
+                    if (ENABLE_AI_TEMPLATES) {
+                      setShowTemplateModal(false);
+                      setShowAIGenerator(true);
+                    }
+                  }}
+                  disabled={!ENABLE_AI_TEMPLATES}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all shadow-lg ${
+                    ENABLE_AI_TEMPLATES
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-indigo-500/20 cursor-pointer'
+                      : 'bg-slate-700/50 cursor-not-allowed opacity-60'
+                  }`}>
+                  <Wand2 className="w-4 h-4" />
+                  Generate with AI
+                </button>
+                {!ENABLE_AI_TEMPLATES && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl border border-slate-700">
+                    Coming Soon
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                  </div>
+                )}
+              </div>
               <button onClick={() => setShowTemplateModal(false)}
                 className="px-6 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors"
                 style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)' }}>

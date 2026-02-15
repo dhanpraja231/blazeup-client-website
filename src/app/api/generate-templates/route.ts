@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
           typeof el?.content === 'string'
             ? el.content
             : isTexty
-              ? (type === 'cardNumber' ? '4532 8720 1456 7890' : 'CARDHOLDER NAME')
+              ? (type === 'cardNumber' ? 'XXXX XXXX XXXX XXXX' : 'CARDHOLDER NAME')
               : '',
         color: normalizeColor(el?.color, '#ffffff'),
         fontSize: clamp(Number(el?.fontSize ?? (type === 'cardNumber' ? 20 : 16)), 6, 48),
