@@ -3,16 +3,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import {
   SearchCheck,
   BarChart3,
-  ArrowRight,
   Palette,
-  LayoutDashboard,
-  TrendingUp,
-  PieChart,
-  LineChart,
   Loader2,
   Maximize2,
   X,
@@ -21,6 +15,18 @@ import CreditCardDesigner from './credit-card-designer';
 
 const PolicyPlayground = dynamic(
   () => import('@/components/composer/PolicyPlayground'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-32">
+        <Loader2 className="w-8 h-8 text-white/30 animate-spin" />
+      </div>
+    ),
+  }
+);
+
+const VisualizeDashboard = dynamic(
+  () => import('@/components/ui/VisualizeDashboard'),
   {
     ssr: false,
     loading: () => (
@@ -61,58 +67,6 @@ const TABS: Tab[] = [
   },
 ];
 
-/* ─────────── Visualize Preview ─────────── */
-function VisualizePreview() {
-  const router = useRouter();
-
-  const previewWidgets = [
-    { icon: <BarChart3 className="w-6 h-6" />, label: 'Bar Chart' },
-    { icon: <LineChart className="w-6 h-6" />, label: 'Line Chart' },
-    { icon: <PieChart className="w-6 h-6" />, label: 'Pie Chart' },
-    { icon: <TrendingUp className="w-6 h-6" />, label: 'KPI Cards' },
-  ];
-
-  return (
-    <div className="flex flex-col items-center py-20 px-8">
-      <div className="relative mb-10">
-        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[var(--electric-blue)]/20 to-[var(--rich-purple)]/20 border border-white/10 flex items-center justify-center backdrop-blur-sm">
-          <LayoutDashboard className="w-10 h-10 text-white/60" />
-        </div>
-      </div>
-
-      <h3 className="text-2xl font-bold text-white mb-3">
-        Spending Analytics Dashboard
-      </h3>
-      <p className="text-white/50 text-center max-w-lg leading-relaxed mb-10">
-        Visualize how the credit cards issued by your company are used.
-        Customize the dashboard by dragging and dropping chart widgets into your
-        preferred layout.
-      </p>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10 w-full max-w-lg">
-        {previewWidgets.map((w) => (
-          <div
-            key={w.label}
-            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/15 transition-colors duration-300"
-          >
-            <span className="text-white/40">{w.icon}</span>
-            <span className="text-xs text-white/40 font-medium">{w.label}</span>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onClick={() => router.push('/visualize')}
-        className="group flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white
-                   bg-gradient-to-r from-[var(--electric-blue)] to-[var(--rich-purple)]
-                   hover:shadow-[0_0_30px_rgba(59,130,246,0.35)] transition-shadow duration-300"
-      >
-        Open Dashboard
-        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-      </button>
-    </div>
-  );
-}
 
 /* ═══════════ Main Component ═══════════ */
 export default function WorkflowTabs() {
@@ -209,7 +163,7 @@ export default function WorkflowTabs() {
           transition={{ duration: 0.3 }}
           className={expanded ? 'h-full overflow-auto' : ''}
         >
-          <VisualizePreview />
+          <VisualizeDashboard />
         </motion.div>
       )}
     </AnimatePresence>
