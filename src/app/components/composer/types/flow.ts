@@ -71,10 +71,10 @@ export interface PolicyNode extends Node<PolicyNodeData> {
   type: NodeType;
 }
 
-export interface PolicyEdge extends Edge {
+export type PolicyEdge = Edge & {
   label?: string;
   animated?: boolean;
-}
+};
 
 export interface PolicyWorkflow {
   nodes: PolicyNode[];
