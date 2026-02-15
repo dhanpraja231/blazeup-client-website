@@ -146,17 +146,13 @@ function MagstripeSVG({ width, height, vertical }: { width?: number; height?: nu
     const h = height || CARD.W;
     const w = width || 62.5;
     return (
-      <div style={{ width: w, height: h, background: 'linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-        <div style={{ position: 'absolute', left: (w - 36) / 2, top: 0, bottom: 0, width: 36, background: '#111', borderLeft: '1px solid #333', borderRight: '1px solid #333' }} />
-      </div>
+      <div style={{ width: w, height: h, background: '#0a0a0a', position: 'relative' }} />
     );
   }
   const w = width || CARD.W;
   const h = height || 62.5;
   return (
-    <div style={{ width: w, height: h, background: 'linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: (h - 36) / 2, left: 0, right: 0, height: 36, background: '#111', borderTop: '1px solid #333', borderBottom: '1px solid #333' }} />
-    </div>
+    <div style={{ width: w, height: h, background: '#0a0a0a', position: 'relative' }} />
   );
 }
 
@@ -211,10 +207,10 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   return [
     // Magnetic stripe — thickness 12.5mm (62.5px); 5mm (25px) from top (landscape) or right (portrait)
     { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 25 - 62.5 : 0, y: isV ? 0 : 25, width: isV ? 62.5 : cw, height: isV ? ch : 62.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
-    // Hologram — bottom-right; in vertical mode shifted left to clear magstripe (magstripe left edge = cw-87.5)
-    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
+    // Hologram — bottom-right in horizontal; lower-right in vertical above issuing bank text
+    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: isV ? ch - 80 : ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
     // Network logo — 4px gap left of hologram
-    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
+    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: isV ? ch - 82 : ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
     // Linked account info group — moves as one unit
     { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 240, height: acctH + 24, content: acctContent, color: '#fff', fontSize: isV ? 13 : 14, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
     { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 2, width: 100, height: 16, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
@@ -956,7 +952,7 @@ export default function CreditCardDesigner() {
                 {/* Custom solid color */}
                 <div className="pt-2 border-t border-white/5">
                   <PropLabel>Custom Solid Color</PropLabel>
-                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); setCardBg(v); pushHistory(); }} className="w-full" />
+                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); setCardBg(v); pushHistory(); }} className="w-32" />
                 </div>
                 {/* Spotlight gradient */}
                 <div className="pt-2 border-t border-white/5">
