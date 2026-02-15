@@ -31,12 +31,14 @@ import {
   ScatterChart,
   AreaChart as AreaChartIcon,
   CircleDot,
+  Store,
 } from 'lucide-react';
 
 /* ── Dynamic imports for recharts components (no SSR) ── */
 const BarGraph = dynamic(() => import('@/components/charts/bar-graph').then(m => ({ default: m.BarGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const LineGraph = dynamic(() => import('@/components/charts/line-graph').then(m => ({ default: m.LineGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const DonutChart = dynamic(() => import('@/components/charts/donut-chart').then(m => ({ default: m.DonutChart })), { ssr: false, loading: () => <ChartSkeleton /> });
+const ScatterGraph = dynamic(() => import('@/components/charts/scatter-graph').then(m => ({ default: m.ScatterGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 import { SpendingHeatmap } from '@/components/charts/spending-heatmap';
 
 function ChartSkeleton() {
@@ -61,6 +63,7 @@ const KPI_DIMENSIONS = [
   { id: 'department', label: 'Department', icon: <Building2 className="w-5 h-5" />, color: 'from-emerald-500/20 to-emerald-600/20', accent: '#10b981' },
   { id: 'user', label: 'User', icon: <User className="w-5 h-5" />, color: 'from-purple-500/20 to-purple-600/20', accent: '#8b5cf6' },
   { id: 'time', label: 'Time', icon: <Clock className="w-5 h-5" />, color: 'from-orange-500/20 to-orange-600/20', accent: '#f97316' },
+  { id: 'merchant', label: 'Merchant', icon: <Store className="w-5 h-5" />, color: 'from-rose-500/20 to-rose-600/20', accent: '#f43f5e' },
 ];
 
 const CHART_TYPES = [
@@ -68,13 +71,15 @@ const CHART_TYPES = [
   { id: 'line', label: 'Line Chart', icon: <LineChartIcon className="w-4 h-4" /> },
   { id: 'doughnut', label: 'Doughnut', icon: <CircleDot className="w-4 h-4" /> },
   { id: 'pie', label: 'Pie Chart', icon: <PieChartIcon className="w-4 h-4" /> },
+  { id: 'scatter', label: 'Scatter Plot', icon: <ScatterChart className="w-4 h-4" /> },
 ];
 
 const KPI_ALLOWED_CHARTS: Record<string, string[]> = {
   category: ['pie', 'doughnut', 'bar'],
   department: ['pie', 'doughnut', 'bar'],
   user: ['bar', 'line'],
-  time: ['line'],
+  time: ['line', 'scatter'],
+  merchant: ['bar', 'doughnut', 'scatter'],
 };
 
 /* ═══════════════ MOCK DATA PER KPI ═══════════════ */
@@ -113,12 +118,47 @@ const TIME_DATA = [
   { name: 'Aug', value: 26500, budget: 24000 },
 ];
 
+const MERCHANT_DATA = [
+  { name: 'Amazon', value: 18500 },
+  { name: 'Uber', value: 9200 },
+  { name: 'Airbnb', value: 14700 },
+  { name: 'WeWork', value: 11300 },
+  { name: 'Starbucks', value: 4800 },
+  { name: 'Adobe', value: 7600 },
+];
+
+const SCATTER_DATA: Record<string, { name: string; x: number; y: number }[]> = {
+  time: [
+    { name: 'Arjun M.', x: 4.5, y: 2.1 },
+    { name: 'Priya S.', x: 8.8, y: 5.3 },
+    { name: 'Rahul V.', x: 12.3, y: 7.8 },
+    { name: 'Sneha P.', x: 3.2, y: 1.5 },
+    { name: 'Vikram S.', x: 6.9, y: 4.2 },
+    { name: 'Anita K.', x: 9.5, y: 6.0 },
+    { name: 'Ravi D.', x: 5.1, y: 3.4 },
+    { name: 'Diya R.', x: 11.2, y: 8.1 },
+    { name: 'Karan J.', x: 7.4, y: 3.9 },
+    { name: 'Meera T.', x: 15.0, y: 9.5 },
+  ],
+  merchant: [
+    { name: 'Amazon', x: 18.5, y: 42 },
+    { name: 'Uber', x: 9.2, y: 85 },
+    { name: 'Airbnb', x: 14.7, y: 24 },
+    { name: 'WeWork', x: 11.3, y: 12 },
+    { name: 'Starbucks', x: 4.8, y: 120 },
+    { name: 'Adobe', x: 7.6, y: 6 },
+    { name: 'Microsoft', x: 22.0, y: 15 },
+    { name: 'Zomato', x: 3.5, y: 90 },
+  ],
+};
+
 function getDataForKPI(kpiId: string) {
   switch (kpiId) {
     case 'category': return CATEGORY_DATA;
     case 'department': return DEPARTMENT_DATA;
     case 'user': return USER_DATA;
     case 'time': return TIME_DATA;
+    case 'merchant': return MERCHANT_DATA;
     default: return CATEGORY_DATA;
   }
 }
@@ -219,6 +259,10 @@ function RealChart({ chartType, kpiId, height }: { chartType: string; kpiId: str
   }
   if (chartType === 'pie') {
     return <DonutChart data={data} dataKey="value" nameKey="name" height={h} />;
+  }
+  if (chartType === 'scatter') {
+    const scatterData = SCATTER_DATA[kpiId] || SCATTER_DATA['time'];
+    return <ScatterGraph data={scatterData} color={kpi?.accent} height={h} />;
   }
   // Fallback
   return <BarGraph data={data} xKey="name" dataKey="value" color={kpi?.accent} height={h} />;
