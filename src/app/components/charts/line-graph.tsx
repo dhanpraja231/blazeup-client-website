@@ -20,7 +20,7 @@ export function LineGraph({ data, xKey, lines, height = 300 }: LineGraphProps) {
   return (
     <div style={{ width: '100%', height }}>
       <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 10, right: 10, left: 5, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_THEME.colors.grid} opacity={0.2} />
           <XAxis dataKey={xKey} axisLine={false} tickLine={false} tick={CHART_THEME.axisStyle} dy={10} />
           <YAxis axisLine={false} tickLine={false} tick={CHART_THEME.axisStyle} tickFormatter={(val) => `$${val/1000}k`} />

@@ -37,6 +37,7 @@ import {
 const BarGraph = dynamic(() => import('@/components/charts/bar-graph').then(m => ({ default: m.BarGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const LineGraph = dynamic(() => import('@/components/charts/line-graph').then(m => ({ default: m.LineGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const DonutChart = dynamic(() => import('@/components/charts/donut-chart').then(m => ({ default: m.DonutChart })), { ssr: false, loading: () => <ChartSkeleton /> });
+import { SpendingHeatmap } from '@/components/charts/spending-heatmap';
 
 function ChartSkeleton() {
   return (
@@ -68,6 +69,13 @@ const CHART_TYPES = [
   { id: 'doughnut', label: 'Doughnut', icon: <CircleDot className="w-4 h-4" /> },
   { id: 'pie', label: 'Pie Chart', icon: <PieChartIcon className="w-4 h-4" /> },
 ];
+
+const KPI_ALLOWED_CHARTS: Record<string, string[]> = {
+  category: ['pie', 'doughnut', 'bar'],
+  department: ['pie', 'doughnut', 'bar'],
+  user: ['bar', 'line'],
+  time: ['line'],
+};
 
 /* ═══════════════ MOCK DATA PER KPI ═══════════════ */
 const CATEGORY_DATA = [
@@ -160,6 +168,26 @@ const EMPLOYEE_CATEGORIES = [
   { name: 'Food', value: 420 },
 ];
 
+/* ═══════════════ HEATMAP DATA (Weekly) ═══════════════ */
+function generateWeeklyData(year: number, baseLine: number, variance: number) {
+  const weeks = [];
+  for (let w = 1; w <= 52; w++) {
+    // Create somewhat realistic seasonal patterns
+    const seasonal = Math.sin((w / 52) * Math.PI * 2) * 15;
+    const noise = ((w * 7 + year * 3) % 37) - 18; // deterministic pseudo-random
+    const value = Math.max(0, Math.min(100, Math.round(baseLine + seasonal + noise * (variance / 20))));
+    weeks.push({ week: w, value });
+  }
+  return weeks;
+}
+
+const HEATMAP_DATA = [
+  { year: 2023, weeks: generateWeeklyData(2023, 45, 30) },
+  { year: 2024, weeks: generateWeeklyData(2024, 55, 25) },
+  { year: 2025, weeks: generateWeeklyData(2025, 60, 20) },
+  { year: 2026, weeks: generateWeeklyData(2026, 50, 35).filter(w => w.week <= 7) },
+];
+
 const EMPLOYEE_TIME_DATA = [
   { name: 'Jan', spending: 320 },
   { name: 'Feb', spending: 480 },
@@ -230,6 +258,7 @@ function DashboardZone({
   const [showDropdown, setShowDropdown] = useState(false);
   const kpi = widget ? KPI_DIMENSIONS.find(k => k.id === widget.kpiId) : null;
   const chartMeta = widget ? CHART_TYPES.find(c => c.id === widget.chartType) : null;
+  const allowedCharts = widget ? CHART_TYPES.filter(c => (KPI_ALLOWED_CHARTS[widget.kpiId] || []).includes(c.id)) : CHART_TYPES;
   const isPreview = mode === 'preview';
   const isLargeZone = zone.colSpan.includes('col-span-2') || zone.rowSpan.includes('row-span-2');
 
@@ -274,7 +303,7 @@ function DashboardZone({
               </button>
               {showDropdown && (
                 <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-xl bg-[#1a1a2e] border border-white/[0.1] shadow-2xl overflow-hidden">
-                  {CHART_TYPES.map((ct) => (
+                  {allowedCharts.map((ct) => (
                     <button key={ct.id} onClick={() => { onChartChange(zone.id, ct.id); setShowDropdown(false); }}
                       className={`w-full text-left flex items-center gap-2 px-3 py-2 text-[11px] transition-colors ${
                         ct.id === widget.chartType ? 'text-indigo-400 bg-indigo-500/10' : 'text-white/50 hover:bg-white/[0.05] hover:text-white/70'}`}>
@@ -303,7 +332,7 @@ function DashboardZone({
               </div>
               <p className="text-xs font-semibold text-white/70">{kpi.label} Analysis</p>
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <RealChart chartType={widget.chartType} kpiId={widget.kpiId} height={isLargeZone ? 280 : 160} />
             </div>
           </div>
@@ -338,12 +367,46 @@ function AlertCard({ alert, index }: { alert: typeof ALERTS[number]; index: numb
       className="relative flex items-center gap-4 rounded-2xl p-5 overflow-hidden"
       style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1, duration: 0.5 }}>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-        <motion.div className="absolute rounded-[40px]" style={{ width: '120%', height: '200%', border: `1.5px solid ${alert.ringColor2}` }}
-          animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.7, 0.4] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: index * 0.3 }} />
-        <motion.div className="absolute rounded-[32px]" style={{ width: '90%', height: '160%', border: `1.5px solid ${alert.ringColor}` }}
-          animate={{ scale: [1, 1.03, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: index * 0.3 + 0.5 }} />
-        <div className="absolute w-24 h-24 rounded-full blur-3xl" style={{ background: alert.accentColor, opacity: 0.06 }} />
+      {/* Concentric circle pulse emanating from the icon center */}
+      <div className="absolute pointer-events-none" style={{ left: 'calc(20px + 22px)', top: '50%', transform: 'translate(-50%, -50%)', width: 0, height: 0 }}>
+        {[0, 1, 2].map((ring) => (
+          <motion.div
+            key={ring}
+            className="absolute rounded-full"
+            style={{
+              top: '50%',
+              left: '50%',
+              width: 44,
+              height: 44,
+              x: '-50%',
+              y: '-50%',
+              border: `2.5px solid ${ring === 0 ? alert.ringColor : alert.ringColor2}`,
+            }}
+            animate={{
+              scale: [1, 10],
+              opacity: [0.5, 0],
+            }}
+            transition={{
+              duration: 3 + ring * 0.5,
+              repeat: Infinity,
+              ease: 'easeOut',
+              delay: ring * 0.8,
+            }}
+          />
+        ))}
+        {/* Ambient glow */}
+        <div
+          className="absolute rounded-full blur-2xl"
+          style={{
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 60,
+            height: 60,
+            background: alert.accentColor,
+            opacity: 0.1,
+          }}
+        />
       </div>
       <div className="relative z-10 shrink-0">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: alert.accentColor + '18', color: alert.accentColor }}>
@@ -402,10 +465,10 @@ function EmployeeLookup() {
         <div className="max-h-[400px] overflow-y-auto">
           {filtered.map((emp) => (
             <motion.button key={emp.id} onClick={() => setSelectedEmployee(emp)}
-              className={`w-full grid grid-cols-12 gap-2 px-5 py-3 text-left transition-colors duration-150 border-b border-white/[0.03] ${selectedEmployee?.id === emp.id ? 'bg-indigo-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
+              className={`w-full grid grid-cols-12 gap-2 px-5 py-3 text-left transition-colors duration-150 border-b border-white/[0.03] ${selectedEmployee?.id === emp.id ? 'bg-green-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
               whileTap={{ scale: 0.995 }}>
               <div className="col-span-4 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>{emp.avatar}</div>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{emp.avatar}</div>
                 <div className="min-w-0"><p className="text-sm font-medium text-white/80 truncate">{emp.name}</p><p className="text-[10px] text-white/30 truncate">{emp.role}</p></div>
               </div>
               <span className="col-span-2 text-xs text-white/40 self-center">{emp.dept}</span>
@@ -427,7 +490,7 @@ function EmployeeLookup() {
             <motion.div key={selectedEmployee.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>{selectedEmployee.avatar}</div>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{selectedEmployee.avatar}</div>
                 <div><h4 className="text-lg font-bold text-white">{selectedEmployee.name}</h4><p className="text-sm text-white/40">{selectedEmployee.role} · {selectedEmployee.dept}</p></div>
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -447,7 +510,7 @@ function EmployeeLookup() {
               {/* Real Line Graph — Spending Over Time */}
               <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <p className="text-xs font-medium text-white/40 mb-2">Spending Over Time</p>
-                <LineGraph data={EMPLOYEE_TIME_DATA} xKey="name" lines={[{ key: 'spending', name: 'Spending', color: '#8b5cf6' }]} height={200} />
+                <LineGraph data={EMPLOYEE_TIME_DATA} xKey="name" lines={[{ key: 'spending', name: 'Spending', color: '#16a34a' }]} height={200} />
               </div>
             </motion.div>
           ) : (
@@ -514,7 +577,8 @@ export default function VisualizeDashboard() {
   const widgetCount = Object.keys(zones).length;
 
   const handleDrop = useCallback((zoneId: string, kpiId: string) => {
-    setZones(prev => ({ ...prev, [zoneId]: { kpiId, chartType: 'bar' } }));
+    const defaultChart = (KPI_ALLOWED_CHARTS[kpiId] || ['bar'])[0];
+    setZones(prev => ({ ...prev, [zoneId]: { kpiId, chartType: defaultChart } }));
   }, []);
 
   const handleRemove = useCallback((zoneId: string) => {
@@ -577,39 +641,7 @@ export default function VisualizeDashboard() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-10">
-        {/* Dashboard Builder */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          <AnimatePresence>
-            {!isPreview && (
-              <motion.aside className="lg:w-48 shrink-0"
-                initial={{ x: -20, opacity: 0, width: 0 }} animate={{ x: 0, opacity: 1, width: 'auto' }} exit={{ x: -20, opacity: 0, width: 0 }} transition={{ duration: 0.3 }}>
-                <div className="lg:sticky lg:top-24 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-3">
-                  <h3 className="text-[11px] font-semibold text-white/40 mb-3 px-1 uppercase tracking-wider">KPI Dimensions</h3>
-                  <div className="flex flex-wrap lg:flex-col gap-2">
-                    {KPI_DIMENSIONS.map((widget) => (
-                      <div key={widget.id} draggable onDragStart={(e) => { e.dataTransfer.setData('text/kpi-dimension', widget.id); e.dataTransfer.effectAllowed = 'copy'; }}>
-                        <PaletteItem widget={widget} />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-white/[0.06]">
-                    <p className="text-[10px] text-white/15 leading-relaxed px-1">Drag a dimension into a zone, then choose a chart type from the dropdown.</p>
-                  </div>
-                </div>
-              </motion.aside>
-            )}
-          </AnimatePresence>
-          <motion.div className="flex-1" layout transition={{ duration: 0.3 }}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 auto-rows-auto">
-              {DROP_ZONES.map((zone) => (
-                <DashboardZone key={zone.id} zone={zone} widget={zones[zone.id] || null} mode={mode}
-                  onDrop={handleDrop} onRemove={handleRemove} onChartChange={handleChartChange} />
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Alerts */}
+        {/* Alerts & Insights — moved to top */}
         <div>
           <motion.h2 className="text-lg font-bold text-white mb-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             Alerts & Insights
@@ -619,7 +651,46 @@ export default function VisualizeDashboard() {
           </div>
         </div>
 
-        {/* Employee Lookup */}
+        {/* Dashboard Builder */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {!isPreview && (
+            <aside className="lg:w-48 shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 96, zIndex: 20 }}>
+              <div className="rounded-2xl border border-white/[0.06] bg-[var(--dark-gray)] backdrop-blur-md p-3">
+                <h3 className="text-[11px] font-semibold text-white/40 mb-3 px-1 uppercase tracking-wider">KPI Dimensions</h3>
+                <div className="flex flex-wrap lg:flex-col gap-2">
+                  {KPI_DIMENSIONS.map((widget) => (
+                    <div key={widget.id} draggable onDragStart={(e) => { e.dataTransfer.setData('text/kpi-dimension', widget.id); e.dataTransfer.effectAllowed = 'copy'; }}>
+                      <PaletteItem widget={widget} />
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                  <p className="text-[10px] text-white/15 leading-relaxed px-1">Drag a dimension into a zone, then choose a chart type from the dropdown.</p>
+                </div>
+              </div>
+            </aside>
+          )}
+          <div className="flex-1">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 auto-rows-auto">
+              {DROP_ZONES
+                .filter((zone) => !isPreview || zones[zone.id])
+                .map((zone) => (
+                <DashboardZone key={zone.id} zone={zone} widget={zones[zone.id] || null} mode={mode}
+                  onDrop={handleDrop} onRemove={handleRemove} onChartChange={handleChartChange} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Spending Heatmap */}
+        <div>
+          <motion.h2 className="text-lg font-bold text-white mb-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            Spending Activity
+          </motion.h2>
+          <SpendingHeatmap data={HEATMAP_DATA} />
+        </div>
+
+        {/* Employee Lookup — at the bottom */}
         <div>
           <motion.h2 className="text-lg font-bold text-white mb-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             Employee Lookup

@@ -1,6 +1,6 @@
 export const CHART_THEME = {
   colors: {
-    primary: '#6366f1',   // Indigo
+    primary: '#16a34a',   // Dark Green
     secondary: '#8b5cf6', // Violet
     success: '#10b981',   // Emerald
     warning: '#f59e0b',   // Amber
