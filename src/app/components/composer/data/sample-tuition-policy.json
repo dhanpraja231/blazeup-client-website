@@ -1,0 +1,166 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "trigger",
+      "position": { "x": 100, "y": 250 },
+      "data": {
+        "label": "Tuition Reimbursement Request",
+        "description": "Employee submits reimbursement claim",
+        "event": "reimbursement_submitted",
+        "frequency": "on_demand"
+      }
+    },
+    {
+      "id": "2",
+      "type": "condition",
+      "position": { "x": 500, "y": 250 },
+      "data": {
+        "label": "Employee Status Check",
+        "conditions": [
+          {
+            "field": "employment_status",
+            "operator": "=",
+            "value": "full_time",
+            "valueType": "string"
+          }
+        ]
+      }
+    },
+    {
+      "id": "3",
+      "type": "category_limits",
+      "position": { "x": 900, "y": 250 },
+      "data": {
+        "label": "Annual Limit Check",
+        "categories": [
+          {
+            "name": "Tuition Reimbursement",
+            "limit": 105000,
+            "currency": "INR",
+            "period": "calendar_year"
+          }
+        ]
+      }
+    },
+    {
+      "id": "4",
+      "type": "policy",
+      "position": { "x": 1350, "y": 150 },
+      "data": {
+        "label": "Course Approval Requirements",
+        "policyType": "approval_required",
+        "items": [
+          {
+            "name": "Pre-approved by department manager",
+            "category": "approval"
+          },
+          {
+            "name": "Pre-approved by HR department",
+            "category": "approval"
+          },
+          {
+            "name": "Job-related accredited course",
+            "category": "eligibility"
+          },
+          {
+            "name": "Directly related to area of responsibility OR promotion path",
+            "category": "relevance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "5",
+      "type": "policy",
+      "position": { "x": 1350, "y": 450 },
+      "data": {
+        "label": "Eligible Course Types",
+        "policyType": "vendor_list",
+        "items": [
+          { "name": "College credit courses", "category": "education" },
+          { "name": "Continuing education units", "category": "education" },
+          { "name": "Professional seminars", "category": "professional_development" },
+          { "name": "Certification tests", "category": "professional_development" },
+          { "name": "Technology training (software tools, languages)", "category": "technology" },
+          { "name": "Leadership/management courses (tech industry)", "category": "leadership" }
+        ]
+      }
+    },
+    {
+      "id": "6",
+      "type": "action",
+      "position": { "x": 1800, "y": 250 },
+      "data": {
+        "label": "Approve Reimbursement",
+        "actionType": "approve",
+        "message": "Tuition reimbursement approved"
+      }
+    },
+    {
+      "id": "7",
+      "type": "action",
+      "position": { "x": 500, "y": 450 },
+      "data": {
+        "label": "Reject - Not Full-Time",
+        "actionType": "reject",
+        "message": "Only full-time employees are eligible"
+      }
+    },
+    {
+      "id": "8",
+      "type": "action",
+      "position": { "x": 900, "y": 450 },
+      "data": {
+        "label": "Reject - Exceeds Limit",
+        "actionType": "reject",
+        "message": "Annual limit of ₹105,000 exceeded"
+      }
+    },
+    {
+      "id": "9",
+      "type": "integration",
+      "position": { "x": 2200, "y": 200 },
+      "data": {
+        "label": "Notify HR & Manager",
+        "service": "slack",
+        "config": {
+          "channel": "#hr-reimbursements",
+          "template": "Tuition reimbursement approved for {employee_name}: {course_name} - ₹{amount}"
+        }
+      }
+    },
+    {
+      "id": "10",
+      "type": "integration",
+      "position": { "x": 2200, "y": 350 },
+      "data": {
+        "label": "Log to Finance System",
+        "service": "sheets",
+        "config": {
+          "spreadsheet": "Tuition Reimbursements 2026",
+          "sheet": "Approved Claims"
+        }
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1-2", "source": "1", "target": "2" },
+    { "id": "e2-3", "source": "2", "target": "3", "sourceHandle": "yes", "label": "Full-time" },
+    { "id": "e2-7", "source": "2", "target": "7", "sourceHandle": "no", "label": "Not full-time" },
+    { "id": "e3-4", "source": "3", "target": "4", "sourceHandle": "pass", "label": "Within limit" },
+    { "id": "e3-8", "source": "3", "target": "8", "sourceHandle": "reject", "label": "Exceeds limit" },
+    { "id": "e4-5", "source": "4", "target": "5", "sourceHandle": "pass", "label": "Pre-approved" },
+    { "id": "e5-6", "source": "5", "target": "6", "sourceHandle": "pass", "label": "Eligible course" },
+    { "id": "e6-9", "source": "6", "target": "9" },
+    { "id": "e6-10", "source": "6", "target": "10" }
+  ],
+  "metadata": {
+    "name": "Appian Tuition Reimbursement Policy",
+    "policyType": "tuition",
+    "description": "Full-time employee tuition reimbursement workflow with ₹105,000 annual limit",
+    "version": "2.0",
+    "createdAt": "2026-02-14T00:00:00Z",
+    "updatedAt": "2026-02-14T00:00:00Z"
+  }
+}
