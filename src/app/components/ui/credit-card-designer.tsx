@@ -13,6 +13,11 @@ import {
 import { processImageBackground } from './backgroundremoval';
 import ColorPicker from './color-picker';
 import { CARD_LAYOUTS, type LayoutId } from './layouts';
+
+// ====================== FEATURE FLAGS ======================
+// Set to true to enable AI template generator, false to disable
+const ENABLE_AI_TEMPLATES = true;
+
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
@@ -800,13 +805,15 @@ export default function CreditCardDesigner() {
               ))}
             </div>
             <div className="mt-8 flex justify-center gap-4">
-            <button onClick={() => {
-              setShowTemplateModal(false);
-              setShowAIGenerator(true);
-            }}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-indigo-500/20">
-              <Wand2 className="w-4 h-4" /> Generate with AI
-            </button>
+            {ENABLE_AI_TEMPLATES && (
+              <button onClick={() => {
+                setShowTemplateModal(false);
+                setShowAIGenerator(true);
+              }}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-indigo-500/20">
+                <Wand2 className="w-4 h-4" /> Generate with AI
+              </button>
+            )}
               <button onClick={() => setShowTemplateModal(false)}
                 className="px-6 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors"
                 style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)' }}>
@@ -817,7 +824,7 @@ export default function CreditCardDesigner() {
         </div>
       )}
     {/* ===== AI TEMPLATE GENERATOR MODAL ===== */}
-    {showAIGenerator && (
+    {ENABLE_AI_TEMPLATES && showAIGenerator && (
       <AITemplateGenerator
         onTemplateSelect={(design) => {
           // Merge AI-generated elements with default hardware components
@@ -874,7 +881,7 @@ export default function CreditCardDesigner() {
           <div className="lg:col-span-3 space-y-3">
 
             {/* Components */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('components')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><Palette className="w-4 h-4 text-indigo-400" /><span className="text-sm font-medium">Components</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'components' ? 'rotate-180' : ''}`} />
@@ -886,7 +893,7 @@ export default function CreditCardDesigner() {
                 </button>); })}</div>}
             </div>
             {/* Image Clipboard */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('clipboard')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><Clipboard className="w-4 h-4 text-emerald-400" /><span className="text-sm font-medium">Image Clipboard</span>
                   {imageClipboard.length > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{imageClipboard.length}</span>}
@@ -934,34 +941,22 @@ export default function CreditCardDesigner() {
                 {/* Custom solid color */}
                 <div className="pt-2 border-t border-white/5">
                   <PropLabel>Custom Solid Color</PropLabel>
-                  <div className="flex gap-2 items-center">
-                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="flex-1" />
-                    <button onClick={() => { setCardBg(spotlightColor); pushHistory(); }}
-                      className="px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-purple-500/20 shrink-0" style={{ background: 'rgba(168,85,247,.1)', border: '1px solid rgba(168,85,247,.2)' }}>
-                      Apply
-                    </button>
-                  </div>
+                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); setCardBg(v); pushHistory(); }} className="w-full" />
                 </div>
                 {/* Spotlight gradient */}
                 <div className="pt-2 border-t border-white/5">
                   <PropLabel>Spotlight Gradient</PropLabel>
-                  <div className="flex gap-2 items-center">
-                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="w-10 shrink-0" />
-                    <button onClick={() => { const g = generateSpotlightGradient(spotlightColor, spotlightX, spotlightY); setCardBg(g); pushHistory(); }}
-                      className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-indigo-500/20" style={{ background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.2)' }}>
-                      Apply Spotlight
-                    </button>
-                  </div>
+                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); const g = generateSpotlightGradient(v, spotlightX, spotlightY); setCardBg(g); pushHistory(); }} className="w-full" />
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => setSpotlightX(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
-                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => setSpotlightY(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
+                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => { const val = parseInt(e.target.value); setSpotlightX(val); const g = generateSpotlightGradient(spotlightColor, val, spotlightY); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => { const val = parseInt(e.target.value); setSpotlightY(val); const g = generateSpotlightGradient(spotlightColor, spotlightX, val); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
                   </div>
                   <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: '1px solid rgba(255,255,255,.06)' }} />
                 </div>
               </div>}
             </div>
             {/* Card Layout */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('layout')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><FlipHorizontal className="w-4 h-4 text-amber-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Layout</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'layout' ? 'rotate-180' : ''}`} />
@@ -991,17 +986,13 @@ export default function CreditCardDesigner() {
                 </div>
                 {/* Color controls — only when a layout is selected */}
                 {activeLayout.id !== 'none' && <>
-                  <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); }} /></div>
-                  <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => setActiveLayout(prev => ({ ...prev, overlayColor: v }))} /></div>
-                  <button onClick={() => { setCardBg(activeLayout.baseColor); pushHistory(); }}
-                    className="w-full px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-amber-500/20" style={{ background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)' }}>
-                    Apply Layout
-                  </button>
+                  <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); pushHistory(); }} /></div>
+                  <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => { setActiveLayout(prev => ({ ...prev, overlayColor: v })); pushHistory(); }} /></div>
                 </>}
               </div>}
             </div>
             {/* Network */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('network')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-cyan-400" /><span className="text-sm font-medium">Card Network</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'network' ? 'rotate-180' : ''}`} />
@@ -1015,7 +1006,7 @@ export default function CreditCardDesigner() {
               </div>}
             </div>
             {/* Patterns */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('patterns')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-rose-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Pattern</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'patterns' ? 'rotate-180' : ''}`} />
