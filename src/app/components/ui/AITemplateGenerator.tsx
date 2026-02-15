@@ -12,7 +12,6 @@ export default function AITemplateGenerator({ onTemplateSelect, onClose }: AITem
   const [step, setStep] = useState<'upload' | 'generating' | 'select'>('upload');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [generatedTemplates, setGeneratedTemplates] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
@@ -69,7 +68,6 @@ export default function AITemplateGenerator({ onTemplateSelect, onClose }: AITem
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           logoImage: logoBase64,
-          companyName: companyName.trim() || undefined,
         }),
       });
 
@@ -150,18 +148,6 @@ export default function AITemplateGenerator({ onTemplateSelect, onClose }: AITem
                 <img src={logoPreview} alt="Logo preview" className="max-h-40 object-contain" />
               </div>
             )}
-
-            <div>
-              <label className="block text-sm font-medium mb-3 text-slate-300">Company Name (Optional)</label>
-              <input
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Acme Corporation"
-                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl
-                  focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-              />
-            </div>
 
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 flex items-start gap-3">

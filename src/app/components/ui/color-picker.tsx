@@ -53,6 +53,7 @@ interface ColorPickerProps {
 export default function ColorPicker({ value, onChange, className }: ColorPickerProps) {
   const [open, setOpen] = useState(false);
   const [hsv, setHsv] = useState<[number, number, number]>(() => hexToHsv(value));
+  const [tempHsv, setTempHsv] = useState<[number, number, number]>(() => hexToHsv(value));
   const [hexInput, setHexInput] = useState(value);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -88,10 +89,19 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
     if (value !== hsvToHex(hsv[0], hsv[1], hsv[2])) {
       const newHsv = hexToHsv(value);
       setHsv(newHsv);
+      setTempHsv(newHsv);
       setHexInput(value);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
+
+  // Reset temp color when opening
+  useEffect(() => {
+    if (open) {
+      setTempHsv(hsv);
+      setHexInput(value);
+    }
+  }, [open, hsv, value]);
 
   // Close on click outside
   useEffect(() => {
@@ -104,11 +114,13 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const emitColor = useCallback((h: number, s: number, v: number) => {
-    const hex = hsvToHex(h, s, v);
+  const applyColor = useCallback(() => {
+    const hex = hsvToHex(tempHsv[0], tempHsv[1], tempHsv[2]);
+    setHsv(tempHsv);
     setHexInput(hex);
     onChange(hex);
-  }, [onChange]);
+    setOpen(false);
+  }, [tempHsv, onChange]);
 
   // ---- Saturation/Brightness area ----
   const handleSatMove = useCallback((clientX: number, clientY: number) => {
@@ -116,10 +128,10 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
     if (!rect) return;
     const s = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const v = Math.max(0, Math.min(1, 1 - (clientY - rect.top) / rect.height));
-    const newHsv: [number, number, number] = [hsv[0], s, v];
-    setHsv(newHsv);
-    emitColor(newHsv[0], newHsv[1], newHsv[2]);
-  }, [hsv, emitColor]);
+    const newHsv: [number, number, number] = [tempHsv[0], s, v];
+    setTempHsv(newHsv);
+    setHexInput(hsvToHex(newHsv[0], newHsv[1], newHsv[2]));
+  }, [tempHsv]);
 
   const onSatDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -136,10 +148,10 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
     const rect = hueRef.current?.getBoundingClientRect();
     if (!rect) return;
     const h = Math.max(0, Math.min(359, ((clientX - rect.left) / rect.width) * 360));
-    const newHsv: [number, number, number] = [h, hsv[1], hsv[2]];
-    setHsv(newHsv);
-    emitColor(newHsv[0], newHsv[1], newHsv[2]);
-  }, [hsv, emitColor]);
+    const newHsv: [number, number, number] = [h, tempHsv[1], tempHsv[2]];
+    setTempHsv(newHsv);
+    setHexInput(hsvToHex(newHsv[0], newHsv[1], newHsv[2]));
+  }, [tempHsv]);
 
   const onHueDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -152,6 +164,7 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
   }, [handleHueMove]);
 
   const currentHex = hsvToHex(hsv[0], hsv[1], hsv[2]);
+  const tempCurrentHex = hsvToHex(tempHsv[0], tempHsv[1], tempHsv[2]);
 
   return (
     <div ref={wrapperRef} className={`relative ${className || ''}`}>
@@ -176,7 +189,7 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
       {open && popupPos && (
         <div ref={popupRef}
           className="w-[260px] rounded-2xl shadow-2xl"
-          style={{ position: 'fixed', top: popupPos.top, left: popupPos.left, background: 'rgba(15,17,30,.96)', border: '1px solid rgba(255,255,255,.08)', backdropFilter: 'blur(20px)', zIndex: 9999 }}
+          style={{ position: 'fixed', top: popupPos.top, left: popupPos.left, background: 'rgba(15,17,30,.96)', border: '1px solid rgba(255,255,255,.08)', backdropFilter: 'blur(20px)', zIndex: 999999 }}
           onClick={e => e.stopPropagation()}>
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,.06)' }}>
@@ -188,11 +201,11 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
             {/* Saturation / Brightness area */}
             <div ref={satRef} onMouseDown={onSatDown}
               className="relative w-full h-[140px] rounded-xl cursor-crosshair overflow-hidden"
-              style={{ background: hueToHex(hsv[0]) }}>
+              style={{ background: hueToHex(tempHsv[0]) }}>
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #fff, transparent)' }} />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent, #000)' }} />
               <div className="absolute w-4 h-4 rounded-full border-2 border-white shadow-lg pointer-events-none"
-                style={{ left: `${hsv[1] * 100}%`, top: `${(1 - hsv[2]) * 100}%`, transform: 'translate(-50%,-50%)', boxShadow: '0 0 0 1px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.4)' }} />
+                style={{ left: `${tempHsv[1] * 100}%`, top: `${(1 - tempHsv[2]) * 100}%`, transform: 'translate(-50%,-50%)', boxShadow: '0 0 0 1px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.4)' }} />
             </div>
 
             {/* Hue slider */}
@@ -200,12 +213,12 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
               className="relative w-full h-3 rounded-full cursor-pointer"
               style={{ background: 'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)' }}>
               <div className="absolute w-4 h-4 rounded-full border-2 border-white shadow-lg pointer-events-none -top-0.5"
-                style={{ left: `${(hsv[0] / 360) * 100}%`, transform: 'translateX(-50%)', background: hueToHex(hsv[0]), boxShadow: '0 0 0 1px rgba(0,0,0,.3), 0 2px 6px rgba(0,0,0,.4)' }} />
+                style={{ left: `${(tempHsv[0] / 360) * 100}%`, transform: 'translateX(-50%)', background: hueToHex(tempHsv[0]), boxShadow: '0 0 0 1px rgba(0,0,0,.3), 0 2px 6px rgba(0,0,0,.4)' }} />
             </div>
 
             {/* Hex + preview */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg border border-white/10 shrink-0" style={{ background: currentHex }} />
+              <div className="w-8 h-8 rounded-lg border border-white/10 shrink-0" style={{ background: tempCurrentHex }} />
               <div className="flex-1 relative">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-600 font-mono">#</span>
                 <input
@@ -217,8 +230,7 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
                     if (raw.length === 6) {
                       const hex = '#' + raw;
                       const newHsv = hexToHsv(hex);
-                      setHsv(newHsv);
-                      onChange(hex.toLowerCase());
+                      setTempHsv(newHsv);
                     }
                   }}
                   className="w-full rounded-lg pl-6 pr-2 py-1.5 text-xs font-mono text-white bg-white/5 border border-white/10 focus:border-indigo-500/40 focus:outline-none transition-colors"
@@ -234,13 +246,21 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
               <div className="grid grid-cols-9 gap-1">
                 {PRESETS.map(c => (
                   <button key={c} type="button"
-                    onClick={() => { const newHsv = hexToHsv(c); setHsv(newHsv); setHexInput(c); onChange(c); }}
+                    onClick={() => { const newHsv = hexToHsv(c); setTempHsv(newHsv); setHexInput(c); }}
                     className="w-full aspect-square rounded-md border transition-all hover:scale-110"
-                    style={{ background: c, borderColor: currentHex === c ? 'rgba(99,102,241,.7)' : 'rgba(255,255,255,.06)', boxShadow: currentHex === c ? '0 0 0 1px rgba(99,102,241,.4)' : 'none' }}
+                    style={{ background: c, borderColor: tempCurrentHex === c ? 'rgba(99,102,241,.7)' : 'rgba(255,255,255,.06)', boxShadow: tempCurrentHex === c ? '0 0 0 1px rgba(99,102,241,.4)' : 'none' }}
                   />
                 ))}
               </div>
             </div>
+
+            {/* Apply Button */}
+            <button
+              onClick={applyColor}
+              className="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg font-semibold text-sm transition-all"
+            >
+              Apply Color
+            </button>
           </div>
         </div>
       )}

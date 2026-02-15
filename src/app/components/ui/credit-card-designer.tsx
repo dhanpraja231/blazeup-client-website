@@ -3,7 +3,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import gsap from 'gsap';
 import AITemplateGenerator from './AITemplateGenerator';
-import AICardGenerator from './AICardGenerator';
 import {
   CreditCard, Type, Circle, Square, Trash2, Undo2, Redo2, Upload,
   Sparkles, Heart, Star, Zap, Shield, Lock, Globe, Wifi, Battery,
@@ -750,7 +749,7 @@ export default function CreditCardDesigner() {
   const selectedData = elements.find(el => el.id === selectedElement);
   const comps = [
     { type: 'text' as const, icon: Type, label: 'Text', dv: 'Double click to edit' },
-    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: 'â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 1234' },
+    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: '•••• •••• •••• 1234' },
     { type: 'circle' as const, icon: Circle, label: 'Circle', dv: '' },
     { type: 'rectangle' as const, icon: Square, label: 'Rectangle', dv: '' },
     { type: 'icon' as const, icon: Sparkles, label: 'Icon', dv: '' },
@@ -821,8 +820,16 @@ export default function CreditCardDesigner() {
     {showAIGenerator && (
       <AITemplateGenerator
         onTemplateSelect={(design) => {
-          setFrontElements(design.frontElements);
-          setBackElements(design.backElements);
+          // Merge AI-generated elements with default hardware components
+          const defaultFront = createFrontTemplate();
+          const defaultBack = createBackTemplate(orientation, network);
+
+          // Combine: hardware elements first (bottom layer), then AI elements on top
+          const mergedFront = [...defaultFront, ...design.frontElements];
+          const mergedBack = [...defaultBack, ...design.backElements];
+
+          setFrontElements(mergedFront);
+          setBackElements(mergedBack);
           setFrontBg(design.frontBg);
           setBackBg(design.backBg);
           setShowAIGenerator(false);
@@ -848,7 +855,7 @@ export default function CreditCardDesigner() {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}><CreditCard className="w-5 h-5 text-white" /></div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text" style={{ WebkitTextFillColor: 'transparent' }}>Card Designer</h1>
-              <p className="text-xs text-slate-500">ISO 7810 â€¢ Drag & drop your logo â€¢ Customize everything</p>
+              <p className="text-xs text-slate-500">ISO 7810 • Drag & drop your logo • Customize everything</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -865,33 +872,6 @@ export default function CreditCardDesigner() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* ===== SIDEBAR ===== */}
           <div className="lg:col-span-3 space-y-3">
-
-{/* ===== AI CARD GENERATOR ===== */}
-<div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
-  <button onClick={() => togglePanel('ai-generator')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
-    <div className="flex items-center gap-2">
-      <Sparkles className="w-4 h-4 text-purple-400" />
-      <span className="text-sm font-medium">AI Card Generator</span>
-    </div>
-    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'ai-generator' ? 'rotate-180' : ''}`} />
-  </button>
-  {expandedPanel === 'ai-generator' && (
-    <div className="px-3 pb-3">
-      <AICardGenerator
-        onDesignGenerated={(design) => {
-          if (activeFace === 'front') {
-            setFrontElements(design.elements);
-            setFrontBg(design.cardColor);
-          } else {
-            setBackElements(design.elements);
-            setBackBg(design.cardColor);
-          }
-          pushHistory();
-        }}
-      />
-    </div>
-  )}
-</div>
 
             {/* Components */}
             <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
@@ -940,7 +920,7 @@ export default function CreditCardDesigner() {
               </div>}
             </div>
             {/* Background + Spotlight */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('background')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><ImageIcon className="w-4 h-4 text-purple-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Background</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'background' ? 'rotate-180' : ''}`} />
@@ -1069,7 +1049,7 @@ export default function CreditCardDesigner() {
               </div>}
             </div>
             {/* Properties — ENHANCED */}
-            {selectedData && <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}><div className="p-4">
+            {selectedData && <div className="rounded-2xl overflow-visible sidebar-item" style={ps}><div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium">Properties
                   {selectedData.isHardware && <span className="text-[10px] text-amber-400 ml-1">FIXED</span>}
@@ -1261,7 +1241,7 @@ export default function CreditCardDesigner() {
                 </div>
               </div>
               <div className="mt-6 text-center"><p className="text-[11px] text-slate-600">
-                Click to select â€¢ Drag to move â€¢ Double-click text to edit â€¢ Drop images from desktop â€¢ <span className="text-slate-500 font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Face</span>
+                Click to select • Drag to move • Double-click text to edit • Drop images from desktop • <span className="text-slate-500 font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Face</span>
               </p></div>
             </div>
           </div>
