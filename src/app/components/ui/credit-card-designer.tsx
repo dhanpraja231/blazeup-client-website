@@ -237,7 +237,7 @@ export default function CreditCardDesigner() {
   const [spotlightX, setSpotlightX] = useState(30);
   const [spotlightY, setSpotlightY] = useState(30);
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
-  const [showTemplateModal, setShowTemplateModal] = useState(true);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [canvasLightMode, setCanvasLightMode] = useState(false);
   // Background removal parameters (from backgroundslider.html)
   const [bgRemovalTolerance, setBgRemovalTolerance] = useState(0.05);
