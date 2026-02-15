@@ -8,20 +8,20 @@ interface DonutChartProps {
   dataKey: string;
   nameKey: string;
   height?: number;
+  light?: boolean;
 }
 
 const COLORS = [
-  CHART_THEME.colors.primary, 
-  CHART_THEME.colors.secondary, 
-  CHART_THEME.colors.success, 
+  CHART_THEME.colors.primary,
+  CHART_THEME.colors.secondary,
+  CHART_THEME.colors.success,
   CHART_THEME.colors.warning,
-  CHART_THEME.colors.danger
+  CHART_THEME.colors.danger,
 ];
 
-export function DonutChart({ data, dataKey, nameKey, height = 300 }: DonutChartProps) {
-  // Dynamically scale radii based on available height so it fits in small containers
+export function DonutChart({ data, dataKey, nameKey, height = 300, light = false }: DonutChartProps) {
   const legendSpace = Math.min(50, Math.max(32, data.length * 10));
-  const chartArea = height - legendSpace - 16; // leave room for legend + padding
+  const chartArea = height - legendSpace - 16;
   const outerRadius = Math.max(30, Math.min(80, chartArea * 0.38));
   const innerRadius = Math.max(18, outerRadius * 0.7);
   const paddingAngle = outerRadius < 50 ? 3 : 5;
@@ -33,10 +33,10 @@ export function DonutChart({ data, dataKey, nameKey, height = 300 }: DonutChartP
           <Pie
             data={data}
             cx="50%" cy="45%"
-            innerRadius={innerRadius} 
+            innerRadius={innerRadius}
             outerRadius={outerRadius}
             paddingAngle={paddingAngle}
-            dataKey={dataKey} 
+            dataKey={dataKey}
             nameKey={nameKey}
             stroke="none"
           >
@@ -44,7 +44,7 @@ export function DonutChart({ data, dataKey, nameKey, height = 300 }: DonutChartP
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip light={light} />} />
           <Legend
             verticalAlign="bottom"
             iconType="circle"
@@ -56,7 +56,7 @@ export function DonutChart({ data, dataKey, nameKey, height = 300 }: DonutChartP
               overflow: 'hidden',
             }}
             formatter={(value: string) => (
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginRight: '8px' }}>
+              <span style={{ color: light ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)', fontSize: '10px', marginRight: '8px' }}>
                 {value.length > 10 ? value.slice(0, 10) + '…' : value}
               </span>
             )}

@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 
 interface WeeklyData {
-  week: number; // 1-52
-  value: number; // 0-100
+  week: number;
+  value: number;
 }
 
 interface YearData {
@@ -16,6 +16,7 @@ export interface SpendingHeatmapProps {
   data: YearData[];
   title?: string;
   subtitle?: string;
+  light?: boolean;
 }
 
 interface TooltipData {
@@ -32,10 +33,10 @@ export function SpendingHeatmap({
   data,
   title = 'Company Spending Heatmap',
   subtitle = 'Weekly expenditure intensity',
+  light = false,
 }: SpendingHeatmapProps) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
-  // Month markers: approximate start week for each month label
   const monthMarkers = [
     { label: 'Jan', week: 1 },
     { label: 'Feb', week: 5 },
@@ -52,7 +53,7 @@ export function SpendingHeatmap({
   ];
 
   const getColor = (value: number): string => {
-    if (value === 0) return 'rgba(255,255,255,0.04)';
+    if (value === 0) return light ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)';
     const hue = 130 + value * 0.1;
     const saturation = 40 + value * 0.5;
     const lightness = 85 - value * 0.65;
@@ -88,8 +89,8 @@ export function SpendingHeatmap({
     <div
       className="rounded-2xl p-6 sm:p-8 relative"
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
+        border: `1px solid ${light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}`,
       }}
     >
       {/* Inline hover styles */}
@@ -100,7 +101,7 @@ export function SpendingHeatmap({
         }
         .heatmap-cell:hover {
           transform: scale(1.4);
-          outline: 1.5px solid rgba(255,255,255,0.6);
+          outline: 1.5px solid ${light ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)'};
           z-index: 5;
           border-radius: 2px;
         }
@@ -108,11 +109,11 @@ export function SpendingHeatmap({
 
       {/* Header */}
       <div className="mb-6">
-        <h3 className="text-base font-semibold text-white/80">{title}</h3>
-        <p className="text-xs text-white/30 mt-1">{subtitle}</p>
+        <h3 className="text-base font-semibold" style={{ color: light ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.8)' }}>{title}</h3>
+        <p className="text-xs mt-1" style={{ color: light ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.3)' }}>{subtitle}</p>
       </div>
 
-      {/* Heatmap Grid — scrollable on small screens */}
+      {/* Heatmap Grid */}
       <div className="overflow-x-auto pb-2">
         {/* Month labels row */}
         <div
@@ -124,13 +125,14 @@ export function SpendingHeatmap({
             minWidth: 600,
           }}
         >
-          <div /> {/* empty corner */}
+          <div />
           {Array.from({ length: TOTAL_WEEKS }, (_, i) => {
             const marker = monthMarkers.find((m) => m.week === i + 1);
             return (
               <div
                 key={`wk-label-${i}`}
-                className="text-[8px] text-white/30 text-center font-medium"
+                className="text-[8px] text-center font-medium"
+                style={{ color: light ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }}
               >
                 {marker ? marker.label : ''}
               </div>
@@ -150,15 +152,13 @@ export function SpendingHeatmap({
               minWidth: 600,
             }}
           >
-            {/* Year label */}
             <div
-              className="text-[11px] text-white/45 text-right pr-3 font-medium"
-              style={{ lineHeight: '14px' }}
+              className="text-[11px] text-right pr-3 font-medium"
+              style={{ lineHeight: '14px', color: light ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.45)' }}
             >
               {yearData.year}
             </div>
 
-            {/* Week cells */}
             {Array.from({ length: TOTAL_WEEKS }, (_, weekIndex) => {
               const value = getWeekValue(yearData, weekIndex);
               return (
@@ -184,28 +184,13 @@ export function SpendingHeatmap({
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-2 mt-5 text-[11px] text-white/35">
+      <div className="flex items-center gap-2 mt-5 text-[11px]" style={{ color: light ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.35)' }}>
         <span>Low Expenditure</span>
-        <div
-          className="w-3 h-3 rounded-sm"
-          style={{ background: 'hsl(130, 60%, 85%)' }}
-        />
-        <div
-          className="w-3 h-3 rounded-sm"
-          style={{ background: 'hsl(133, 65%, 65%)' }}
-        />
-        <div
-          className="w-3 h-3 rounded-sm"
-          style={{ background: 'hsl(135, 70%, 50%)' }}
-        />
-        <div
-          className="w-3 h-3 rounded-sm"
-          style={{ background: 'hsl(138, 80%, 35%)' }}
-        />
-        <div
-          className="w-3 h-3 rounded-sm"
-          style={{ background: 'hsl(140, 90%, 20%)' }}
-        />
+        <div className="w-3 h-3 rounded-sm" style={{ background: 'hsl(130, 60%, 85%)' }} />
+        <div className="w-3 h-3 rounded-sm" style={{ background: 'hsl(133, 65%, 65%)' }} />
+        <div className="w-3 h-3 rounded-sm" style={{ background: 'hsl(135, 70%, 50%)' }} />
+        <div className="w-3 h-3 rounded-sm" style={{ background: 'hsl(138, 80%, 35%)' }} />
+        <div className="w-3 h-3 rounded-sm" style={{ background: 'hsl(140, 90%, 20%)' }} />
         <span>High Expenditure</span>
       </div>
 
@@ -217,33 +202,20 @@ export function SpendingHeatmap({
             left: `${tooltip.x}px`,
             top: `${tooltip.y}px`,
             transform: 'translate(-50%, -100%)',
-            backgroundColor: '#1a1a2e',
-            border: '1px solid rgba(255,255,255,0.12)',
+            backgroundColor: light ? '#fff' : '#1a1a2e',
+            border: `1px solid ${light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)'}`,
             borderRadius: '8px',
             padding: '8px 12px',
             pointerEvents: 'none',
             zIndex: 1000,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
+            boxShadow: light ? '0 8px 24px rgba(0,0,0,0.12)' : '0 8px 24px rgba(0,0,0,0.6)',
             minWidth: '110px',
           }}
         >
-          <div
-            style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              color: '#fff',
-              marginBottom: '2px',
-            }}
-          >
+          <div style={{ fontSize: '12px', fontWeight: 600, color: light ? '#1e293b' : '#fff', marginBottom: '2px' }}>
             {tooltip.year}
           </div>
-          <div
-            style={{
-              fontSize: '11px',
-              color: 'rgba(255,255,255,0.5)',
-              marginBottom: '4px',
-            }}
-          >
+          <div style={{ fontSize: '11px', color: light ? '#64748b' : 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>
             Week {tooltip.week}
           </div>
           <div style={{ fontSize: '11px', color: '#4ade80', fontWeight: 500 }}>

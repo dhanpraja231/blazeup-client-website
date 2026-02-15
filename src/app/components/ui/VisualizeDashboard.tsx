@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+
+const ThemeCtx = createContext(false);
+function useLight() { return useContext(ThemeCtx); }
 import {
   Layers,
   Building2,
@@ -32,6 +35,8 @@ import {
   AreaChart as AreaChartIcon,
   CircleDot,
   Store,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 /* ── Dynamic imports for recharts components (no SSR) ── */
@@ -241,48 +246,50 @@ const EMPLOYEE_TIME_DATA = [
 
 /* ═══════════════ REAL CHART RENDERER ═══════════════ */
 function RealChart({ chartType, kpiId, height }: { chartType: string; kpiId: string; height?: number }) {
+  const light = useLight();
   const data = getDataForKPI(kpiId);
   const kpi = KPI_DIMENSIONS.find(k => k.id === kpiId);
   const h = height || 220;
 
   if (chartType === 'bar') {
-    return <BarGraph data={data} xKey="name" dataKey="value" color={kpi?.accent} height={h} />;
+    return <BarGraph data={data} xKey="name" dataKey="value" color={kpi?.accent} height={h} light={light} />;
   }
   if (chartType === 'line') {
     const lines = kpiId === 'time'
       ? [{ key: 'value', name: 'Spending', color: kpi?.accent || '#6366f1' }, { key: 'budget', name: 'Budget', color: '#64748b' }]
       : [{ key: 'value', name: kpi?.label || 'Value', color: kpi?.accent || '#6366f1' }];
-    return <LineGraph data={data} xKey="name" lines={lines} height={h} />;
+    return <LineGraph data={data} xKey="name" lines={lines} height={h} light={light} />;
   }
   if (chartType === 'doughnut') {
-    return <DonutChart data={data} dataKey="value" nameKey="name" height={h} />;
+    return <DonutChart data={data} dataKey="value" nameKey="name" height={h} light={light} />;
   }
   if (chartType === 'pie') {
-    return <DonutChart data={data} dataKey="value" nameKey="name" height={h} />;
+    return <DonutChart data={data} dataKey="value" nameKey="name" height={h} light={light} />;
   }
   if (chartType === 'scatter') {
     const scatterData = SCATTER_DATA[kpiId] || SCATTER_DATA['time'];
-    return <ScatterGraph data={scatterData} color={kpi?.accent} height={h} />;
+    return <ScatterGraph data={scatterData} color={kpi?.accent} height={h} light={light} />;
   }
-  // Fallback
-  return <BarGraph data={data} xKey="name" dataKey="value" color={kpi?.accent} height={h} />;
+  return <BarGraph data={data} xKey="name" dataKey="value" color={kpi?.accent} height={h} light={light} />;
 }
 
 /* ═══════════════ PALETTE ITEM ═══════════════ */
 function PaletteItem({ widget }: { widget: typeof KPI_DIMENSIONS[number] }) {
+  const L = useLight();
   return (
     <motion.div
       draggable
       onDragStart={(e) => {
         (e as unknown as React.DragEvent).dataTransfer?.setData('text/kpi-dimension', widget.id);
       }}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r ${widget.color} border border-white/[0.06] cursor-grab active:cursor-grabbing select-none hover:border-white/15 transition-colors duration-200`}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing select-none transition-colors duration-200 bg-gradient-to-r ${widget.color}`}
+      style={{ border: L ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.06)' }}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
     >
-      <GripVertical className="w-3.5 h-3.5 text-white/30 shrink-0" />
-      <span className="text-white/50">{widget.icon}</span>
-      <span className="text-xs font-medium text-white/60 whitespace-nowrap">{widget.label}</span>
+      <GripVertical className="w-3.5 h-3.5 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.3)' }} />
+      <span style={{ color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.5)' }}>{widget.icon}</span>
+      <span className="text-xs font-semibold whitespace-nowrap" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{widget.label}</span>
     </motion.div>
   );
 }
@@ -300,6 +307,7 @@ function DashboardZone({
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const L = useLight();
   const kpi = widget ? KPI_DIMENSIONS.find(k => k.id === widget.kpiId) : null;
   const chartMeta = widget ? CHART_TYPES.find(c => c.id === widget.chartType) : null;
   const allowedCharts = widget ? CHART_TYPES.filter(c => (KPI_ALLOWED_CHARTS[widget.kpiId] || []).includes(c.id)) : CHART_TYPES;
@@ -311,14 +319,28 @@ function DashboardZone({
       layout
       className={`${zone.colSpan} ${zone.rowSpan} rounded-2xl flex flex-col relative overflow-hidden transition-all duration-300 ${
         isPreview
-          ? 'border border-white/[0.06] bg-white/[0.025]'
+          ? ''
           : isDragOver
-            ? 'border-2 border-indigo-500/50 bg-indigo-500/[0.04] shadow-[0_0_30px_rgba(99,102,241,0.1)]'
-            : widget
-              ? 'border border-white/[0.08] bg-white/[0.025]'
-              : 'border-2 border-dashed border-white/[0.08] bg-white/[0.015] hover:bg-white/[0.025] hover:border-white/[0.12]'
+            ? 'shadow-[0_0_30px_rgba(99,102,241,0.1)]'
+            : ''
       }`}
-      style={{ minHeight: isLargeZone && widget ? 360 : 220 }}
+      style={{
+        minHeight: isLargeZone && widget ? 360 : 220,
+        background: isPreview
+          ? (L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.025)')
+          : isDragOver
+            ? 'rgba(99,102,241,0.04)'
+            : widget
+              ? (L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.025)')
+              : (L ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.015)'),
+        border: isPreview
+          ? `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`
+          : isDragOver
+            ? '2px solid rgba(99,102,241,0.5)'
+            : widget
+              ? `1px solid ${L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`
+              : `2px dashed ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`,
+      }}
       onDragOver={(e) => { if (!isPreview) { e.preventDefault(); setIsDragOver(true); } }}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={(e) => {
@@ -330,10 +352,10 @@ function DashboardZone({
       }}
     >
       {/* Header */}
-      <div className={`flex items-center justify-between px-4 py-2 border-b ${isPreview ? 'border-white/[0.04]' : 'border-white/[0.06]'}`}>
+      <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
         <div className="flex items-center gap-2">
           {widget && kpi && <span className="w-2 h-2 rounded-full" style={{ background: kpi.accent }} />}
-          <span className={`text-[11px] font-medium ${widget ? 'text-white/50' : 'text-white/25'}`}>
+          <span className="text-[11px] font-medium" style={{ color: widget ? (L ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.5)') : (L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.25)') }}>
             {widget && kpi ? `${kpi.label} · ${chartMeta?.label || 'Bar Chart'}` : zone.label}
           </span>
         </div>
@@ -341,16 +363,17 @@ function DashboardZone({
           {widget && !isPreview && (
             <div className="relative">
               <button onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.05] border border-white/[0.08] text-[10px] text-white/50 hover:text-white/70 hover:border-white/15 transition-all">
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] transition-all"
+                style={{ background: L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`, color: L ? '#475569' : 'rgba(255,255,255,0.5)' }}>
                 {chartMeta?.icon}
                 <ChevronDown className="w-2.5 h-2.5" />
               </button>
               {showDropdown && (
-                <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-xl bg-[#1a1a2e] border border-white/[0.1] shadow-2xl overflow-hidden">
+                <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-xl shadow-2xl overflow-hidden" style={{ background: L ? '#fff' : '#1a1a2e', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}` }}>
                   {allowedCharts.map((ct) => (
                     <button key={ct.id} onClick={() => { onChartChange(zone.id, ct.id); setShowDropdown(false); }}
-                      className={`w-full text-left flex items-center gap-2 px-3 py-2 text-[11px] transition-colors ${
-                        ct.id === widget.chartType ? 'text-indigo-400 bg-indigo-500/10' : 'text-white/50 hover:bg-white/[0.05] hover:text-white/70'}`}>
+                      className="w-full text-left flex items-center gap-2 px-3 py-2 text-[11px] transition-colors"
+                      style={{ color: ct.id === widget.chartType ? '#6366f1' : (L ? '#475569' : 'rgba(255,255,255,0.5)'), background: ct.id === widget.chartType ? 'rgba(99,102,241,0.1)' : 'transparent' }}>
                       {ct.icon} {ct.label}
                     </button>
                   ))}
@@ -359,7 +382,7 @@ function DashboardZone({
             </div>
           )}
           {widget && !isPreview && (
-            <button onClick={() => onRemove(zone.id)} className="p-1 rounded-md text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Remove widget">
+            <button onClick={() => onRemove(zone.id)} className="p-1 rounded-md hover:text-red-400 hover:bg-red-500/10 transition-all" style={{ color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)' }} title="Remove widget">
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
@@ -374,7 +397,7 @@ function DashboardZone({
               <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: kpi.accent + '18' }}>
                 <span className="scale-75" style={{ color: kpi.accent }}>{kpi.icon}</span>
               </div>
-              <p className="text-xs font-semibold text-white/70">{kpi.label} Analysis</p>
+              <p className="text-xs font-semibold" style={{ color: L ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)' }}>{kpi.label} Analysis</p>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden">
               <RealChart chartType={widget.chartType} kpiId={widget.kpiId} height={isLargeZone ? 280 : 160} />
@@ -391,10 +414,10 @@ function DashboardZone({
               </motion.div>
             ) : (
               <>
-                <div className="w-10 h-10 mb-2 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                  <Layers className="w-4 h-4 text-white/15" />
+                <div className="w-10 h-10 mb-2 rounded-lg flex items-center justify-center" style={{ background: L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)', border: `1px solid ${L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}` }}>
+                  <Layers className="w-4 h-4" style={{ color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.15)' }} />
                 </div>
-                <p className="text-[11px] text-white/20">Drag a KPI here</p>
+                <p className="text-[11px]" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.2)' }}>Drag a KPI here</p>
               </>
             )}
           </div>
@@ -406,10 +429,11 @@ function DashboardZone({
 
 /* ═══════════════ ALERT CARD ═══════════════ */
 function AlertCard({ alert, index }: { alert: typeof ALERTS[number]; index: number }) {
+  const L = useLight();
   return (
     <motion.div
       className="relative flex items-center gap-4 rounded-2xl p-5 overflow-hidden"
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1, duration: 0.5 }}>
       {/* Concentric circle pulse emanating from the icon center */}
       <div className="absolute pointer-events-none" style={{ left: 'calc(20px + 22px)', top: '50%', transform: 'translate(-50%, -50%)', width: 0, height: 0 }}>
@@ -458,9 +482,9 @@ function AlertCard({ alert, index }: { alert: typeof ALERTS[number]; index: numb
         </div>
       </div>
       <div className="relative z-10 flex-1 min-w-0">
-        <p className="text-xs text-white/40 font-medium">{alert.label}</p>
+        <p className="text-xs font-medium" style={{ color: L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)' }}>{alert.label}</p>
         <div className="flex items-baseline gap-2 mt-0.5">
-          <span className="text-2xl font-bold text-white">{alert.value}</span>
+          <span className="text-2xl font-bold" style={{ color: L ? '#0f172a' : '#fff' }}>{alert.value}</span>
           <span className="flex items-center gap-0.5 text-[11px] font-medium"
             style={{ color: alert.trendUp ? (alert.id === 'resolved' ? '#22c55e' : '#ef4444') : '#22c55e' }}>
             {alert.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
@@ -474,6 +498,7 @@ function AlertCard({ alert, index }: { alert: typeof ALERTS[number]; index: numb
 
 /* ═══════════════ EMPLOYEE LOOKUP ═══════════════ */
 function EmployeeLookup() {
+  const L = useLight();
   const [search, setSearch] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<typeof EMPLOYEES[number] | null>(null);
 
@@ -492,14 +517,14 @@ function EmployeeLookup() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Table */}
-      <div className="lg:col-span-7 rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="px-5 py-4 border-b border-white/[0.06] flex items-center gap-3">
-          <Search className="w-4 h-4 text-white/30 shrink-0" />
+      <div className="lg:col-span-7 rounded-2xl overflow-hidden" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
+        <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
+          <Search className="w-4 h-4 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }} />
           <input type="text" placeholder="Search employees by name, department, or role..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-transparent text-sm text-white placeholder-white/25 outline-none" />
-          {search && <button onClick={() => setSearch('')} className="p-1 rounded-md hover:bg-white/[0.05]"><X className="w-3.5 h-3.5 text-white/30" /></button>}
+            className="flex-1 bg-transparent text-sm outline-none" style={{ color: L ? '#1e293b' : '#fff' }} />
+          {search && <button onClick={() => setSearch('')} className="p-1 rounded-md" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }}><X className="w-3.5 h-3.5" /></button>}
         </div>
-        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-semibold text-white/25 uppercase tracking-wider border-b border-white/[0.04]">
+        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.25)', borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'}` }}>
           <span className="col-span-4">Employee</span>
           <span className="col-span-2">Department</span>
           <span className="col-span-2 text-right">Spend</span>
@@ -509,21 +534,22 @@ function EmployeeLookup() {
         <div className="max-h-[400px] overflow-y-auto">
           {filtered.map((emp) => (
             <motion.button key={emp.id} onClick={() => setSelectedEmployee(emp)}
-              className={`w-full grid grid-cols-12 gap-2 px-5 py-3 text-left transition-colors duration-150 border-b border-white/[0.03] ${selectedEmployee?.id === emp.id ? 'bg-green-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
+              className="w-full grid grid-cols-12 gap-2 px-5 py-3 text-left transition-colors duration-150"
+              style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'}`, background: selectedEmployee?.id === emp.id ? 'rgba(22,163,74,0.08)' : 'transparent' }}
               whileTap={{ scale: 0.995 }}>
               <div className="col-span-4 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{emp.avatar}</div>
-                <div className="min-w-0"><p className="text-sm font-medium text-white/80 truncate">{emp.name}</p><p className="text-[10px] text-white/30 truncate">{emp.role}</p></div>
+                <div className="min-w-0"><p className="text-sm font-medium truncate" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{emp.name}</p><p className="text-[10px] truncate" style={{ color: L ? '#94a3b8' : 'rgba(255,255,255,0.3)' }}>{emp.role}</p></div>
               </div>
-              <span className="col-span-2 text-xs text-white/40 self-center">{emp.dept}</span>
-              <span className="col-span-2 text-xs text-white/60 font-medium text-right self-center">₹{emp.spend.toLocaleString()}</span>
-              <span className="col-span-2 text-xs text-white/40 text-right self-center">{emp.transactions}</span>
+              <span className="col-span-2 text-xs self-center" style={{ color: L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)' }}>{emp.dept}</span>
+              <span className="col-span-2 text-xs font-medium text-right self-center" style={{ color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.6)' }}>₹{emp.spend.toLocaleString()}</span>
+              <span className="col-span-2 text-xs text-right self-center" style={{ color: L ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)' }}>{emp.transactions}</span>
               <div className="col-span-2 flex justify-center self-center">
                 <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={statusColor(emp.status)}>{emp.status}</span>
               </div>
             </motion.button>
           ))}
-          {filtered.length === 0 && <div className="py-12 text-center text-white/20 text-sm">No employees match your search</div>}
+          {filtered.length === 0 && <div className="py-12 text-center text-sm" style={{ color: L ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.2)' }}>No employees match your search</div>}
         </div>
       </div>
 
@@ -532,37 +558,36 @@ function EmployeeLookup() {
         <AnimatePresence mode="wait">
           {selectedEmployee ? (
             <motion.div key={selectedEmployee.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{selectedEmployee.avatar}</div>
-                <div><h4 className="text-lg font-bold text-white">{selectedEmployee.name}</h4><p className="text-sm text-white/40">{selectedEmployee.role} · {selectedEmployee.dept}</p></div>
+                <div><h4 className="text-lg font-bold" style={{ color: L ? '#0f172a' : '#fff' }}>{selectedEmployee.name}</h4><p className="text-sm" style={{ color: L ? '#64748b' : 'rgba(255,255,255,0.4)' }}>{selectedEmployee.role} · {selectedEmployee.dept}</p></div>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {[{ label: 'Total Spend', value: `₹${selectedEmployee.spend.toLocaleString()}` }, { label: 'Transactions', value: selectedEmployee.transactions.toString() }, { label: 'Status', value: selectedEmployee.status }].map((stat) => (
-                  <div key={stat.label} className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <p className="text-[10px] text-white/30 mb-1">{stat.label}</p><p className="text-sm font-semibold text-white/70">{stat.value}</p>
+                  <div key={stat.label} className="rounded-xl p-3 text-center" style={{ background: L ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)', border: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'}` }}>
+                    <p className="text-[10px] mb-1" style={{ color: L ? '#94a3b8' : 'rgba(255,255,255,0.3)' }}>{stat.label}</p><p className="text-sm font-semibold" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.7)' }}>{stat.value}</p>
                   </div>
                 ))}
               </div>
 
               {/* Real Donut Chart — Spending by Category */}
-              <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p className="text-xs font-medium text-white/40 mb-2">Spending by Category</p>
-                <DonutChart data={EMPLOYEE_CATEGORIES} dataKey="value" nameKey="name" height={200} />
+              <div className="rounded-xl p-4" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'}` }}>
+                <p className="text-xs font-medium mb-2" style={{ color: L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)' }}>Spending by Category</p>
+                <DonutChart data={EMPLOYEE_CATEGORIES} dataKey="value" nameKey="name" height={200} light={L} />
               </div>
 
-              {/* Real Line Graph — Spending Over Time */}
-              <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p className="text-xs font-medium text-white/40 mb-2">Spending Over Time</p>
-                <LineGraph data={EMPLOYEE_TIME_DATA} xKey="name" lines={[{ key: 'spending', name: 'Spending', color: '#16a34a' }]} height={200} />
+              <div className="rounded-xl p-4" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'}` }}>
+                <p className="text-xs font-medium mb-2" style={{ color: L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)' }}>Spending Over Time</p>
+                <LineGraph data={EMPLOYEE_TIME_DATA} xKey="name" lines={[{ key: 'spending', name: 'Spending', color: '#16a34a' }]} height={200} light={L} />
               </div>
             </motion.div>
           ) : (
             <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="rounded-2xl p-12 flex flex-col items-center justify-center text-center"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', minHeight: 400 }}>
-              <User className="w-10 h-10 text-white/10 mb-4" /><p className="text-sm text-white/25">Select an employee to view details</p>
-              <p className="text-[11px] text-white/15 mt-1">Click any row in the table</p>
+              style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`, minHeight: 400 }}>
+              <User className="w-10 h-10 mb-4" style={{ color: L ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.1)' }} /><p className="text-sm" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.25)' }}>Select an employee to view details</p>
+              <p className="text-[11px] mt-1" style={{ color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.15)' }}>Click any row in the table</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -617,6 +642,8 @@ export default function VisualizeDashboard() {
   const [mode, setMode] = useState<DashboardMode>('edit');
   const [zones, setZones] = useState<Record<string, PlacedWidget>>({});
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [light, setLight] = useState(false);
+  const L = light;
 
   const widgetCount = Object.keys(zones).length;
 
@@ -636,27 +663,30 @@ export default function VisualizeDashboard() {
   const isPreview = mode === 'preview';
 
   return (
-    <div className="min-h-screen bg-[var(--dark-gray)]">
+    <ThemeCtx.Provider value={light}>
+    <div className="min-h-screen" style={{ background: L ? '#f8fafc' : 'var(--dark-gray)', color: L ? '#1e293b' : '#fff', transition: 'background 0.3s, color 0.3s' }}>
       {/* Header */}
-      <div className="border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+      <div style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}`, background: L ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.02)', backdropFilter: 'blur(8px)' }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <motion.h1 className="text-2xl sm:text-3xl font-bold text-white" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4 }}>
+              <motion.h1 className="text-2xl sm:text-3xl font-bold" style={{ color: L ? '#0f172a' : '#fff' }} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4 }}>
                 Spending <span className="text-gradient-animated">Dashboard</span>
               </motion.h1>
-              <motion.p className="text-white/40 mt-1 text-sm" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
+              <motion.p className="mt-1 text-sm" style={{ color: L ? '#64748b' : 'rgba(255,255,255,0.4)' }} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
                 {isPreview ? 'Preview your dashboard — this is how it will look when shipped' : 'Build your dashboard by dragging KPI dimensions into the grid'}
               </motion.p>
             </div>
             <motion.div className="flex items-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-              <div className="flex items-center rounded-xl overflow-hidden border border-white/[0.08]">
+              <div className="flex items-center rounded-xl overflow-hidden" style={{ border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}` }}>
                 <button onClick={() => setMode('edit')}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all ${!isPreview ? 'bg-indigo-500/15 text-indigo-400' : 'bg-white/[0.03] text-white/40 hover:text-white/60'}`}>
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all"
+                  style={{ background: !isPreview ? 'rgba(99,102,241,0.15)' : (L ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)'), color: !isPreview ? '#6366f1' : (L ? '#475569' : 'rgba(255,255,255,0.4)') }}>
                   <Pencil className="w-3.5 h-3.5" /> Edit
                 </button>
                 <button onClick={() => setMode('preview')}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all ${isPreview ? 'bg-indigo-500/15 text-indigo-400' : 'bg-white/[0.03] text-white/40 hover:text-white/60'}`}>
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all"
+                  style={{ background: isPreview ? 'rgba(99,102,241,0.15)' : (L ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)'), color: isPreview ? '#6366f1' : (L ? '#475569' : 'rgba(255,255,255,0.4)') }}>
                   <Eye className="w-3.5 h-3.5" /> Preview
                 </button>
               </div>
@@ -664,7 +694,10 @@ export default function VisualizeDashboard() {
                 className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-30 disabled:cursor-not-allowed">
                 <Send className="w-3.5 h-3.5" /> Submit
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/50 hover:text-white/80 hover:border-white/15 transition-all duration-200 text-sm">
+              <button onClick={() => setLight(v => !v)} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 text-sm" style={{ background: L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`, color: L ? '#475569' : 'rgba(255,255,255,0.5)' }}>
+                {L ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </button>
+              <button className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 text-sm" style={{ background: L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`, color: L ? '#475569' : 'rgba(255,255,255,0.5)' }}>
                 <Settings className="w-4 h-4" />
               </button>
             </motion.div>
@@ -687,7 +720,7 @@ export default function VisualizeDashboard() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-10">
         {/* Alerts & Insights — moved to top */}
         <div>
-          <motion.h2 className="text-lg font-bold text-white mb-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <motion.h2 className="text-lg font-bold mb-4" style={{ color: L ? '#0f172a' : '#fff' }} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             Alerts & Insights
           </motion.h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -699,8 +732,8 @@ export default function VisualizeDashboard() {
         <div className="flex flex-col lg:flex-row gap-6">
           {!isPreview && (
             <aside className="lg:w-48 shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 96, zIndex: 20 }}>
-              <div className="rounded-2xl border border-white/[0.06] bg-[var(--dark-gray)] backdrop-blur-md p-3">
-                <h3 className="text-[11px] font-semibold text-white/40 mb-3 px-1 uppercase tracking-wider">KPI Dimensions</h3>
+              <div className="rounded-2xl backdrop-blur-md p-3" style={{ background: L ? '#fff' : 'var(--dark-gray)', border: `1px solid ${L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}` }}>
+                <h3 className="text-[11px] font-semibold mb-3 px-1 uppercase tracking-wider" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.4)' }}>KPI Dimensions</h3>
                 <div className="flex flex-wrap lg:flex-col gap-2">
                   {KPI_DIMENSIONS.map((widget) => (
                     <div key={widget.id} draggable onDragStart={(e) => { e.dataTransfer.setData('text/kpi-dimension', widget.id); e.dataTransfer.effectAllowed = 'copy'; }}>
@@ -708,8 +741,8 @@ export default function VisualizeDashboard() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-3 pt-3 border-t border-white/[0.06]">
-                  <p className="text-[10px] text-white/15 leading-relaxed px-1">Drag a dimension into a zone, then choose a chart type from the dropdown.</p>
+                <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
+                  <p className="text-[10px] leading-relaxed px-1" style={{ color: L ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.15)' }}>Drag a dimension into a zone, then choose a chart type from the dropdown.</p>
                 </div>
               </div>
             </aside>
@@ -728,15 +761,15 @@ export default function VisualizeDashboard() {
 
         {/* Spending Heatmap */}
         <div>
-          <motion.h2 className="text-lg font-bold text-white mb-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <motion.h2 className="text-lg font-bold mb-4" style={{ color: L ? '#0f172a' : '#fff' }} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             Spending Activity
           </motion.h2>
-          <SpendingHeatmap data={HEATMAP_DATA} />
+          <SpendingHeatmap data={HEATMAP_DATA} light={L} />
         </div>
 
-        {/* Employee Lookup — at the bottom */}
+        {/* Employee Lookup */}
         <div>
-          <motion.h2 className="text-lg font-bold text-white mb-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <motion.h2 className="text-lg font-bold mb-4" style={{ color: L ? '#0f172a' : '#fff' }} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             Employee Lookup
           </motion.h2>
           <EmployeeLookup />
@@ -745,5 +778,6 @@ export default function VisualizeDashboard() {
 
       {showSubmitModal && <SubmitModal onClose={() => setShowSubmitModal(false)} widgetCount={widgetCount} />}
     </div>
+    </ThemeCtx.Provider>
   );
 }
