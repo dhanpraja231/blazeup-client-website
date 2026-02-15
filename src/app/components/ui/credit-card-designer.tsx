@@ -2,6 +2,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import gsap from 'gsap';
+import AITemplateGenerator from './AITemplateGenerator';
 import {
   CreditCard, Type, Circle, Square, Trash2, Undo2, Redo2, Upload,
   Sparkles, Heart, Star, Zap, Shield, Lock, Globe, Wifi, Battery,
@@ -12,6 +13,11 @@ import {
 import { processImageBackground } from './backgroundremoval';
 import ColorPicker from './color-picker';
 import { CARD_LAYOUTS, type LayoutId } from './layouts';
+
+// ====================== FEATURE FLAGS ======================
+// Set to true to enable AI template generator, false to disable
+const ENABLE_AI_TEMPLATES = false;
+
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
@@ -140,17 +146,13 @@ function MagstripeSVG({ width, height, vertical }: { width?: number; height?: nu
     const h = height || CARD.W;
     const w = width || 62.5;
     return (
-      <div style={{ width: w, height: h, background: 'linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-        <div style={{ position: 'absolute', left: (w - 36) / 2, top: 0, bottom: 0, width: 36, background: '#111', borderLeft: '1px solid #333', borderRight: '1px solid #333' }} />
-      </div>
+      <div style={{ width: w, height: h, background: '#0a0a0a', position: 'relative' }} />
     );
   }
   const w = width || CARD.W;
   const h = height || 62.5;
   return (
-    <div style={{ width: w, height: h, background: 'linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: (h - 36) / 2, left: 0, right: 0, height: 36, background: '#111', borderTop: '1px solid #333', borderBottom: '1px solid #333' }} />
-    </div>
+    <div style={{ width: w, height: h, background: '#0a0a0a', position: 'relative' }} />
   );
 }
 
@@ -186,7 +188,7 @@ function createFrontTemplate(): CardElement[] {
     // Contactless / NFC icon — fully movable & resizable
     { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
     // Account holder name — MOVABLE
-    { id: uid(), type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
+    { id: 'hw-cardholder-name', type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
   ];
 }
 
@@ -199,25 +201,27 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   // Account info: landscape = mid-left area; portrait = left side near top
   const acctX = isV ? 24 : 24;
   const acctY = isV ? 28 : ch - 90;
-  const acctContent = isV ? '4532\n8720\n1456\n7890' : '4532  8720  1456  7890';
+  const acctContent = isV ? 'XXXX\nXXXX\nXXXX\nXXXX' : 'XXXX  XXXX  XXXX  XXXX';
   const acctH = isV ? 70 : 20;
 
   return [
     // Magnetic stripe — thickness 12.5mm (62.5px); 5mm (25px) from top (landscape) or right (portrait)
     { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 25 - 62.5 : 0, y: isV ? 0 : 25, width: isV ? 62.5 : cw, height: isV ? ch : 62.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
-    // Hologram — bottom-right; in vertical mode shifted left to clear magstripe (magstripe left edge = cw-87.5)
-    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
+    // Hologram — bottom-right in horizontal; lower-right in vertical above issuing bank text
+    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: isV ? ch - 80 : ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
     // Network logo — 4px gap left of hologram
-    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
+    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: isV ? ch - 82 : ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
     // Linked account info group — moves as one unit
     { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 240, height: acctH + 24, content: acctContent, color: '#fff', fontSize: isV ? 13 : 14, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
     { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 2, width: 100, height: 16, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     { id: 'hw-expiry', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 18, width: 140, height: 16, content: 'VALID THRU: 12/28', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     // Fine print
-    { id: uid(), type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
+    { id: 'hw-fine-print', type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
   ];
 }
 export default function CreditCardDesigner() {
+    // Add this to your state declarations (around line 280)
+    const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [activeFace, setActiveFace] = useState<CardFace>('front');
   const [network, setNetwork] = useState<NetworkType>('Visa');
   const [frontElements, setFrontElements] = useState<CardElement[]>(() => createFrontTemplate());
@@ -233,7 +237,7 @@ export default function CreditCardDesigner() {
   const [spotlightX, setSpotlightX] = useState(30);
   const [spotlightY, setSpotlightY] = useState(30);
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
-  const [showTemplateModal, setShowTemplateModal] = useState(true);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [canvasLightMode, setCanvasLightMode] = useState(false);
   // Background removal parameters (from backgroundslider.html)
   const [bgRemovalTolerance, setBgRemovalTolerance] = useState(0.05);
@@ -746,7 +750,7 @@ export default function CreditCardDesigner() {
   const selectedData = elements.find(el => el.id === selectedElement);
   const comps = [
     { type: 'text' as const, icon: Type, label: 'Text', dv: 'Double click to edit' },
-    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: 'â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 1234' },
+    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: 'XXXX XXXX XXXX XXXX' },
     { type: 'circle' as const, icon: Circle, label: 'Circle', dv: '' },
     { type: 'rectangle' as const, icon: Square, label: 'Rectangle', dv: '' },
     { type: 'icon' as const, icon: Sparkles, label: 'Icon', dv: '' },
@@ -797,10 +801,30 @@ export default function CreditCardDesigner() {
               ))}
             </div>
             <div className="mt-8 flex justify-center gap-4">
-              <button onClick={() => { setToast({ message: 'AI template generation coming soon!', type: 'info' }); }}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-indigo-500/20">
-                <Wand2 className="w-4 h-4" /> Generate with AI
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => {
+                    if (ENABLE_AI_TEMPLATES) {
+                      setShowTemplateModal(false);
+                      setShowAIGenerator(true);
+                    }
+                  }}
+                  disabled={!ENABLE_AI_TEMPLATES}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all shadow-lg ${
+                    ENABLE_AI_TEMPLATES
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-indigo-500/20 cursor-pointer'
+                      : 'bg-slate-700/50 cursor-not-allowed opacity-60'
+                  }`}>
+                  <Wand2 className="w-4 h-4" />
+                  Generate with AI
+                </button>
+                {!ENABLE_AI_TEMPLATES && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl border border-slate-700">
+                    Coming Soon
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                  </div>
+                )}
+              </div>
               <button onClick={() => setShowTemplateModal(false)}
                 className="px-6 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors"
                 style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)' }}>
@@ -810,6 +834,28 @@ export default function CreditCardDesigner() {
           </div>
         </div>
       )}
+    {/* ===== AI TEMPLATE GENERATOR MODAL ===== */}
+    {ENABLE_AI_TEMPLATES && showAIGenerator && (
+      <AITemplateGenerator
+        onTemplateSelect={(design) => {
+          // Merge AI-generated elements with default hardware components
+          const defaultFront = createFrontTemplate();
+          const defaultBack = createBackTemplate(orientation, network);
+
+          // Combine: hardware elements first (bottom layer), then AI elements on top
+          const mergedFront = [...defaultFront, ...design.frontElements];
+          const mergedBack = [...defaultBack, ...design.backElements];
+
+          setFrontElements(mergedFront);
+          setBackElements(mergedBack);
+          setFrontBg(design.frontBg);
+          setBackBg(design.backBg);
+          setShowAIGenerator(false);
+          pushHistory();
+        }}
+        onClose={() => setShowAIGenerator(false)}
+      />
+    )}
       {/* Toast */}
       {toast && <div className="fixed bottom-6 right-6 z-[200] flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl animate-in slide-in-from-right" style={{
         background: toast.type === 'warn' ? 'rgba(245,158,11,.15)' : toast.type === 'error' ? 'rgba(239,68,68,.15)' : 'rgba(99,102,241,.15)',
@@ -827,7 +873,7 @@ export default function CreditCardDesigner() {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}><CreditCard className="w-5 h-5 text-white" /></div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text" style={{ WebkitTextFillColor: 'transparent' }}>Card Designer</h1>
-              <p className="text-xs text-slate-500">ISO 7810 â€¢ Drag & drop your logo â€¢ Customize everything</p>
+              <p className="text-xs text-slate-500">ISO 7810 • Drag & drop your logo • Customize everything</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -844,8 +890,9 @@ export default function CreditCardDesigner() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* ===== SIDEBAR ===== */}
           <div className="lg:col-span-3 space-y-3">
+
             {/* Components */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('components')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><Palette className="w-4 h-4 text-indigo-400" /><span className="text-sm font-medium">Components</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'components' ? 'rotate-180' : ''}`} />
@@ -857,7 +904,7 @@ export default function CreditCardDesigner() {
                 </button>); })}</div>}
             </div>
             {/* Image Clipboard */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('clipboard')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><Clipboard className="w-4 h-4 text-emerald-400" /><span className="text-sm font-medium">Image Clipboard</span>
                   {imageClipboard.length > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{imageClipboard.length}</span>}
@@ -891,7 +938,7 @@ export default function CreditCardDesigner() {
               </div>}
             </div>
             {/* Background + Spotlight */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('background')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><ImageIcon className="w-4 h-4 text-purple-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Background</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'background' ? 'rotate-180' : ''}`} />
@@ -905,34 +952,22 @@ export default function CreditCardDesigner() {
                 {/* Custom solid color */}
                 <div className="pt-2 border-t border-white/5">
                   <PropLabel>Custom Solid Color</PropLabel>
-                  <div className="flex gap-2 items-center">
-                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="flex-1" />
-                    <button onClick={() => { setCardBg(spotlightColor); pushHistory(); }}
-                      className="px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-purple-500/20 shrink-0" style={{ background: 'rgba(168,85,247,.1)', border: '1px solid rgba(168,85,247,.2)' }}>
-                      Apply
-                    </button>
-                  </div>
+                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); setCardBg(v); pushHistory(); }} className="w-32" />
                 </div>
                 {/* Spotlight gradient */}
                 <div className="pt-2 border-t border-white/5">
                   <PropLabel>Spotlight Gradient</PropLabel>
-                  <div className="flex gap-2 items-center">
-                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="w-10 shrink-0" />
-                    <button onClick={() => { const g = generateSpotlightGradient(spotlightColor, spotlightX, spotlightY); setCardBg(g); pushHistory(); }}
-                      className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-indigo-500/20" style={{ background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.2)' }}>
-                      Apply Spotlight
-                    </button>
-                  </div>
+                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); const g = generateSpotlightGradient(v, spotlightX, spotlightY); setCardBg(g); pushHistory(); }} className="w-full" />
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => setSpotlightX(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
-                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => setSpotlightY(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
+                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => { const val = parseInt(e.target.value); setSpotlightX(val); const g = generateSpotlightGradient(spotlightColor, val, spotlightY); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => { const val = parseInt(e.target.value); setSpotlightY(val); const g = generateSpotlightGradient(spotlightColor, spotlightX, val); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
                   </div>
                   <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: '1px solid rgba(255,255,255,.06)' }} />
                 </div>
               </div>}
             </div>
             {/* Card Layout */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('layout')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><FlipHorizontal className="w-4 h-4 text-amber-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Layout</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'layout' ? 'rotate-180' : ''}`} />
@@ -962,17 +997,13 @@ export default function CreditCardDesigner() {
                 </div>
                 {/* Color controls — only when a layout is selected */}
                 {activeLayout.id !== 'none' && <>
-                  <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); }} /></div>
-                  <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => setActiveLayout(prev => ({ ...prev, overlayColor: v }))} /></div>
-                  <button onClick={() => { setCardBg(activeLayout.baseColor); pushHistory(); }}
-                    className="w-full px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-amber-500/20" style={{ background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)' }}>
-                    Apply Layout
-                  </button>
+                  <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); pushHistory(); }} /></div>
+                  <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => { setActiveLayout(prev => ({ ...prev, overlayColor: v })); pushHistory(); }} /></div>
                 </>}
               </div>}
             </div>
             {/* Network */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('network')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-cyan-400" /><span className="text-sm font-medium">Card Network</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'network' ? 'rotate-180' : ''}`} />
@@ -986,7 +1017,7 @@ export default function CreditCardDesigner() {
               </div>}
             </div>
             {/* Patterns */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
               <button onClick={() => togglePanel('patterns')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-rose-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Pattern</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'patterns' ? 'rotate-180' : ''}`} />
@@ -1020,7 +1051,7 @@ export default function CreditCardDesigner() {
               </div>}
             </div>
             {/* Properties — ENHANCED */}
-            {selectedData && <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}><div className="p-4">
+            {selectedData && <div className="rounded-2xl overflow-visible sidebar-item" style={ps}><div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium">Properties
                   {selectedData.isHardware && <span className="text-[10px] text-amber-400 ml-1">FIXED</span>}
@@ -1212,7 +1243,7 @@ export default function CreditCardDesigner() {
                 </div>
               </div>
               <div className="mt-6 text-center"><p className="text-[11px] text-slate-600">
-                Click to select â€¢ Drag to move â€¢ Double-click text to edit â€¢ Drop images from desktop â€¢ <span className="text-slate-500 font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Face</span>
+                Click to select • Drag to move • Double-click text to edit • Drop images from desktop • <span className="text-slate-500 font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Face</span>
               </p></div>
             </div>
           </div>
