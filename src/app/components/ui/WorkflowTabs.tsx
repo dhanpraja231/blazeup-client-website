@@ -235,7 +235,7 @@ export default function WorkflowTabs() {
               >
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
                   Your{' '}
-                  <span className="text-gradient-animated">Workflow</span>
+                  Workflow
                 </h2>
                 <p className="text-white/50 max-w-2xl text-lg">
                   Design, evaluate, and visualize — everything you need to manage

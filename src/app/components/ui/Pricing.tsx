@@ -62,7 +62,7 @@ export default function Pricing() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Simple <span className="text-gradient-animated">Pricing</span>
+            Simple Pricing
           </motion.h2>
           <motion.p 
             className="text-lg sm:text-xl max-w-3xl mx-auto"

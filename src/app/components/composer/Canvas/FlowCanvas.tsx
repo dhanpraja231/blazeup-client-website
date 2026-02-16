@@ -94,6 +94,10 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
         
         // Check if any node is close to this position
         const hasOverlap = nodes.some(node => {
+          // Ensure node has valid position
+          if (!node.position || typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
+            return false;
+          }
           const dx = Math.abs(node.position.x - x);
           const dy = Math.abs(node.position.y - y);
           return dx < 750 && dy < 550; // MASSIVE overlap detection area
@@ -105,9 +109,9 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
       }
     }
     
-    // Snap to grid
-    x = Math.round(x / gridSize) * gridSize;
-    y = Math.round(y / gridSize) * gridSize;
+    // Ensure valid numbers and snap to grid
+    x = Math.round((Number.isFinite(x) ? x : baseX) / gridSize) * gridSize;
+    y = Math.round((Number.isFinite(y) ? y : baseY) / gridSize) * gridSize;
     
     const newNode: Node = {
       id: `${Date.now()}`,

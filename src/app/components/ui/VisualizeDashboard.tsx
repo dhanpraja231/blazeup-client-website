@@ -213,9 +213,15 @@ const EMPLOYEE_CATEGORIES = [
 ];
 
 /* ═══════════════ HEATMAP DATA (Weekly) ═══════════════ */
-function generateWeeklyData(year: number, baseLine: number, variance: number) {
+function generateWeeklyData(year: number, baseLine: number, variance: number, emptyWeeks: number[] = []) {
   const weeks = [];
   for (let w = 1; w <= 52; w++) {
+    // Check if this week should be empty (no spending)
+    if (emptyWeeks.includes(w)) {
+      weeks.push({ week: w, value: 0 });
+      continue;
+    }
+    
     // Create smooth seasonal patterns
     const seasonal = Math.sin((w / 52) * Math.PI * 2) * 15;
     
@@ -232,10 +238,10 @@ function generateWeeklyData(year: number, baseLine: number, variance: number) {
 }
 
 const HEATMAP_DATA = [
-  { year: 2023, weeks: generateWeeklyData(2023, 50, 35) },
-  { year: 2024, weeks: generateWeeklyData(2024, 60, 30) },
-  { year: 2025, weeks: generateWeeklyData(2025, 65, 25) },
-  { year: 2026, weeks: generateWeeklyData(2026, 55, 30).filter(w => w.week <= 7) },
+  { year: 2023, weeks: generateWeeklyData(2023, 50, 35, [1, 26, 52]) },
+  { year: 2024, weeks: generateWeeklyData(2024, 60, 30, [1, 35]) },
+  { year: 2025, weeks: generateWeeklyData(2025, 65, 25, [1, 25, 52]) },
+  { year: 2026, weeks: generateWeeklyData(2026, 55, 30, [1]).filter(w => w.week <= 7) },
 ];
 
 const EMPLOYEE_TIME_DATA = [
@@ -676,7 +682,7 @@ export default function VisualizeDashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <motion.h1 className="text-2xl sm:text-3xl font-bold" style={{ color: L ? '#0f172a' : '#fff' }} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4 }}>
-                Spending <span className="text-gradient-animated">Dashboard</span>
+                Spending Dashboard
               </motion.h1>
               <motion.p className="mt-1 text-sm" style={{ color: L ? '#64748b' : 'rgba(255,255,255,0.4)' }} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
                 {isPreview ? 'Preview your dashboard — this is how it will look when shipped' : 'Build your dashboard by dragging KPI dimensions into the grid'}

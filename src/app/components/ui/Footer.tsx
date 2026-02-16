@@ -19,7 +19,7 @@ export default function Footer() {
             {/* Logo */}
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="text-gradient animate-gradient-shift font-bold text-xl cursor-pointer"
+              className="text-white font-bold text-xl cursor-pointer"
               onClick={() => scrollToSection('hero')}
             >
               BlazeUp

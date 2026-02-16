@@ -75,9 +75,7 @@ export default function Navbar() {
                   suppressHydrationWarning
                 />
               </motion.div>
-              {/* <span className="text-4xl font-bold text-gradient-animated"> */}
-              <span className="text-3xl font-bold text-gradient-animated">
-              {/* <span className="text-3xl font-bold text-white/80"> */}
+              <span className="text-3xl font-bold text-white">
                 BlazeUp
               </span>
             </motion.div>

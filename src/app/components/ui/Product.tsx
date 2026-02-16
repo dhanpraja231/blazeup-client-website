@@ -55,7 +55,7 @@ export default function Product() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Our <span className="text-gradient-animated">Product</span>
+            Our Product
           </motion.h2>
           <motion.p 
             className="text-lg sm:text-xl max-w-3xl mx-auto"
