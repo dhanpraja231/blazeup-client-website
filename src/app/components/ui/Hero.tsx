@@ -6,53 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 // Mock HERO_WORDS data - replace with your actual import
 const HERO_WORDS = ['Dreams', 'Vision', 'Future', 'Success', 'Impact', 'Legacy'];
 
-function pseudoRandom(i: number, seed: number) {
-  return (Math.sin(i * seed) + 1) / 2; // value in [0,1]
-}
-
-function FloatingParticles() {
-  // This component is ONLY rendered on the client after mount,
-  // so using Math.random() here is safe.
-  const particles = Array.from({ length: 15 }, (_, i) => ({
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    xOffset: Math.random() * 100 - 50,
-    duration: Math.random() * 10 + 10,
-    delay: Math.random() * 5,
-  }));
-
-  return (
-    <>
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-white/20 rounded-full"
-          animate={{
-            x: [0, p.xOffset],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-          }}
-          style={{
-            left: p.left,
-            top: p.top,
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
-
 export default function Hero() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [showParticles, setShowParticles] = useState(false);
   
   useEffect(() => {
-    setShowParticles(true);
     const interval = setInterval(() => {
       setCurrentWordIndex((prev) => (prev + 1) % HERO_WORDS.length);
     }, 3000); // Change word every 3 seconds
@@ -77,54 +34,9 @@ export default function Hero() {
   return (
     <section 
       id="hero"
-      className="min-h-screen flex items-center justify-center text-center relative bg-black overflow-hidden"
+      className="min-h-screen flex items-center justify-center text-center relative overflow-hidden"
+      style={{ background: 'var(--dark-gray)' }}
     >
-      {/* Animated Background - Matching Success Page */}
-      <div className="fixed inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            rotate: [0, 120, 240, 360],
-            scale: [1, 1.1, 0.9, 1],
-          }}
-          transition={{
-            duration: 30,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
-              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 50%)
-            `
-          }}
-        />
-        
-        {/* Floating particles */}
-        {/* {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
-            animate={{
-              x: [0, Math.random() * 100 - 50],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-            }}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          />
-        ))} */}
-        {/* Only render this AFTER mount */}
-        {showParticles && <FloatingParticles />}
-      </div>
-
       
 
       <div className="container mx-auto mb-20 px-8 relative z-10">
@@ -222,39 +134,8 @@ export default function Hero() {
               </span>
             </motion.button>
           </motion.div>
-
-          {/* Additional Context */}
-          {/* <motion.div
-            className="mt-16 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-          >
-            <p className="text-white/40 text-sm uppercase tracking-wider font-medium">
-              Trusted by innovators worldwide
-            </p>
-            
-            {/* Trust indicators 
-            <div className="flex justify-center items-center gap-8 mt-6 text-white/30">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-xs">200+ Projects</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                <span className="text-xs">95% Retention</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                <span className="text-xs">3.2x Faster</span>
-              </div>
-            </div>
-          </motion.div> */}
         </motion.div> 
       </div>
-
-      {/* Bottom Gradient Fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
     </section>
   );
 }

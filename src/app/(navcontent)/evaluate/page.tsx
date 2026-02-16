@@ -1,7 +1,20 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import PolicyPlayground from '@/components/composer/PolicyPlayground';
+import dynamic from 'next/dynamic';
+
+// Lazy load PolicyPlayground for faster initial page load
+const PolicyPlayground = dynamic(() => import('@/components/composer/PolicyPlayground'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-3 border-white/10 border-t-indigo-500 rounded-full animate-spin" />
+        <p className="text-sm text-white/40">Loading Policy Composer...</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function EvaluatePage() {
   return (

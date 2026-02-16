@@ -209,8 +209,8 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
         fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         proOptions={proOptions}
         minZoom={0.3}
-        maxZoom={2}
-        defaultZoom={0.8}
+        maxZoom={1.5}
+        defaultViewport={{ zoom: 0.8 }}
         snapToGrid={true}
         snapGrid={[20, 20]}
         defaultEdgeOptions={{

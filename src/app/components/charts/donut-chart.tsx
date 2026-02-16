@@ -205,7 +205,7 @@ export function DonutChart({ data, dataKey, nameKey, height = 300, light = false
               <Pie
                 data={activeData}
                 cx="50%"
-                cy="45%"
+                cy="55%"
                 innerRadius={innerRadius}
                 outerRadius={outerRadius}
                 paddingAngle={outerRadius < 50 ? 3 : 4}
@@ -289,14 +289,14 @@ export function DonutChart({ data, dataKey, nameKey, height = 300, light = false
                 )}
               />
 
-              {/* Center text */}
+              {/* Center text - pushed down significantly to avoid overlay */}
               <text
                 x="50%"
-                y="42%"
+                y="52%"
                 textAnchor="middle"
                 dominantBaseline="middle"
                 style={{
-                  fontSize: outerRadius > 60 ? '18px' : '14px',
+                  fontSize: outerRadius > 60 ? '18px' : outerRadius > 40 ? '12px' : '10px',
                   fontWeight: 800,
                   fill: light ? '#0f172a' : '#fff',
                   transition: 'all 0.3s ease',
@@ -306,11 +306,11 @@ export function DonutChart({ data, dataKey, nameKey, height = 300, light = false
               </text>
               <text
                 x="50%"
-                y={outerRadius > 60 ? '49%' : '50%'}
+                y={outerRadius > 60 ? '59%' : outerRadius > 40 ? '60%' : '61%'}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 style={{
-                  fontSize: '9px',
+                  fontSize: outerRadius > 60 ? '9px' : '7px',
                   fontWeight: 500,
                   fill: light ? '#94a3b8' : 'rgba(255,255,255,0.35)',
                   letterSpacing: '1.5px',

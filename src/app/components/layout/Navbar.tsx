@@ -72,6 +72,7 @@ export default function Navbar() {
                   width={32}
                   height={32}
                   className="w-8 h-8 object-contain"
+                  suppressHydrationWarning
                 />
               </motion.div>
               {/* <span className="text-4xl font-bold text-gradient-animated"> */}

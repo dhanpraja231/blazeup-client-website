@@ -43,7 +43,7 @@ const BarGraph = dynamic(() => import('@/components/charts/bar-graph').then(m =>
 const LineGraph = dynamic(() => import('@/components/charts/line-graph').then(m => ({ default: m.LineGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const DonutChart = dynamic(() => import('@/components/charts/donut-chart').then(m => ({ default: m.DonutChart })), { ssr: false, loading: () => <ChartSkeleton /> });
 const ScatterGraph = dynamic(() => import('@/components/charts/scatter-graph').then(m => ({ default: m.ScatterGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
-import { SpendingHeatmap } from '@/components/charts/spending-heatmap';
+const SpendingHeatmap = dynamic(() => import('@/components/charts/spending-heatmap').then(m => ({ default: m.SpendingHeatmap })), { ssr: false, loading: () => <ChartSkeleton /> });
 
 function ChartSkeleton() {
   return (
@@ -216,20 +216,26 @@ const EMPLOYEE_CATEGORIES = [
 function generateWeeklyData(year: number, baseLine: number, variance: number) {
   const weeks = [];
   for (let w = 1; w <= 52; w++) {
-    // Create somewhat realistic seasonal patterns
+    // Create smooth seasonal patterns
     const seasonal = Math.sin((w / 52) * Math.PI * 2) * 15;
-    const noise = ((w * 7 + year * 3) % 37) - 18; // deterministic pseudo-random
-    const value = Math.max(0, Math.min(100, Math.round(baseLine + seasonal + noise * (variance / 20))));
+    
+    // Gentle week-to-week variation
+    const weekVariation = Math.sin(w * 0.5) * 8;
+    
+    // Calculate value with good range distribution
+    const rawValue = baseLine + seasonal + weekVariation;
+    const value = Math.max(20, Math.min(100, Math.round(rawValue)));
+    
     weeks.push({ week: w, value });
   }
   return weeks;
 }
 
 const HEATMAP_DATA = [
-  { year: 2023, weeks: generateWeeklyData(2023, 45, 30) },
-  { year: 2024, weeks: generateWeeklyData(2024, 55, 25) },
-  { year: 2025, weeks: generateWeeklyData(2025, 60, 20) },
-  { year: 2026, weeks: generateWeeklyData(2026, 50, 35).filter(w => w.week <= 7) },
+  { year: 2023, weeks: generateWeeklyData(2023, 50, 35) },
+  { year: 2024, weeks: generateWeeklyData(2024, 60, 30) },
+  { year: 2025, weeks: generateWeeklyData(2025, 65, 25) },
+  { year: 2026, weeks: generateWeeklyData(2026, 55, 30).filter(w => w.week <= 7) },
 ];
 
 const EMPLOYEE_TIME_DATA = [
@@ -244,7 +250,7 @@ const EMPLOYEE_TIME_DATA = [
 ];
 
 /* ═══════════════ REAL CHART RENDERER ═══════════════ */
-function RealChart({ chartType, kpiId, height }: { chartType: string; kpiId: string; height?: number }) {
+const RealChart = React.memo(function RealChart({ chartType, kpiId, height }: { chartType: string; kpiId: string; height?: number }) {
   const light = useLight();
   const data = getDataForKPI(kpiId);
   const kpi = KPI_DIMENSIONS.find(k => k.id === kpiId);
@@ -270,10 +276,10 @@ function RealChart({ chartType, kpiId, height }: { chartType: string; kpiId: str
     return <ScatterGraph data={scatterData} color={kpi?.accent} height={h} light={light} />;
   }
   return <BarGraph data={data} xKey="name" dataKey="value" color={kpi?.accent} height={h} light={light} />;
-}
+});
 
 /* ═══════════════ PALETTE ITEM ═══════════════ */
-function PaletteItem({ widget }: { widget: typeof KPI_DIMENSIONS[number] }) {
+const PaletteItem = React.memo(function PaletteItem({ widget }: { widget: typeof KPI_DIMENSIONS[number] }) {
   const L = useLight();
   return (
     <motion.div
@@ -291,10 +297,10 @@ function PaletteItem({ widget }: { widget: typeof KPI_DIMENSIONS[number] }) {
       <span className="text-xs font-semibold whitespace-nowrap" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{widget.label}</span>
     </motion.div>
   );
-}
+});
 
 /* ═══════════════ DASHBOARD ZONE ═══════════════ */
-function DashboardZone({
+const DashboardZone = React.memo(function DashboardZone({
   zone, widget, mode, onDrop, onRemove, onChartChange,
 }: {
   zone: DropZoneConfig;
@@ -424,10 +430,10 @@ function DashboardZone({
       </div>
     </motion.div>
   );
-}
+});
 
 /* ═══════════════ ALERT CARD ═══════════════ */
-function AlertCard({ alert, index }: { alert: typeof ALERTS[number]; index: number }) {
+const AlertCard = React.memo(function AlertCard({ alert, index }: { alert: typeof ALERTS[number]; index: number }) {
   const L = useLight();
   return (
     <motion.div
@@ -493,7 +499,7 @@ function AlertCard({ alert, index }: { alert: typeof ALERTS[number]; index: numb
       </div>
     </motion.div>
   );
-}
+});
 
 /* ═══════════════ EMPLOYEE LOOKUP ═══════════════ */
 function EmployeeLookup() {

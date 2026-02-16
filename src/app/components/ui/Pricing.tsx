@@ -5,51 +5,38 @@ import { Check, Sparkles, Zap, Rocket } from 'lucide-react';
 
 const plans = [
   {
-    name: 'Starter',
-    price: '$29',
-    period: '/month',
-    description: 'Perfect for individuals and small teams',
+    name: 'Standard',
+    price: '$10',
+    period: '/month per card',
+    description: 'Simple, transparent pricing for every card',
     icon: Sparkles,
     features: [
-      'Lorem ipsum dolor sit amet',
-      'Consectetur adipiscing elit',
-      'Sed do eiusmod tempor',
-      'Incididunt ut labore',
-      'Et dolore magna aliqua'
-    ],
-    cta: 'Get Started',
-    popular: false
-  },
-  {
-    name: 'Professional',
-    price: '$79',
-    period: '/month',
-    description: 'For growing businesses and teams',
-    icon: Zap,
-    features: [
-      'Everything in Starter',
-      'Ut enim ad minim veniam',
-      'Quis nostrud exercitation',
-      'Ullamco laboris nisi',
-      'Ut aliquip ex ea commodo',
-      'Duis aute irure dolor'
+      'Instant virtual card issuance',
+      'Real-time expense tracking',
+      'Mobile & web app access',
+      'Basic spend controls',
+      'Email support',
+      'Standard reporting & analytics'
     ],
     cta: 'Get Started',
     popular: true
   },
   {
     name: 'Enterprise',
-    price: '$199',
-    period: '/month',
-    description: 'For large organizations',
+    price: 'Custom',
+    period: '',
+    description: 'Tailored solutions for large organizations',
     icon: Rocket,
     features: [
-      'Everything in Professional',
-      'Excepteur sint occaecat',
-      'Cupidatat non proident',
-      'Sunt in culpa qui officia',
-      'Deserunt mollit anim',
-      'Id est laborum'
+      'Everything in Standard',
+      'Single Sign-On (SSO)',
+      'Agentic fraud detection',
+      'Advanced AI-powered compliance',
+      'Custom credit limits & workflows',
+      'Dedicated account manager',
+      'Full ERP integrations (SAP, Oracle, etc.)',
+      'White-label options',
+      '24/7 priority support'
     ],
     cta: 'Contact Sales',
     popular: false
@@ -59,9 +46,6 @@ const plans = [
 export default function Pricing() {
   return (
     <section id="pricing" className="relative py-20 sm:py-32 overflow-hidden" style={{ background: 'var(--dark-gray)' }}>
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-500/5 via-transparent to-indigo-500/5 pointer-events-none" />
-      
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
         <motion.div
@@ -88,12 +72,12 @@ export default function Pricing() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Choose the perfect plan for your needs. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            Pay only for what you use. $10 per card per month with no hidden fees. Scale as you grow with custom Enterprise solutions.
           </motion.p>
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {plans.map((plan, index) => {
             const Icon = plan.icon;
             return (

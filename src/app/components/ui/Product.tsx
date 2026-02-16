@@ -6,42 +6,39 @@ import { Zap, Shield, Sparkles, TrendingUp, Users, Globe } from 'lucide-react';
 const features = [
   {
     icon: Zap,
-    title: 'Lightning Fast',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.'
+    title: 'Instant Corporate Cards',
+    description: 'Virtual cards issued in 2 minutes vs 7-15 days for traditional banks. Physical cards with custom designs for branding.'
   },
   {
     icon: Shield,
-    title: 'Secure by Default',
-    description: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.'
+    title: 'Zero Forex Fees',
+    description: '0% forex markup on international transactions vs 2-3% at banks. Save ₹1-6L annually on international spend alone.'
   },
   {
     icon: Sparkles,
-    title: 'AI-Powered',
-    description: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla.'
+    title: 'AI-Powered Compliance',
+    description: 'Automatic expense categorization with 95%+ accuracy. Real-time policy violation detection before submission.'
   },
   {
     icon: TrendingUp,
-    title: 'Scalable Growth',
-    description: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.'
+    title: 'Advanced Spend Controls',
+    description: 'Custom approval workflows by department. Real-time budget tracking with alerts and role-based access controls.'
   },
   {
     icon: Users,
-    title: 'Team Collaboration',
-    description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.'
+    title: 'Enterprise Integrations',
+    description: 'Native ERP connectors for SAP, Oracle, NetSuite, Zoho Books, and Tally. API-first architecture for custom workflows.'
   },
   {
     icon: Globe,
-    title: 'Global Reach',
-    description: 'Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae.'
+    title: 'Real-Time Dashboard',
+    description: 'Instant spend visibility across your company. Automated reconciliation and expense report generation in minutes.'
   }
 ];
 
 export default function Product() {
   return (
     <section id="product" className="relative py-20 sm:py-32 overflow-hidden" style={{ background: 'var(--dark-gray)' }}>
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent pointer-events-none" />
-      
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
         <motion.div
@@ -68,7 +65,7 @@ export default function Product() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Turn every business payment into a controlled, programmable event. One platform for cards, UPI, and transfers with real-time visibility.
           </motion.p>
         </motion.div>
 
