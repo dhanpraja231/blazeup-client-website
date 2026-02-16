@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { NAV_ITEMS } from '@/data';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,12 +19,24 @@ export default function Navbar() {
   }, []);
 
   const handleNavClick = (href: string) => {
-    router.push(href);
     setIsMobileMenuOpen(false);
+    
+    // Smooth scroll to section
+    const element = document.querySelector(href);
+    if (element) {
+      const offset = 80; // Account for navbar height
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
   };
 
   const handleLogoClick = () => {
-    router.push('/');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -62,11 +72,10 @@ export default function Navbar() {
                   width={32}
                   height={32}
                   className="w-8 h-8 object-contain"
+                  suppressHydrationWarning
                 />
               </motion.div>
-              {/* <span className="text-4xl font-bold text-gradient-animated"> */}
-              <span className="text-3xl font-bold text-gradient-animated">
-              {/* <span className="text-3xl font-bold text-white/80"> */}
+              <span className="text-3xl font-bold text-white">
                 BlazeUp
               </span>
             </motion.div>

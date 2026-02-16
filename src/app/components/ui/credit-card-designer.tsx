@@ -2,6 +2,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import gsap from 'gsap';
+import AITemplateGenerator from './AITemplateGenerator';
 import {
   CreditCard, Type, Circle, Square, Trash2, Undo2, Redo2, Upload,
   Sparkles, Heart, Star, Zap, Shield, Lock, Globe, Wifi, Battery,
@@ -12,6 +13,11 @@ import {
 import { processImageBackground } from './backgroundremoval';
 import ColorPicker from './color-picker';
 import { CARD_LAYOUTS, type LayoutId } from './layouts';
+
+// ====================== FEATURE FLAGS ======================
+// Set to true to enable AI template generator, false to disable
+const ENABLE_AI_TEMPLATES = false;
+
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
@@ -140,17 +146,13 @@ function MagstripeSVG({ width, height, vertical }: { width?: number; height?: nu
     const h = height || CARD.W;
     const w = width || 62.5;
     return (
-      <div style={{ width: w, height: h, background: 'linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-        <div style={{ position: 'absolute', left: (w - 36) / 2, top: 0, bottom: 0, width: 36, background: '#111', borderLeft: '1px solid #333', borderRight: '1px solid #333' }} />
-      </div>
+      <div style={{ width: w, height: h, background: '#0a0a0a', position: 'relative' }} />
     );
   }
   const w = width || CARD.W;
   const h = height || 62.5;
   return (
-    <div style={{ width: w, height: h, background: 'linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 40%,#1a1a1a 100%)', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: (h - 36) / 2, left: 0, right: 0, height: 36, background: '#111', borderTop: '1px solid #333', borderBottom: '1px solid #333' }} />
-    </div>
+    <div style={{ width: w, height: h, background: '#0a0a0a', position: 'relative' }} />
   );
 }
 
@@ -184,9 +186,9 @@ function createFrontTemplate(): CardElement[] {
     // EMV Chip — ISO 7816: fully locked hardware
     { id: 'hw-chip', type: 'image', face: 'front', x: 47.5, y: 92.5, width: 55, height: 42.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'CHIP', isHardware: true },
     // Contactless / NFC icon — fully movable & resizable
-    { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
+    { id: 'hw-contactless', type: 'icon', face: 'front', x: 116, y: 100, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
     // Account holder name — MOVABLE
-    { id: uid(), type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
+    { id: 'hw-cardholder-name', type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
   ];
 }
 
@@ -199,25 +201,27 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   // Account info: landscape = mid-left area; portrait = left side near top
   const acctX = isV ? 24 : 24;
   const acctY = isV ? 28 : ch - 90;
-  const acctContent = isV ? '4532\n8720\n1456\n7890' : '4532  8720  1456  7890';
+  const acctContent = isV ? 'XXXX\nXXXX\nXXXX\nXXXX' : 'XXXX  XXXX  XXXX  XXXX';
   const acctH = isV ? 70 : 20;
 
   return [
     // Magnetic stripe — thickness 12.5mm (62.5px); 5mm (25px) from top (landscape) or right (portrait)
     { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 25 - 62.5 : 0, y: isV ? 0 : 25, width: isV ? 62.5 : cw, height: isV ? ch : 62.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
-    // Hologram — bottom-right; in vertical mode shifted left to clear magstripe (magstripe left edge = cw-87.5)
-    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
+    // Hologram — bottom-right in horizontal; lower-right in vertical above issuing bank text
+    { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: isV ? ch - 80 : ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
     // Network logo — 4px gap left of hologram
-    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
+    { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: isV ? ch - 82 : ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
     // Linked account info group — moves as one unit
     { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 240, height: acctH + 24, content: acctContent, color: '#fff', fontSize: isV ? 13 : 14, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
     { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 2, width: 100, height: 16, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     { id: 'hw-expiry', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 18, width: 140, height: 16, content: 'VALID THRU: 12/28', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     // Fine print
-    { id: uid(), type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
+    { id: 'hw-fine-print', type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
   ];
 }
 export default function CreditCardDesigner() {
+    // Add this to your state declarations (around line 280)
+    const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [activeFace, setActiveFace] = useState<CardFace>('front');
   const [network, setNetwork] = useState<NetworkType>('Visa');
   const [frontElements, setFrontElements] = useState<CardElement[]>(() => createFrontTemplate());
@@ -233,7 +237,7 @@ export default function CreditCardDesigner() {
   const [spotlightX, setSpotlightX] = useState(30);
   const [spotlightY, setSpotlightY] = useState(30);
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
-  const [showTemplateModal, setShowTemplateModal] = useState(true);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [canvasLightMode, setCanvasLightMode] = useState(false);
   // Background removal parameters (from backgroundslider.html)
   const [bgRemovalTolerance, setBgRemovalTolerance] = useState(0.05);
@@ -746,15 +750,20 @@ export default function CreditCardDesigner() {
   const selectedData = elements.find(el => el.id === selectedElement);
   const comps = [
     { type: 'text' as const, icon: Type, label: 'Text', dv: 'Double click to edit' },
-    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: 'â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 1234' },
+    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: 'XXXX XXXX XXXX XXXX' },
     { type: 'circle' as const, icon: Circle, label: 'Circle', dv: '' },
     { type: 'rectangle' as const, icon: Square, label: 'Rectangle', dv: '' },
     { type: 'icon' as const, icon: Sparkles, label: 'Icon', dv: '' },
     { type: 'image' as const, icon: Upload, label: 'Upload Logo', dv: '' },
   ];
   const togglePanel = (p: string) => setExpandedPanel(expandedPanel === p ? null : p);
-  const ps = { background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', backdropFilter: 'blur(20px)' };
-  const bs = { background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)' };
+  const light = canvasLightMode;
+  const ps = light
+    ? { background: 'rgba(0,0,0,.02)', border: '1px solid rgba(0,0,0,.08)' } as React.CSSProperties
+    : { background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', backdropFilter: 'blur(20px)' } as React.CSSProperties;
+  const bs = light
+    ? { background: 'rgba(0,0,0,.04)', border: '1px solid rgba(0,0,0,.1)' }
+    : { background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)' };
   const renderHardware = (el: CardElement) => {
     if (el.imageData === 'CHIP') return <ChipSVG w={el.width} h={el.height} />;
     if (el.imageData === 'MAGSTRIPE') return <MagstripeSVG width={el.width} height={el.height} vertical={orientation === 'vertical'} />;
@@ -767,58 +776,110 @@ export default function CreditCardDesigner() {
     ...(pos.includes('w') ? { left: -5 } : { right: -5 }),
   });
   // ---- label helper for properties ----
-  const PropLabel = ({ children }: { children: React.ReactNode }) => <label className="block text-xs text-slate-400 mb-1.5">{children}</label>;
+  const PropLabel = ({ children }: { children: React.ReactNode }) => <label className={`block text-xs mb-1.5 ${light ? 'text-slate-500' : 'text-slate-400'}`}>{children}</label>;
+  // ---- theme-aware helpers ----
+  const textPrimary = light ? 'text-slate-900' : 'text-white';
+  const textSecondary = light ? 'text-slate-600' : 'text-slate-300';
+  const textMuted = light ? 'text-slate-400' : 'text-slate-500';
+  const hoverBg = light ? 'hover:bg-black/5' : 'hover:bg-white/5';
+  const selectStyle = light
+    ? 'w-full bg-white rounded-lg p-2 text-xs border border-slate-200 text-slate-900'
+    : 'w-full bg-white/5 rounded-lg p-2 text-xs border border-white/10 text-white';
+  const selectOptionBg = light ? 'bg-white' : 'bg-[#1a1a2e]';
   // ====================== JSX ======================
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#111128] to-[#0d0d20] text-white p-4 md:p-8" style={{ fontFamily: "'Inter',system-ui,sans-serif" }}>
+    <div className="p-4 md:p-8 transition-colors duration-300" style={{ fontFamily: "'Inter',system-ui,sans-serif", background: light ? '#f5f7fa' : 'var(--dark-gray)', color: light ? '#1e293b' : '#fff' }}>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
       <input ref={clipboardInputRef} type="file" accept="image/*" multiple onChange={handleClipboardUpload} className="hidden" />
 
       {/* ===== TEMPLATE SELECTION MODAL ===== */}
       {showTemplateModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.7)', backdropFilter: 'blur(12px)' }}>
-          <div className="w-full max-w-3xl mx-4 rounded-3xl p-8" style={{ background: 'rgba(15,15,30,.95)', border: '1px solid rgba(255,255,255,.1)' }}>
+        <div className="fixed inset-0 z-[300] flex items-center justify-center" style={{ background: light ? 'rgba(0,0,0,.3)' : 'rgba(0,0,0,.7)', backdropFilter: 'blur(12px)' }}>
+          <div className="w-full max-w-3xl mx-4 rounded-3xl p-8" style={{ background: light ? 'rgba(255,255,255,.97)' : 'rgba(15,15,30,.95)', border: light ? '1px solid rgba(0,0,0,.1)' : '1px solid rgba(255,255,255,.1)' }}>
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text" style={{ WebkitTextFillColor: 'transparent' }}>Choose a Card Template</h2>
-              <p className="text-sm text-slate-400 mt-2">Select a base style for your card design</p>
+              <p className={`text-sm mt-2 ${light ? 'text-slate-500' : 'text-slate-400'}`}>Select a base style for your card design</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {CARD_TEMPLATES.map((t, i) => (
                 <button key={t.name} onClick={() => handleSelectTemplate(i)}
                   className="group rounded-2xl p-4 transition-all hover:scale-105 hover:ring-2 hover:ring-indigo-500/50"
-                  style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)' }}>
+                  style={{ background: light ? 'rgba(0,0,0,.02)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.08)' }}>
                   <div className="rounded-xl h-36 mb-4 overflow-hidden" style={{ background: t.bg, boxShadow: '0 8px 30px rgba(0,0,0,.4)' }}>
                     <div className="w-full h-full flex items-center justify-center">
                       <CreditCard className="w-12 h-12 text-white/20" />
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">{t.name}</p>
+                  <p className={`text-sm font-medium transition-colors ${light ? 'text-slate-700 group-hover:text-slate-900' : 'text-slate-200 group-hover:text-white'}`}>{t.name}</p>
                 </button>
               ))}
             </div>
             <div className="mt-8 flex justify-center gap-4">
-              <button onClick={() => { setToast({ message: 'AI template generation coming soon!', type: 'info' }); }}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-indigo-500/20">
-                <Wand2 className="w-4 h-4" /> Generate with AI
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => {
+                    if (ENABLE_AI_TEMPLATES) {
+                      setShowTemplateModal(false);
+                      setShowAIGenerator(true);
+                    }
+                  }}
+                  disabled={!ENABLE_AI_TEMPLATES}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all shadow-lg ${
+                    ENABLE_AI_TEMPLATES
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-indigo-500/20 cursor-pointer'
+                      : 'bg-slate-700/50 cursor-not-allowed opacity-60'
+                  }`}>
+                  <Wand2 className="w-4 h-4" />
+                  Generate with AI
+                </button>
+                {!ENABLE_AI_TEMPLATES && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl border border-slate-700">
+                    Coming Soon
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                  </div>
+                )}
+              </div>
               <button onClick={() => setShowTemplateModal(false)}
-                className="px-6 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors"
-                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)' }}>
+                className={`px-6 py-3 rounded-xl text-sm font-medium transition-colors ${light ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                style={{ background: light ? 'rgba(0,0,0,.04)' : 'rgba(255,255,255,.05)', border: light ? '1px solid rgba(0,0,0,.1)' : '1px solid rgba(255,255,255,.1)' }}>
                 Skip
               </button>
             </div>
           </div>
         </div>
       )}
+    {/* ===== AI TEMPLATE GENERATOR MODAL ===== */}
+    {ENABLE_AI_TEMPLATES && showAIGenerator && (
+      <AITemplateGenerator
+        onTemplateSelect={(design) => {
+          // Merge AI-generated elements with default hardware components
+          const defaultFront = createFrontTemplate();
+          const defaultBack = createBackTemplate(orientation, network);
+
+          // Combine: hardware elements first (bottom layer), then AI elements on top
+          const mergedFront = [...defaultFront, ...design.frontElements];
+          const mergedBack = [...defaultBack, ...design.backElements];
+
+          setFrontElements(mergedFront);
+          setBackElements(mergedBack);
+          setFrontBg(design.frontBg);
+          setBackBg(design.backBg);
+          setShowAIGenerator(false);
+          pushHistory();
+        }}
+        onClose={() => setShowAIGenerator(false)}
+      />
+    )}
       {/* Toast */}
       {toast && <div className="fixed bottom-6 right-6 z-[200] flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl animate-in slide-in-from-right" style={{
-        background: toast.type === 'warn' ? 'rgba(245,158,11,.15)' : toast.type === 'error' ? 'rgba(239,68,68,.15)' : 'rgba(99,102,241,.15)',
+        background: toast.type === 'warn' ? (light ? 'rgba(245,158,11,.1)' : 'rgba(245,158,11,.15)') : toast.type === 'error' ? (light ? 'rgba(239,68,68,.1)' : 'rgba(239,68,68,.15)') : (light ? 'rgba(99,102,241,.1)' : 'rgba(99,102,241,.15)'),
         border: `1px solid ${toast.type === 'warn' ? 'rgba(245,158,11,.3)' : toast.type === 'error' ? 'rgba(239,68,68,.3)' : 'rgba(99,102,241,.3)'}`,
         backdropFilter: 'blur(12px)',
+        color: light ? '#1e293b' : '#fff',
       }}>
         {toast.type === 'warn' && <AlertTriangle className="w-4 h-4 text-amber-400" />}
         <span className="text-sm">{toast.message}</span>
-        <button onClick={() => setToast(null)} className="ml-2 p-0.5 rounded hover:bg-white/10"><X className="w-3 h-3" /></button>
+        <button onClick={() => setToast(null)} className={`ml-2 p-0.5 rounded ${light ? 'hover:bg-black/10' : 'hover:bg-white/10'}`}><X className="w-3 h-3" /></button>
       </div>}
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -826,17 +887,17 @@ export default function CreditCardDesigner() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}><CreditCard className="w-5 h-5 text-white" /></div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text" style={{ WebkitTextFillColor: 'transparent' }}>Card Designer</h1>
-              <p className="text-xs text-slate-500">ISO 7810 â€¢ Drag & drop your logo â€¢ Customize everything</p>
+              <h1 className={`text-2xl font-bold tracking-tight bg-gradient-to-r bg-clip-text ${light ? 'from-slate-900 to-slate-600' : 'from-white to-white/60'}`} style={{ WebkitTextFillColor: 'transparent' }}>Card Designer</h1>
+              <p className={`text-xs ${light ? 'text-slate-400' : 'text-slate-500'}`}>ISO 7810 • Drag & drop your logo • Customize everything</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={undo} disabled={historyIndex === 0} className="p-2.5 rounded-xl transition-all disabled:opacity-30 hover:bg-white/10" style={bs} title="Undo"><Undo2 className="w-4 h-4" /></button>
-            <button onClick={redo} disabled={historyIndex === history.length - 1} className="p-2.5 rounded-xl transition-all disabled:opacity-30 hover:bg-white/10" style={bs} title="Redo"><Redo2 className="w-4 h-4" /></button>
-            <button onClick={flipCard} className="p-2.5 rounded-xl transition-all hover:bg-white/10 ml-2 flex items-center gap-1.5" style={bs} title="Flip Card">
+            <button onClick={undo} disabled={historyIndex === 0} className={`p-2.5 rounded-xl transition-all disabled:opacity-30 ${hoverBg}`} style={bs} title="Undo"><Undo2 className="w-4 h-4" /></button>
+            <button onClick={redo} disabled={historyIndex === history.length - 1} className={`p-2.5 rounded-xl transition-all disabled:opacity-30 ${hoverBg}`} style={bs} title="Redo"><Redo2 className="w-4 h-4" /></button>
+            <button onClick={flipCard} className={`p-2.5 rounded-xl transition-all ${hoverBg} ml-2 flex items-center gap-1.5`} style={bs} title="Flip Card">
               <FlipHorizontal className="w-4 h-4" /><span className="text-xs hidden sm:inline">Flip</span>
             </button>
-            <button onClick={() => setOrientation(o => o === 'horizontal' ? 'vertical' : 'horizontal')} className="p-2.5 rounded-xl transition-all hover:bg-white/10 flex items-center gap-1.5" style={bs} title={orientation === 'horizontal' ? 'Switch to Vertical' : 'Switch to Horizontal'}>
+            <button onClick={() => setOrientation(o => o === 'horizontal' ? 'vertical' : 'horizontal')} className={`p-2.5 rounded-xl transition-all ${hoverBg} flex items-center gap-1.5`} style={bs} title={orientation === 'horizontal' ? 'Switch to Vertical' : 'Switch to Horizontal'}>
               <RotateCw className="w-4 h-4" /><span className="text-xs hidden sm:inline">{orientation === 'horizontal' ? 'Vertical' : 'Horizontal'}</span>
             </button>
           </div>
@@ -844,21 +905,22 @@ export default function CreditCardDesigner() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* ===== SIDEBAR ===== */}
           <div className="lg:col-span-3 space-y-3">
+
             {/* Components */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
-              <button onClick={() => togglePanel('components')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('components')} className={`w-full flex items-center justify-between p-4 ${hoverBg} transition-colors`}>
                 <div className="flex items-center gap-2"><Palette className="w-4 h-4 text-indigo-400" /><span className="text-sm font-medium">Components</span></div>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'components' ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 ${light ? 'text-slate-400' : 'text-slate-400'} transition-transform ${expandedPanel === 'components' ? 'rotate-180' : ''}`} />
               </button>
               {expandedPanel === 'components' && <div className="px-3 pb-3 space-y-1">{comps.map(c => { const I = c.icon; return (
-                <button key={c.type} onClick={() => addElement(c.type, c.dv)} className="sidebar-item w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/8 transition-all group">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center group-hover:bg-indigo-500/20" style={{ background: 'rgba(255,255,255,.05)' }}><I className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors" /></div>
-                  <span className="text-sm text-slate-300 group-hover:text-white transition-colors">{c.label}</span>
+                <button key={c.type} onClick={() => addElement(c.type, c.dv)} className={`sidebar-item w-full flex items-center gap-3 p-2.5 rounded-xl ${light ? 'hover:bg-black/5' : 'hover:bg-white/8'} transition-all group`}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center group-hover:bg-indigo-500/20" style={{ background: light ? 'rgba(0,0,0,.04)' : 'rgba(255,255,255,.05)' }}><I className={`w-4 h-4 ${textSecondary} group-hover:text-indigo-400 transition-colors`} /></div>
+                  <span className={`text-sm ${textSecondary} group-hover:${textPrimary} transition-colors`}>{c.label}</span>
                 </button>); })}</div>}
             </div>
             {/* Image Clipboard */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
-              <button onClick={() => togglePanel('clipboard')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('clipboard')} className={`w-full flex items-center justify-between p-4 ${hoverBg} transition-colors`}>
                 <div className="flex items-center gap-2"><Clipboard className="w-4 h-4 text-emerald-400" /><span className="text-sm font-medium">Image Clipboard</span>
                   {imageClipboard.length > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{imageClipboard.length}</span>}
                 </div>
@@ -866,13 +928,13 @@ export default function CreditCardDesigner() {
               </button>
               {expandedPanel === 'clipboard' && <div className="px-3 pb-3 space-y-2">
                 <button onClick={() => clipboardInputRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-dashed border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all text-sm text-slate-400 hover:text-emerald-400">
+                  className={`w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-dashed ${light ? 'border-black/10 hover:border-emerald-500/40 text-slate-400' : 'border-white/10 hover:border-emerald-500/40 text-slate-400'} hover:bg-emerald-500/5 transition-all text-sm hover:text-emerald-400`}>
                   <Plus className="w-4 h-4" /> Upload Images
                 </button>
                 {imageClipboard.length === 0 && <p className="text-[11px] text-slate-600 text-center py-2">Upload images to your clipboard, then click or drag them onto the card</p>}
                 {imageClipboard.length > 0 && <div className="grid grid-cols-3 gap-1.5">
                   {imageClipboard.map(img => (
-                    <div key={img.id} className="relative group rounded-lg overflow-hidden border border-white/6 hover:border-emerald-500/40 transition-all cursor-grab aspect-square"
+                    <div key={img.id} className={`relative group rounded-lg overflow-hidden border ${light ? 'border-black/8' : 'border-white/6'} hover:border-emerald-500/40 transition-all cursor-grab aspect-square`}
                       draggable
                       onDragStart={(e) => { e.dataTransfer.setData('text/clipboard-image', img.dataUrl); e.dataTransfer.effectAllowed = 'copy'; }}
                       onClick={() => addClipboardImageToCard(img.dataUrl)}
@@ -891,49 +953,37 @@ export default function CreditCardDesigner() {
               </div>}
             </div>
             {/* Background + Spotlight */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
-              <button onClick={() => togglePanel('background')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('background')} className={`w-full flex items-center justify-between p-4 ${hoverBg} transition-colors`}>
                 <div className="flex items-center gap-2"><ImageIcon className="w-4 h-4 text-purple-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Background</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'background' ? 'rotate-180' : ''}`} />
               </button>
               {expandedPanel === 'background' && <div className="px-3 pb-3 space-y-3">
                 <div className="grid grid-cols-2 gap-2">{GRADIENTS.map(g => (
                   <button key={g.name} onClick={() => { setCardBg(g.value); pushHistory(); }} className="h-14 rounded-xl border-2 transition-all hover:scale-105 group relative overflow-hidden"
-                    style={{ background: g.value, borderColor: cardBg === g.value ? 'rgba(99,102,241,.7)' : 'rgba(255,255,255,.06)' }} title={g.name}>
+                    style={{ background: g.value, borderColor: cardBg === g.value ? 'rgba(99,102,241,.7)' : (light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)') }} title={g.name}>
                     <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white/50 font-medium opacity-0 group-hover:opacity-100 transition-opacity">{g.name}</span>
                   </button>))}</div>
                 {/* Custom solid color */}
-                <div className="pt-2 border-t border-white/5">
+                <div className={`pt-2 border-t ${light ? 'border-black/5' : 'border-white/5'}`}>
                   <PropLabel>Custom Solid Color</PropLabel>
-                  <div className="flex gap-2 items-center">
-                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="flex-1" />
-                    <button onClick={() => { setCardBg(spotlightColor); pushHistory(); }}
-                      className="px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-purple-500/20 shrink-0" style={{ background: 'rgba(168,85,247,.1)', border: '1px solid rgba(168,85,247,.2)' }}>
-                      Apply
-                    </button>
-                  </div>
+                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); setCardBg(v); pushHistory(); }} className="w-32" />
                 </div>
                 {/* Spotlight gradient */}
-                <div className="pt-2 border-t border-white/5">
+                <div className={`pt-2 border-t ${light ? 'border-black/5' : 'border-white/5'}`}>
                   <PropLabel>Spotlight Gradient</PropLabel>
-                  <div className="flex gap-2 items-center">
-                    <ColorPicker value={spotlightColor} onChange={v => setSpotlightColor(v)} className="w-10 shrink-0" />
-                    <button onClick={() => { const g = generateSpotlightGradient(spotlightColor, spotlightX, spotlightY); setCardBg(g); pushHistory(); }}
-                      className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-indigo-500/20" style={{ background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.2)' }}>
-                      Apply Spotlight
-                    </button>
-                  </div>
+                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); const g = generateSpotlightGradient(v, spotlightX, spotlightY); setCardBg(g); pushHistory(); }} className="w-full" />
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => setSpotlightX(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
-                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => setSpotlightY(parseInt(e.target.value))} className="w-full accent-indigo-500" /></div>
+                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => { const val = parseInt(e.target.value); setSpotlightX(val); const g = generateSpotlightGradient(spotlightColor, val, spotlightY); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => { const val = parseInt(e.target.value); setSpotlightY(val); const g = generateSpotlightGradient(spotlightColor, spotlightX, val); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
                   </div>
-                  <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: '1px solid rgba(255,255,255,.06)' }} />
+                  <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }} />
                 </div>
               </div>}
             </div>
             {/* Card Layout */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
-              <button onClick={() => togglePanel('layout')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('layout')} className={`w-full flex items-center justify-between p-4 ${hoverBg} transition-colors`}>
                 <div className="flex items-center gap-2"><FlipHorizontal className="w-4 h-4 text-amber-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Layout</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'layout' ? 'rotate-180' : ''}`} />
               </button>
@@ -952,7 +1002,7 @@ export default function CreditCardDesigner() {
                           }
                         }}
                         className="h-14 rounded-lg border-2 transition-all relative overflow-hidden group"
-                        style={{ borderColor: activeLayout.id === lay.id ? 'rgba(245,158,11,.6)' : 'rgba(255,255,255,.06)', background: lay.id === 'none' ? 'rgba(255,255,255,.03)' : activeLayout.baseColor }}>
+                        style={{ borderColor: activeLayout.id === lay.id ? 'rgba(245,158,11,.6)' : (light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)'), background: lay.id === 'none' ? (light ? 'rgba(0,0,0,.03)' : 'rgba(255,255,255,.03)') : activeLayout.baseColor }}>
                         {/* Overlay preview */}
                         {lay.id !== 'none' && <div className="absolute inset-0" style={{ background: activeLayout.overlayColor, clipPath: clip }} />}
                         <span className="absolute inset-0 flex items-center justify-center text-[9px] text-white/60 font-medium opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ textShadow: '0 1px 3px rgba(0,0,0,.8)' }}>{lay.name}</span>
@@ -962,32 +1012,28 @@ export default function CreditCardDesigner() {
                 </div>
                 {/* Color controls — only when a layout is selected */}
                 {activeLayout.id !== 'none' && <>
-                  <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); }} /></div>
-                  <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => setActiveLayout(prev => ({ ...prev, overlayColor: v }))} /></div>
-                  <button onClick={() => { setCardBg(activeLayout.baseColor); pushHistory(); }}
-                    className="w-full px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-amber-500/20" style={{ background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)' }}>
-                    Apply Layout
-                  </button>
+                  <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); pushHistory(); }} /></div>
+                  <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => { setActiveLayout(prev => ({ ...prev, overlayColor: v })); pushHistory(); }} /></div>
                 </>}
               </div>}
             </div>
             {/* Network */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
-              <button onClick={() => togglePanel('network')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('network')} className={`w-full flex items-center justify-between p-4 ${hoverBg} transition-colors`}>
                 <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-cyan-400" /><span className="text-sm font-medium">Card Network</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'network' ? 'rotate-180' : ''}`} />
               </button>
               {expandedPanel === 'network' && <div className="px-3 pb-3 grid grid-cols-2 gap-2">
                 {(['Visa','Mastercard','RuPay','Amex'] as NetworkType[]).map(n => (
                   <button key={n} onClick={() => changeNetwork(n)} className="p-3 rounded-xl border-2 transition-all flex items-center justify-center"
-                    style={{ borderColor: network === n ? 'rgba(99,102,241,.6)' : 'rgba(255,255,255,.06)', background: network === n ? 'rgba(99,102,241,.08)' : 'transparent' }}>
+                    style={{ borderColor: network === n ? 'rgba(99,102,241,.6)' : (light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)'), background: network === n ? 'rgba(99,102,241,.08)' : 'transparent' }}>
                     <NetworkLogo type={n} size={20} />
                   </button>))}
               </div>}
             </div>
             {/* Patterns */}
-            <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}>
-              <button onClick={() => togglePanel('patterns')} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+            <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
+              <button onClick={() => togglePanel('patterns')} className={`w-full flex items-center justify-between p-4 ${hoverBg} transition-colors`}>
                 <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-rose-400" /><span className="text-sm font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Pattern</span></div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedPanel === 'patterns' ? 'rotate-180' : ''}`} />
               </button>
@@ -997,7 +1043,7 @@ export default function CreditCardDesigner() {
                   {/* None option */}
                   <button onClick={() => setActivePattern(p => ({ ...p, id: null }))}
                     className="h-12 rounded-lg border-2 transition-all flex items-center justify-center text-[10px] text-slate-500"
-                    style={{ borderColor: activePattern.id === null ? 'rgba(244,63,94,.6)' : 'rgba(255,255,255,.06)', background: activePattern.id === null ? 'rgba(244,63,94,.08)' : 'rgba(255,255,255,.03)' }}>
+                    style={{ borderColor: activePattern.id === null ? 'rgba(244,63,94,.6)' : (light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)'), background: activePattern.id === null ? 'rgba(244,63,94,.08)' : (light ? 'rgba(0,0,0,.03)' : 'rgba(255,255,255,.03)') }}>
                     None
                   </button>
                   {CARD_PATTERNS.map(p => {
@@ -1006,7 +1052,7 @@ export default function CreditCardDesigner() {
                     return (
                       <button key={p.id} onClick={() => setActivePattern(prev => ({ ...prev, id: p.id }))}
                         className="h-12 rounded-lg border-2 transition-all overflow-hidden"
-                        style={{ borderColor: activePattern.id === p.id ? 'rgba(244,63,94,.6)' : 'rgba(255,255,255,.06)', backgroundImage: encoded, backgroundSize: 'auto', backgroundColor: 'rgba(255,255,255,.03)' }}
+                        style={{ borderColor: activePattern.id === p.id ? 'rgba(244,63,94,.6)' : (light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)'), backgroundImage: encoded, backgroundSize: 'auto', backgroundColor: light ? 'rgba(0,0,0,.03)' : 'rgba(255,255,255,.03)' }}
                         title={p.name} />
                     );
                   })}
@@ -1020,7 +1066,7 @@ export default function CreditCardDesigner() {
               </div>}
             </div>
             {/* Properties — ENHANCED */}
-            {selectedData && <div className="rounded-2xl overflow-hidden sidebar-item" style={ps}><div className="p-4">
+            {selectedData && <div className="rounded-2xl overflow-visible sidebar-item" style={ps}><div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium">Properties
                   {selectedData.isHardware && <span className="text-[10px] text-amber-400 ml-1">FIXED</span>}
@@ -1028,7 +1074,7 @@ export default function CreditCardDesigner() {
                 </span>
                 {!selectedData.isHardware && !selectedData.isPositionLocked && <button onClick={() => deleteElement(selectedElement!)} className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
               </div>
-              {selectedData.isHardware && <p className="text-[11px] text-slate-500">Hardware element — fully locked</p>}
+              {selectedData.isHardware && <p className={`text-[11px] ${light ? 'text-slate-400' : 'text-slate-500'}`}>Hardware element — fully locked</p>}
               {!selectedData.isHardware && <div className="space-y-3">
                 {/* Position sliders — hidden for position-locked elements */}
                 {!selectedData.isPositionLocked && <div className="grid grid-cols-2 gap-2">
@@ -1046,11 +1092,11 @@ export default function CreditCardDesigner() {
                 {(selectedData.type === 'text' || selectedData.type === 'cardNumber') && <>
                   <div><PropLabel>Text Color</PropLabel><ColorPicker value={selectedData.color} onChange={v => updateElement(selectedElement!, { color: v })} /></div>
                   <div><PropLabel>Font Size: {selectedData.fontSize}px</PropLabel><input type="range" min="6" max="48" value={selectedData.fontSize} onChange={e => updateElement(selectedElement!, { fontSize: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
-                  <div><PropLabel>Font Family</PropLabel><select value={selectedData.fontFamily || "'Inter',sans-serif"} onChange={e => updateElement(selectedElement!, { fontFamily: e.target.value })} className="w-full bg-white/5 rounded-lg p-2 text-xs border border-white/10 text-white">
-                    {FONT_FAMILIES.map(f => <option key={f.name} value={f.value} className="bg-[#1a1a2e]">{f.name}</option>)}
+                  <div><PropLabel>Font Family</PropLabel><select value={selectedData.fontFamily || "'Inter',sans-serif"} onChange={e => updateElement(selectedElement!, { fontFamily: e.target.value })} className={selectStyle}>
+                    {FONT_FAMILIES.map(f => <option key={f.name} value={f.value} className={selectOptionBg}>{f.name}</option>)}
                   </select></div>
-                  <div><PropLabel>Font Weight</PropLabel><select value={selectedData.fontWeight || 400} onChange={e => updateElement(selectedElement!, { fontWeight: parseInt(e.target.value) })} className="w-full bg-white/5 rounded-lg p-2 text-xs border border-white/10 text-white">
-                    {[300,400,500,600,700].map(w => <option key={w} value={w} className="bg-[#1a1a2e]">{w === 300 ? 'Light' : w === 400 ? 'Regular' : w === 500 ? 'Medium' : w === 600 ? 'Semi-Bold' : 'Bold'}</option>)}
+                  <div><PropLabel>Font Weight</PropLabel><select value={selectedData.fontWeight || 400} onChange={e => updateElement(selectedElement!, { fontWeight: parseInt(e.target.value) })} className={selectStyle}>
+                    {[300,400,500,600,700].map(w => <option key={w} value={w} className={selectOptionBg}>{w === 300 ? 'Light' : w === 400 ? 'Regular' : w === 500 ? 'Medium' : w === 600 ? 'Semi-Bold' : 'Bold'}</option>)}
                   </select></div>
                   <div><PropLabel>Letter Spacing: {selectedData.letterSpacing ?? 0}px</PropLabel><input type="range" min="0" max="10" step=".5" value={selectedData.letterSpacing ?? 0} onChange={e => updateElement(selectedElement!, { letterSpacing: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
                 </>}
@@ -1058,20 +1104,20 @@ export default function CreditCardDesigner() {
                 {selectedData.type === 'icon' && <>
                   <div><PropLabel>Icon</PropLabel><div className="grid grid-cols-4 gap-1.5">{DEFAULT_ICONS.map(ic => { const IC = ic.component; return (
                     <button key={ic.name} onClick={() => updateElement(selectedElement!, { iconName: ic.name })} className="p-2 rounded-lg border transition-all"
-                      style={{ borderColor: selectedData.iconName === ic.name ? 'rgba(99,102,241,.6)' : 'rgba(255,255,255,.06)', background: selectedData.iconName === ic.name ? 'rgba(99,102,241,.1)' : 'transparent' }}>
-                      <IC className="w-4 h-4 mx-auto text-slate-300" /></button>); })}</div></div>
+                      style={{ borderColor: selectedData.iconName === ic.name ? 'rgba(99,102,241,.6)' : (light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)'), background: selectedData.iconName === ic.name ? 'rgba(99,102,241,.1)' : 'transparent' }}>
+                      <IC className={`w-4 h-4 mx-auto ${textSecondary}`} /></button>); })}</div></div>
                   <div><PropLabel>Color</PropLabel><ColorPicker value={selectedData.color} onChange={v => updateElement(selectedElement!, { color: v })} /></div>
                 </>}
                 {/* Image */}
                 {selectedData.type === 'image' && <>
-                  <div className="flex items-center justify-between p-2 rounded-lg" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
-                    <span className="text-xs text-slate-400">Remove Background</span>
+                  <div className="flex items-center justify-between p-2 rounded-lg" style={{ background: light ? 'rgba(0,0,0,.02)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }}>
+                    <span className={`text-xs ${light ? 'text-slate-500' : 'text-slate-400'}`}>Remove Background</span>
                     <button onClick={() => toggleBgRemoval(selectedElement!)} className="relative w-10 h-5 rounded-full transition-colors" style={{ background: selectedData.isBackgroundRemoved ? '#6366f1' : 'rgba(255,255,255,.1)' }}>
                       <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: selectedData.isBackgroundRemoved ? 22 : 2 }} />
                     </button>
                   </div>
                   {/* Background removal sliders — integrated from backgroundslider.html */}
-                  <div className="space-y-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
+                  <div className="space-y-2 p-2 rounded-lg" style={{ background: light ? 'rgba(0,0,0,.02)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }}>
                     <div>
                       <PropLabel>Tolerance - Color Sensitivity: {bgRemovalTolerance.toFixed(2)}</PropLabel>
                       <input type="range" min="0" max="0.5" step="0.01" value={bgRemovalTolerance} onChange={e => { const v = parseFloat(e.target.value); setBgRemovalTolerance(v); reapplyBgRemoval(v, bgRemovalFade, bgRemovalKeepInternal); }} className="w-full accent-indigo-500" />
@@ -1082,7 +1128,7 @@ export default function CreditCardDesigner() {
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={bgRemovalKeepInternal} onChange={e => { const v = e.target.checked; setBgRemovalKeepInternal(v); reapplyBgRemoval(bgRemovalTolerance, bgRemovalFade, v); }} className="w-4 h-4 rounded accent-indigo-500" />
-                      <span className="text-xs text-slate-400">Keep Internal Pixels</span>
+                      <span className={`text-xs ${light ? 'text-slate-500' : 'text-slate-400'}`}>Keep Internal Pixels</span>
                     </label>
                   </div>
                 </>}
@@ -1094,7 +1140,7 @@ export default function CreditCardDesigner() {
             </div></div>}
           </div>
           {/* ===== CANVAS ===== */}
-          <div ref={canvasWrapperRef} className="lg:col-span-9" style={{ willChange: 'transform' }}>
+          <div ref={canvasWrapperRef} className="lg:col-span-9">
             <div className="rounded-2xl p-6 md:p-10 transition-colors duration-300" style={{
               backgroundColor: canvasLightMode ? '#ffffff' : '#09090b',
               backgroundImage: canvasLightMode
@@ -1112,7 +1158,7 @@ export default function CreditCardDesigner() {
                   </button>))}
                 <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON — back mirrors front styles' : 'Sync OFF — faces are independent', type: 'info' }); }}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-1"
-                  style={{ background: syncFaces ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.03)', border: syncFaces ? '1px solid rgba(34,197,94,.3)' : '1px solid rgba(255,255,255,.06)', color: syncFaces ? '#4ade80' : '#64748b' }}
+                  style={{ background: syncFaces ? 'rgba(34,197,94,.12)' : (light ? 'rgba(0,0,0,.03)' : 'rgba(255,255,255,.03)'), border: syncFaces ? '1px solid rgba(34,197,94,.3)' : (light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)'), color: syncFaces ? '#4ade80' : '#64748b' }}
                   title={syncFaces ? 'Front → Back sync ON: back face mirrors front styles' : 'Sync styles from front to back face'}>
                   {syncFaces ? <Link2 className="w-3 h-3" /> : <Unlink2 className="w-3 h-3" />}
                   {syncFaces ? 'Synced' : 'Sync'}
@@ -1120,7 +1166,7 @@ export default function CreditCardDesigner() {
                 <span className={`text-[10px] ml-2 ${canvasLightMode ? 'text-slate-400' : 'text-slate-600'}`}>ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
                 <button onClick={() => setCanvasLightMode(p => !p)}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-auto"
-                  style={{ background: canvasLightMode ? 'rgba(250,204,21,.12)' : 'rgba(255,255,255,.03)', border: canvasLightMode ? '1px solid rgba(250,204,21,.3)' : '1px solid rgba(255,255,255,.06)', color: canvasLightMode ? '#facc15' : '#64748b' }}
+                  style={{ background: light ? 'rgba(250,204,21,.12)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(250,204,21,.3)' : '1px solid rgba(255,255,255,.06)', color: light ? '#facc15' : '#64748b' }}
                   title={canvasLightMode ? 'Switch to dark canvas' : 'Switch to light canvas'}>
                   {canvasLightMode ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
                   {canvasLightMode ? 'Light' : 'Dark'}
@@ -1135,9 +1181,8 @@ export default function CreditCardDesigner() {
                       transition: 'width 0.4s ease, height 0.4s ease, box-shadow 0.3s ease, border 0.3s ease',
                       boxShadow: isDragOver ? '0 0 40px rgba(99,102,241,.5),0 25px 60px rgba(0,0,0,.4)' : '0 25px 60px rgba(0,0,0,.4)',
                       border: isDragOver ? '2px dashed rgba(99,102,241,.6)' : '1px solid rgba(255,255,255,.08)' }}>
-                    <div className="absolute pointer-events-none" style={{ inset: CARD.MARGIN, border: '1px dashed rgba(255,255,255,.06)', borderRadius: CARD.R - 4 }} />
                     <div className="absolute inset-0 pointer-events-none" style={{ opacity: .04 }}><svg width="100%" height="100%"><pattern id="cp" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#cp)"/></svg></div>
-                    <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />
+                    {!light && <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />}
                     {/* Pattern overlay */}
                     {activePattern.id && (() => {
                       const pat = CARD_PATTERNS.find(p => p.id === activePattern.id);
@@ -1211,8 +1256,8 @@ export default function CreditCardDesigner() {
                   </div>
                 </div>
               </div>
-              <div className="mt-6 text-center"><p className="text-[11px] text-slate-600">
-                Click to select â€¢ Drag to move â€¢ Double-click text to edit â€¢ Drop images from desktop â€¢ <span className="text-slate-500 font-medium">{activeFace === 'front' ? 'Front' : 'Back'} Face</span>
+              <div className="mt-6 text-center"><p className={`text-[11px] ${light ? 'text-slate-400' : 'text-slate-600'}`}>
+                Click to select • Drag to move • Double-click text to edit • Drop images from desktop • <span className={`font-medium ${light ? 'text-slate-500' : 'text-slate-500'}`}>{activeFace === 'front' ? 'Front' : 'Back'} Face</span>
               </p></div>
             </div>
           </div>

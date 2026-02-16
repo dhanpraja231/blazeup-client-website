@@ -1,256 +1,105 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-
-// Mock HERO_WORDS data - replace with your actual import
-const HERO_WORDS = ['Dreams', 'Vision', 'Future', 'Success', 'Impact', 'Legacy'];
-
-function pseudoRandom(i: number, seed: number) {
-  return (Math.sin(i * seed) + 1) / 2; // value in [0,1]
-}
-
-function FloatingParticles() {
-  // This component is ONLY rendered on the client after mount,
-  // so using Math.random() here is safe.
-  const particles = Array.from({ length: 15 }, (_, i) => ({
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    xOffset: Math.random() * 100 - 50,
-    duration: Math.random() * 10 + 10,
-    delay: Math.random() * 5,
-  }));
-
-  return (
-    <>
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-white/20 rounded-full"
-          animate={{
-            x: [0, p.xOffset],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-          }}
-          style={{
-            left: p.left,
-            top: p.top,
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
 
 export default function Hero() {
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [showParticles, setShowParticles] = useState(false);
-  const router = useRouter();
-  
+  const [displayedText, setDisplayedText] = useState('');
+  const fullText = 'Powering the corporate credit card of tomorrow.';
+  const typingSpeed = 50; // milliseconds per character
+
   useEffect(() => {
-    setShowParticles(true);
-    const interval = setInterval(() => {
-      setCurrentWordIndex((prev) => (prev + 1) % HERO_WORDS.length);
-    }, 3000); // Change word every 3 seconds
+    if (displayedText.length < fullText.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(fullText.slice(0, displayedText.length + 1));
+      }, typingSpeed);
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearTimeout(timeout);
+    }
+  }, [displayedText]);
 
-  const handleBuildClick = () => {
-    router.push('/build');
-  };
+  const handleScrollToSection = (sectionId: string) => {
+    const element = document.querySelector(`#${sectionId}`);
+    if (element) {
+      const offset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
 
-  const handleFreelanceClick = () => {
-    router.push('/freelance');
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
   };
 
   return (
     <section 
       id="hero"
-      className="min-h-screen flex items-center justify-center text-center relative bg-black overflow-hidden"
+      className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      style={{ background: 'var(--dark-gray)' }}
+      suppressHydrationWarning
     >
-      {/* Animated Background - Matching Success Page */}
-      <div className="fixed inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            rotate: [0, 120, 240, 360],
-            scale: [1, 1.1, 0.9, 1],
-          }}
-          transition={{
-            duration: 30,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
-              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 50%)
-            `
-          }}
-        />
-        
-        {/* Floating particles */}
-        {/* {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
-            animate={{
-              x: [0, Math.random() * 100 - 50],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-            }}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          />
-        ))} */}
-        {/* Only render this AFTER mount */}
-        {showParticles && <FloatingParticles />}
-      </div>
-
-      
-
-      <div className="container mx-auto mb-20 px-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="max-w-4xl mx-auto"
-        >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-5xl mx-auto text-center">
           {/* Main Heading */}
-          <motion.h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-8"
           >
-            <motion.span 
-              className="text-white block mb-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 1 }}
-            >
-              Build Your
-            </motion.span>
-            
-            <div className="relative inline-block min-h-[1.2em]">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={currentWordIndex}
-                  className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent inline-block"
-                  initial={{ opacity: 0, x: 0 }}
-                  animate={{ 
-                    opacity: [0, 0.5, 1, 1],
-                    x: [20, -10, 5, 0],
-                    transition: { duration: 0.6, times: [0, 0.3, 0.7, 1] }
-                  }}
-                  exit={{ 
-                    opacity: [1, 0.5, 0],
-                    x: [0, 15, -20],
-                    transition: { duration: 0.4, times: [0, 0.5, 1] }
-                  }}
-                >
-                  {HERO_WORDS[currentWordIndex]}
-                </motion.span>
-              </AnimatePresence>
-            </div>
-          </motion.h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white min-h-[1.2em]">
+              {displayedText}
+              <span className="inline-block w-1 h-[0.9em] bg-indigo-500 ml-1 animate-pulse align-middle" 
+                    style={{ 
+                      opacity: displayedText.length < fullText.length ? 1 : 0,
+                      transition: 'opacity 0.3s'
+                    }}
+              />
+            </h1>
 
-          {/* Subtitle */}
-          <motion.p
-            className="text-xl md:text-2xl text-white/70 mb-12 max-w-3xl mx-auto leading-relaxed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-          >
-            Where talent meets opportunity. Where ideas become reality. Where your success story begins.
-          </motion.p>
-          
-          {/* Call to Action Buttons */}
+            {/* Subtitle */}
+            <motion.p
+              className="text-lg sm:text-xl text-white/60 mb-10 max-w-3xl mx-auto leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: displayedText.length === fullText.length ? 1 : 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              Policies built into every payment. Real-time visibility. Close books in days.
+            </motion.p>
+          </motion.div>
+
+          {/* CTA Buttons */}
           <motion.div 
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-12"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
+            animate={{ opacity: displayedText.length === fullText.length ? 1 : 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
-            {/* Build Button */}
             <motion.button
-              onClick={handleBuildClick}
-              className="group relative px-10 py-4 text-lg font-semibold backdrop-blur-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl hover:shadow-purple-500/25"
-              whileHover={{ 
-                scale: 1.05,
-                boxShadow: "0 20px 40px rgba(168, 85, 247, 0.3)"
-              }}
+              onClick={() => handleScrollToSection('product')}
+              className="group relative px-8 py-4 text-base font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl overflow-hidden transition-all duration-300 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <span className="relative z-10 flex items-center gap-2">
-                Craft your product
+                See How It Works
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.button>
 
-            {/* Freelance Button */}
             <motion.button
-              onClick={handleFreelanceClick}
-              className="group relative px-10 py-4 text-lg font-semibold backdrop-blur-lg bg-white/5 border border-white/10 text-white/90 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/10 hover:border-white/20"
-              whileHover={{ 
-                scale: 1.05,
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                borderColor: "rgba(255, 255, 255, 0.2)"
-              }}
+              onClick={() => handleScrollToSection('pricing')}
+              className="px-8 py-4 text-base font-semibold bg-white/5 border border-white/10 text-white/90 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <span className="relative z-10 flex items-center gap-2 group-hover:text-white transition-colors duration-300">
-                Join as Freelancer
-              </span>
+              View Pricing
             </motion.button>
           </motion.div>
-
-          {/* Additional Context */}
-          {/* <motion.div
-            className="mt-16 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-          >
-            <p className="text-white/40 text-sm uppercase tracking-wider font-medium">
-              Trusted by innovators worldwide
-            </p>
-            
-            {/* Trust indicators 
-            <div className="flex justify-center items-center gap-8 mt-6 text-white/30">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-xs">200+ Projects</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                <span className="text-xs">95% Retention</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                <span className="text-xs">3.2x Faster</span>
-              </div>
-            </div>
-          </motion.div> */}
-        </motion.div> 
+        </div>
       </div>
-
-      {/* Bottom Gradient Fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
     </section>
   );
 }
