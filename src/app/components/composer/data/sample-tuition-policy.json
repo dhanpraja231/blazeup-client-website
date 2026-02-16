@@ -156,7 +156,7 @@
     { "id": "e6-10", "source": "6", "target": "10" }
   ],
   "metadata": {
-    "name": "Appian Tuition Reimbursement Policy",
+    "name": "Design Expense Policy",
     "policyType": "tuition",
     "description": "Full-time employee tuition reimbursement workflow with ₹105,000 annual limit",
     "version": "2.0",
