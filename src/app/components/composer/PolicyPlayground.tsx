@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ReactFlowProvider } from 'reactflow';
-import { CreditCard, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import FlowCanvas from './Canvas/FlowCanvas';
 import BottomSheetManager from './UI/BottomSheetManager';
 import VendorListModal from './Modals/VendorListModal';
@@ -28,14 +28,9 @@ export default function PolicyPlayground() {
           >
             <Menu className="w-4.5 h-4.5 text-gray-50" />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600">
-              <CreditCard className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-sm font-semibold text-gray-50 hidden sm:inline">
-              {(sampleTuitionPolicy as PolicyWorkflow).metadata?.name || 'Policy Playground'}
-            </span>
-          </div>
+          <span className="text-sm font-semibold text-gray-50">
+            {(sampleTuitionPolicy as PolicyWorkflow).metadata?.name || 'Policy Playground'}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle theme={theme} onToggle={toggleTheme} />

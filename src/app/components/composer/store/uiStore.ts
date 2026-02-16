@@ -32,7 +32,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  sidePanelOpen: false,
+  sidePanelOpen: true,
   bottomSheet: {
     isOpen: false,
     content: null,
