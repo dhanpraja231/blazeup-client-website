@@ -25,7 +25,7 @@ export function getClientIP(request: Request): string {
 export async function hasIPGeneratedThisMonth(ipHash: string): Promise<boolean> {
   const month = getCurrentMonth();
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin()
     .from('generations')
     .select('id')
     .eq('ip_hash', ipHash)
@@ -48,11 +48,11 @@ export async function hasReachedGlobalLimit(): Promise<{
   const month = getCurrentMonth();
 
   // Try to get from counter table
-  const { data: counterData } = await supabaseAdmin
+  const { data: counterData } = await supabaseAdmin()
     .from('monthly_counter')
     .select('count')
     .eq('month', month)
-    .single();
+    .single<{ count: number }>();
 
   if (counterData) {
     return {
@@ -62,7 +62,7 @@ export async function hasReachedGlobalLimit(): Promise<{
   }
 
   // Fallback: count from generations table
-  const { count, error } = await supabaseAdmin
+  const { count, error } = await supabaseAdmin()
     .from('generations')
     .select('*', { count: 'exact', head: true })
     .eq('month', month);
@@ -83,9 +83,9 @@ export async function recordGeneration(ipHash: string): Promise<void> {
   const month = getCurrentMonth();
 
   // Insert generation record
-  const { error: insertError } = await supabaseAdmin
+  const { error: insertError } = await supabaseAdmin()
     .from('generations')
-    .insert({ ip_hash: ipHash, month });
+    .insert({ ip_hash: ipHash, month } as any);
 
   if (insertError) {
     console.error('Error recording generation:', insertError);
@@ -93,5 +93,5 @@ export async function recordGeneration(ipHash: string): Promise<void> {
   }
 
   // Increment monthly counter
-  await supabaseAdmin.rpc('increment_monthly_counter', { month_param: month });
+  await (supabaseAdmin() as any).rpc('increment_monthly_counter', { month_param: month });
 }
