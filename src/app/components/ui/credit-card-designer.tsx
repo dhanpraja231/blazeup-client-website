@@ -186,7 +186,7 @@ function createFrontTemplate(): CardElement[] {
     // EMV Chip — ISO 7816: fully locked hardware
     { id: 'hw-chip', type: 'image', face: 'front', x: 47.5, y: 92.5, width: 55, height: 42.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'CHIP', isHardware: true },
     // Contactless / NFC icon — fully movable & resizable
-    { id: 'hw-contactless', type: 'icon', face: 'front', x: 118, y: 145, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
+    { id: 'hw-contactless', type: 'icon', face: 'front', x: 116, y: 100, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
     // Account holder name — MOVABLE
     { id: 'hw-cardholder-name', type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
   ];

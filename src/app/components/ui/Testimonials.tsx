@@ -1,12 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const companies = [
-  { name: 'Solinas', logo: '🏢' },
-  { name: 'XYMA Analytics', logo: '📊' },
-  { name: 'NeoMotion', logo: '🚀' },
-  { name: 'KCat', logo: '💼' }
+  { name: 'Solinas', logo: '/image_assets/companies/solinas.svg' },
+  { name: 'XYMA Analytics', logo: '/image_assets/companies/xyma.svg' },
+  { name: 'NeoMotion', logo: '/image_assets/companies/neomotion.svg' },
+  { name: 'KCat', logo: '/image_assets/companies/kcat.svg' }
 ];
 
 export default function Testimonials() {
@@ -62,9 +63,14 @@ export default function Testimonials() {
                 borderColor: 'rgba(99,102,241,0.2)'
               }}
             >
-              {/* Logo emoji placeholder */}
-              <div className="text-6xl mb-4">
-                {company.logo}
+              {/* Company Logo */}
+              <div className="relative w-24 h-24 mb-4">
+                <Image
+                  src={company.logo}
+                  alt={`${company.name} logo`}
+                  fill
+                  className="object-contain"
+                />
               </div>
 
               {/* Company name */}
