@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, lazy } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -12,23 +12,6 @@ import ReactFlow, {
 import type { Node, Edge, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import TriggerNode from '../Nodes/TriggerNode';
-import ConditionNode from '../Nodes/ConditionNode';
-import ActionNode from '../Nodes/ActionNode';
-import IntegrationNode from '../Nodes/IntegrationNode';
-import PolicyNode from '../Nodes/PolicyNode';
-import CategoryLimitsNode from '../Nodes/CategoryLimitsNode';
-import MCCCheckNode from '../Nodes/MCCCheckNode';
-import VelocityLimitNode from '../Nodes/VelocityLimitNode';
-import GeoRestrictionNode from '../Nodes/GeoRestrictionNode';
-import TimeRestrictionNode from '../Nodes/TimeRestrictionNode';
-import ReceiptRequirementNode from '../Nodes/ReceiptRequirementNode';
-import BudgetTrackerNode from '../Nodes/BudgetTrackerNode';
-import NotificationNode from '../Nodes/NotificationNode';
-import LogicAndNode from '../Nodes/LogicAndNode';
-import LogicOrNode from '../Nodes/LogicOrNode';
-import LogicXorNode from '../Nodes/LogicXorNode';
-import LogicNotNode from '../Nodes/LogicNotNode';
 import CustomEdge from '../Edges/CustomEdge';
 import SidePanel from '../UI/SidePanel';
 
@@ -37,6 +20,25 @@ import type { PolicyWorkflow, NodeType } from '../types/flow';
 interface FlowCanvasProps {
   workflow: PolicyWorkflow;
 }
+
+// Lazy load all node types for faster initial render
+const TriggerNode = lazy(() => import('../Nodes/TriggerNode'));
+const ConditionNode = lazy(() => import('../Nodes/ConditionNode'));
+const ActionNode = lazy(() => import('../Nodes/ActionNode'));
+const IntegrationNode = lazy(() => import('../Nodes/IntegrationNode'));
+const PolicyNode = lazy(() => import('../Nodes/PolicyNode'));
+const CategoryLimitsNode = lazy(() => import('../Nodes/CategoryLimitsNode'));
+const MCCCheckNode = lazy(() => import('../Nodes/MCCCheckNode'));
+const VelocityLimitNode = lazy(() => import('../Nodes/VelocityLimitNode'));
+const GeoRestrictionNode = lazy(() => import('../Nodes/GeoRestrictionNode'));
+const TimeRestrictionNode = lazy(() => import('../Nodes/TimeRestrictionNode'));
+const ReceiptRequirementNode = lazy(() => import('../Nodes/ReceiptRequirementNode'));
+const BudgetTrackerNode = lazy(() => import('../Nodes/BudgetTrackerNode'));
+const NotificationNode = lazy(() => import('../Nodes/NotificationNode'));
+const LogicAndNode = lazy(() => import('../Nodes/LogicAndNode'));
+const LogicOrNode = lazy(() => import('../Nodes/LogicOrNode'));
+const LogicXorNode = lazy(() => import('../Nodes/LogicXorNode'));
+const LogicNotNode = lazy(() => import('../Nodes/LogicNotNode'));
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -214,7 +216,7 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
         proOptions={proOptions}
         minZoom={0.3}
         maxZoom={1.5}
-        defaultViewport={{ zoom: 0.8 }}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
         snapToGrid={true}
         snapGrid={[20, 20]}
         defaultEdgeOptions={{
