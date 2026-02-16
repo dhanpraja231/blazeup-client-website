@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 
 // Mock HERO_WORDS data - replace with your actual import
 const HERO_WORDS = ['Dreams', 'Vision', 'Future', 'Success', 'Impact', 'Legacy'];
@@ -51,7 +50,6 @@ function FloatingParticles() {
 export default function Hero() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showParticles, setShowParticles] = useState(false);
-  const router = useRouter();
   
   useEffect(() => {
     setShowParticles(true);
@@ -62,12 +60,18 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleBuildClick = () => {
-    router.push('/build');
-  };
+  const handleScrollToSection = (sectionId: string) => {
+    const element = document.querySelector(`#${sectionId}`);
+    if (element) {
+      const offset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
 
-  const handleFreelanceClick = () => {
-    router.push('/freelance');
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
   };
 
   return (
@@ -186,9 +190,9 @@ export default function Hero() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
           >
-            {/* Build Button */}
+            {/* Get Started Button */}
             <motion.button
-              onClick={handleBuildClick}
+              onClick={() => handleScrollToSection('product')}
               className="group relative px-10 py-4 text-lg font-semibold backdrop-blur-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl hover:shadow-purple-500/25"
               whileHover={{ 
                 scale: 1.05,
@@ -197,14 +201,14 @@ export default function Hero() {
               whileTap={{ scale: 0.95 }}
             >
               <span className="relative z-10 flex items-center gap-2">
-                Craft your product
+                Explore Product
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.button>
 
-            {/* Freelance Button */}
+            {/* Learn More Button */}
             <motion.button
-              onClick={handleFreelanceClick}
+              onClick={() => handleScrollToSection('pricing')}
               className="group relative px-10 py-4 text-lg font-semibold backdrop-blur-lg bg-white/5 border border-white/10 text-white/90 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/10 hover:border-white/20"
               whileHover={{ 
                 scale: 1.05,
@@ -214,7 +218,7 @@ export default function Hero() {
               whileTap={{ scale: 0.95 }}
             >
               <span className="relative z-10 flex items-center gap-2 group-hover:text-white transition-colors duration-300">
-                Join as Freelancer
+                View Pricing
               </span>
             </motion.button>
           </motion.div>

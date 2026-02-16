@@ -223,7 +223,7 @@ export default function WorkflowTabs() {
 
       {/* ─── Normal inline section ─── */}
       {!isExpanded && (
-        <section className="w-full py-16 sm:py-24">
+        <section id="product" className="w-full py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header */}
             <div className="mb-12">
