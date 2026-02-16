@@ -2,8 +2,23 @@
 
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function Hero() {
+  const [displayedText, setDisplayedText] = useState('');
+  const fullText = 'Powering the corporate credit card of tomorrow.';
+  const typingSpeed = 50; // milliseconds per character
+
+  useEffect(() => {
+    if (displayedText.length < fullText.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(fullText.slice(0, displayedText.length + 1));
+      }, typingSpeed);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [displayedText]);
+
   const handleScrollToSection = (sectionId: string) => {
     const element = document.querySelector(`#${sectionId}`);
     if (element) {
@@ -34,21 +49,22 @@ export default function Hero() {
             transition={{ duration: 0.6 }}
             className="mb-8"
           >
-            <motion.h1 
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-            >
-              Powering the corporate credit card of tomorrow.
-            </motion.h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white min-h-[1.2em]">
+              {displayedText}
+              <span className="inline-block w-1 h-[0.9em] bg-indigo-500 ml-1 animate-pulse align-middle" 
+                    style={{ 
+                      opacity: displayedText.length < fullText.length ? 1 : 0,
+                      transition: 'opacity 0.3s'
+                    }}
+              />
+            </h1>
 
             {/* Subtitle */}
             <motion.p
               className="text-lg sm:text-xl text-white/60 mb-10 max-w-3xl mx-auto leading-relaxed"
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
+              animate={{ opacity: displayedText.length === fullText.length ? 1 : 0 }}
+              transition={{ duration: 0.6 }}
             >
               Policies built into every payment. Real-time visibility. Close books in days.
             </motion.p>
@@ -58,8 +74,8 @@ export default function Hero() {
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
+            animate={{ opacity: displayedText.length === fullText.length ? 1 : 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
             <motion.button
               onClick={() => handleScrollToSection('product')}
