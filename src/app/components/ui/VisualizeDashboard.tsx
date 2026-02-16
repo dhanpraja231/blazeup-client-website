@@ -13,7 +13,6 @@ import {
   Clock,
   GripVertical,
   ChevronDown,
-  Settings,
   Eye,
   Pencil,
   Send,
@@ -696,9 +695,6 @@ export default function VisualizeDashboard() {
               </button>
               <button onClick={() => setLight(v => !v)} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 text-sm" style={{ background: L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`, color: L ? '#475569' : 'rgba(255,255,255,0.5)' }}>
                 {L ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              </button>
-              <button className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 text-sm" style={{ background: L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`, color: L ? '#475569' : 'rgba(255,255,255,0.5)' }}>
-                <Settings className="w-4 h-4" />
               </button>
             </motion.div>
           </div>

@@ -208,8 +208,9 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
         fitView
         fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         proOptions={proOptions}
-        minZoom={0.1}
-        maxZoom={1.5}
+        minZoom={0.3}
+        maxZoom={2}
+        defaultZoom={0.8}
         snapToGrid={true}
         snapGrid={[20, 20]}
         defaultEdgeOptions={{
@@ -223,10 +224,11 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
           variant={BackgroundVariant.Dots}
           gap={20}
           size={1.5}
-          className="bg-[#F8F9FA] dark:bg-[#1E1E1E]"
+          style={{ background: 'var(--dark-gray)' }}
         />
         <Controls
-          className="!shadow-lg !border !border-gray-300 dark:!border-gray-700 !bg-white dark:!bg-[#2A2A2A]"
+          className="!shadow-lg"
+          style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}
           showInteractive={false}
         />
       </ReactFlow>

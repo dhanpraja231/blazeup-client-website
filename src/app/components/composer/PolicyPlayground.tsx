@@ -17,18 +17,21 @@ export default function PolicyPlayground() {
   const toggleSidePanel = useUIStore((state) => state.toggleSidePanel);
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#1E1E1E] rounded-lg overflow-hidden">
+    <div className="w-full h-full flex flex-col rounded-lg overflow-hidden" style={{ background: 'var(--dark-gray)' }}>
       {/* Inline toolbar (replaces the fixed TopBar) */}
-      <div className="shrink-0 h-12 bg-gray-900 border-b border-gray-700 flex items-center justify-between px-4">
+      <div className="shrink-0 h-12 flex items-center justify-between px-4" style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3">
           <button
             onClick={toggleSidePanel}
-            className="p-1.5 rounded-lg hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-lg transition-colors"
+            style={{ color: '#fff' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             aria-label="Toggle side panel"
           >
-            <Menu className="w-4.5 h-4.5 text-gray-50" />
+            <Menu className="w-4.5 h-4.5" />
           </button>
-          <span className="text-sm font-semibold text-gray-50">
+          <span className="text-sm font-semibold" style={{ color: '#fff' }}>
             {(sampleTuitionPolicy as PolicyWorkflow).metadata?.name || 'Policy Playground'}
           </span>
         </div>

@@ -788,7 +788,7 @@ export default function CreditCardDesigner() {
   const selectOptionBg = light ? 'bg-white' : 'bg-[#1a1a2e]';
   // ====================== JSX ======================
   return (
-    <div className={`min-h-screen p-4 md:p-8 transition-colors duration-300 ${light ? 'bg-[#f5f7fa] text-slate-900' : 'bg-gradient-to-br from-[#0a0a1a] via-[#111128] to-[#0d0d20] text-white'}`} style={{ fontFamily: "'Inter',system-ui,sans-serif" }}>
+    <div className="p-4 md:p-8 transition-colors duration-300" style={{ fontFamily: "'Inter',system-ui,sans-serif", background: light ? '#f5f7fa' : 'var(--dark-gray)', color: light ? '#1e293b' : '#fff' }}>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
       <input ref={clipboardInputRef} type="file" accept="image/*" multiple onChange={handleClipboardUpload} className="hidden" />
 
@@ -1181,7 +1181,6 @@ export default function CreditCardDesigner() {
                       transition: 'width 0.4s ease, height 0.4s ease, box-shadow 0.3s ease, border 0.3s ease',
                       boxShadow: isDragOver ? '0 0 40px rgba(99,102,241,.5),0 25px 60px rgba(0,0,0,.4)' : '0 25px 60px rgba(0,0,0,.4)',
                       border: isDragOver ? '2px dashed rgba(99,102,241,.6)' : '1px solid rgba(255,255,255,.08)' }}>
-                    <div className="absolute pointer-events-none" style={{ inset: CARD.MARGIN, border: '1px dashed rgba(255,255,255,.06)', borderRadius: CARD.R - 4 }} />
                     <div className="absolute inset-0 pointer-events-none" style={{ opacity: .04 }}><svg width="100%" height="100%"><pattern id="cp" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#cp)"/></svg></div>
                     {!light && <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />}
                     {/* Pattern overlay */}
