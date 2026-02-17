@@ -223,6 +223,12 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
         }}
         nodeExtent={[[-1000, -1000], [10000, 10000]]}
         deleteKeyCode={['Backspace', 'Delete']}
+        panOnScroll={true}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={false}
+        panOnDrag={true}
+        selectNodesOnDrag={false}
       >
         <Background
           variant={BackgroundVariant.Dots}
