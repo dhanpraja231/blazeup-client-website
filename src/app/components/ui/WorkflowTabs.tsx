@@ -175,7 +175,7 @@ export default function WorkflowTabs() {
       {/* This button uses position:fixed and sits at z-index 99999 so it's
           always clickable, even when the CreditCardDesigner's template modal
           (z-300) is open and covering the page. */}
-      <button
+      {/* <button
         onClick={() => setIsExpanded((prev) => !prev)}
         type="button"
         style={{
@@ -219,7 +219,7 @@ export default function WorkflowTabs() {
             Expand
           </>
         )}
-      </button>
+      </button> */}
 
       {/* ─── Normal inline section ─── */}
       {!isExpanded && (

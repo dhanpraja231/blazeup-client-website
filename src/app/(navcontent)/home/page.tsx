@@ -12,8 +12,8 @@ export default function HomePage() {
       <WorkflowTabs />
       <Integrations />
       <Pricing />
-      <Testimonials />
-      <Footer />
+      {/* <Testimonials /> */}
+      {/* <Footer /> */}
     </main>
   );
 }
