@@ -221,27 +221,38 @@ function generateWeeklyData(year: number, baseLine: number, variance: number, em
       weeks.push({ week: w, value: 0 });
       continue;
     }
-    
-    // Create smooth seasonal patterns
-    const seasonal = Math.sin((w / 52) * Math.PI * 2) * 15;
-    
-    // Gentle week-to-week variation
-    const weekVariation = Math.sin(w * 0.5) * 8;
-    
-    // Calculate value with good range distribution
-    const rawValue = baseLine + seasonal + weekVariation;
-    const value = Math.max(20, Math.min(100, Math.round(rawValue)));
-    
+
+    // Random chance of zero spending (20% chance for any week)
+    if (Math.random() > 0.8) {
+      weeks.push({ week: w, value: 0 });
+      continue;
+    }
+
+    // Highly sporadic pattern with random spikes and drops
+    const randomSpike = Math.random() > 0.85 ? Math.random() * 50 : 0; // 15% chance of large spike
+    const randomDrop = Math.random() > 0.9 ? -Math.random() * 30 : 0; // 10% chance of significant drop
+    const highVariance = (Math.random() - 0.5) * variance * 2; // Double the variance for sporadic behavior
+
+    // Occasional extreme outliers
+    const extremeOutlier = Math.random() > 0.95 ? (Math.random() > 0.5 ? 40 : -20) : 0;
+
+    // Random quiet periods (very low activity)
+    const quietPeriod = Math.random() > 0.92 ? -baseLine * 0.6 : 0;
+
+    // Calculate highly sporadic value
+    const rawValue = baseLine + highVariance + randomSpike + randomDrop + extremeOutlier + quietPeriod;
+    const value = Math.max(0, Math.min(100, Math.round(rawValue)));
+
     weeks.push({ week: w, value });
   }
   return weeks;
 }
 
 const HEATMAP_DATA = [
-  { year: 2023, weeks: generateWeeklyData(2023, 50, 35, [1, 26, 52]) },
-  { year: 2024, weeks: generateWeeklyData(2024, 60, 30, [1, 35]) },
-  { year: 2025, weeks: generateWeeklyData(2025, 65, 25, [1, 25, 52]) },
-  { year: 2026, weeks: generateWeeklyData(2026, 55, 30, [1]).filter(w => w.week <= 7) },
+  { year: 2023, weeks: generateWeeklyData(2023, 45, 35, [1, 5, 12, 18, 26, 31, 38, 44, 52]) },
+  { year: 2024, weeks: generateWeeklyData(2024, 50, 40, [1, 7, 15, 20, 23, 29, 35, 41, 47, 50]) },
+  { year: 2025, weeks: generateWeeklyData(2025, 48, 38, [1, 4, 8, 13, 19, 25, 33, 39, 42, 48, 52]) },
+  { year: 2026, weeks: generateWeeklyData(2026, 52, 42, [1, 3, 5]).filter(w => w.week <= 7) },
 ];
 
 const EMPLOYEE_TIME_DATA = [

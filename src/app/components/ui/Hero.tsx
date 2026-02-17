@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 export default function Hero() {
   const [displayedText, setDisplayedText] = useState('');
-  const fullText = 'Powering the corporate credit card of tomorrow.';
+  const fullText = 'Corporate spends REIMAGINED.';
   const typingSpeed = 50; // milliseconds per character
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function Hero() {
               animate={{ opacity: displayedText.length === fullText.length ? 1 : 0 }}
               transition={{ duration: 0.6 }}
             >
-              Policies built into every payment. Real-time visibility. Close books in days.
+              Policies built into every payment. Real-time visibility. Credit Lines. UPI and more.
             </motion.p>
           </motion.div>
 

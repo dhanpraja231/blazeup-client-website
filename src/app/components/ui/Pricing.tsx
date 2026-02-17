@@ -111,7 +111,7 @@ export default function Pricing() {
                 )}
 
                 {/* Icon */}
-                <div className="mb-6">
+                {/* <div className="mb-6">
                   <div 
                     className="w-16 h-16 rounded-2xl flex items-center justify-center"
                     style={{ 
@@ -123,7 +123,7 @@ export default function Pricing() {
                   >
                     <Icon className="w-8 h-8 text-indigo-400" />
                   </div>
-                </div>
+                </div> */}
 
                 {/* Plan details */}
                 <h3 className="text-2xl font-bold mb-2 text-white">{plan.name}</h3>
