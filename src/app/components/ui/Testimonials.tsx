@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 
 const companies = [
-  { name: 'Solinas', logo: '/image_assets/companies/solinas.svg' },
-  { name: 'XYMA Analytics', logo: '/image_assets/companies/xyma.svg' },
-  { name: 'NeoMotion', logo: '/image_assets/companies/neomotion.svg' },
-  { name: 'KCat', logo: '/image_assets/companies/kcat.svg' }
+  { name: 'Solinas', logo: '/image_assets/companies/solinas.png' },
+  { name: 'XYMA Analytics', logo: '/image_assets/companies/xyma.png' },
+  { name: 'NeoMotion', logo: '/image_assets/companies/neomotion.png' },
+  { name: 'KCat', logo: '/image_assets/companies/kcat.png' }
 ];
 
 export default function Testimonials() {

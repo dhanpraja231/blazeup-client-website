@@ -885,7 +885,6 @@ export default function CreditCardDesigner() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}><CreditCard className="w-5 h-5 text-white" /></div>
             <div>
               <h1 className={`text-2xl font-bold tracking-tight bg-gradient-to-r bg-clip-text ${light ? 'from-slate-900 to-slate-600' : 'from-white to-white/60'}`} style={{ WebkitTextFillColor: 'transparent' }}>Card Designer</h1>
               <p className={`text-xs ${light ? 'text-slate-400' : 'text-slate-500'}`}>ISO 7810 • Drag & drop your logo • Customize everything</p>
