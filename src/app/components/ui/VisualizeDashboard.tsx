@@ -547,21 +547,21 @@ function EmployeeLookup() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Table */}
-      <div className="lg:col-span-7 rounded-2xl overflow-hidden" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
-        <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
+      <div className="lg:col-span-7 rounded-2xl overflow-hidden flex flex-col h-full" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
+        <div className="px-5 py-4 flex items-center gap-3 shrink-0" style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
           <Search className="w-4 h-4 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }} />
           <input type="text" placeholder="Search employees by name, department, or role..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="flex-1 bg-transparent text-sm outline-none" style={{ color: L ? '#1e293b' : '#fff' }} />
           {search && <button onClick={() => setSearch('')} className="p-1 rounded-md" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }}><X className="w-3.5 h-3.5" /></button>}
         </div>
-        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.25)', borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'}` }}>
+        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider shrink-0" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.25)', borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'}` }}>
           <span className="col-span-4">Employee</span>
           <span className="col-span-2">Department</span>
           <span className="col-span-2 text-right">Spend</span>
           <span className="col-span-2 text-right">Txns</span>
           <span className="col-span-2 text-center">Status</span>
         </div>
-        <div className="max-h-[400px] overflow-y-auto" style={{ scrollbarGutter: 'stable', scrollBehavior: 'auto' }}>
+        <div className="flex-1 overflow-y-auto min-h-0">
           {filtered.map((emp) => (
             <motion.button key={emp.id} onClick={(e) => { e.preventDefault(); setSelectedEmployee(emp); }}
               className="w-full grid grid-cols-12 gap-2 px-5 py-3 text-left transition-colors duration-150"
@@ -587,7 +587,7 @@ function EmployeeLookup() {
         <AnimatePresence mode="wait">
           {selectedEmployee ? (
             <motion.div key={selectedEmployee.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
+              transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5 h-full" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`, minHeight: '550px' }}>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{selectedEmployee.avatar}</div>
                 <div><h4 className="text-lg font-bold" style={{ color: L ? '#0f172a' : '#fff' }}>{selectedEmployee.name}</h4><p className="text-sm" style={{ color: L ? '#64748b' : 'rgba(255,255,255,0.4)' }}>{selectedEmployee.role} · {selectedEmployee.dept}</p></div>
