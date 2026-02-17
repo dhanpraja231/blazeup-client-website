@@ -118,11 +118,11 @@ export function DonutChart({ data, dataKey, nameKey, height = 300, light = false
 
   const total = activeData.reduce((sum: number, d: any) => sum + d[activeDataKey], 0);
 
-  // Dynamic radii based on height
+  // Dynamic radii based on height - bigger donut to avoid text overlap
   const legendSpace = Math.min(50, Math.max(32, activeData.length * 10));
   const chartArea = height - legendSpace - 16;
-  const outerRadius = Math.max(30, Math.min(90, chartArea * 0.38));
-  const innerRadius = Math.max(18, outerRadius * 0.72);
+  const outerRadius = Math.max(45, Math.min(110, chartArea * 0.48)); // Increased from 0.38 to 0.48
+  const innerRadius = Math.max(28, outerRadius * 0.78); // Thinner segments - increased from 0.65 to 0.78
 
   const handlePieClick = useCallback((_: any, index: number) => {
     if (drilldown) return;
