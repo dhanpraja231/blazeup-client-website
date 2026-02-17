@@ -212,19 +212,21 @@ const EMPLOYEE_CATEGORIES = [
   { name: 'Food', value: 420 },
 ];
 
-/* ═══════════════ HEATMAP DATA (Weekly) ═══════════════ */
-function generateWeeklyData(year: number, baseLine: number, variance: number, emptyWeeks: number[] = []) {
-  const weeks = [];
-  for (let w = 1; w <= 52; w++) {
-    // Check if this week should be empty (no spending)
-    if (emptyWeeks.includes(w)) {
-      weeks.push({ week: w, value: 0 });
+/* ═══════════════ HEATMAP DATA (Daily) ═══════════════ */
+function generateDailyData(year: number, baseLine: number, variance: number, emptyDays: number[] = []) {
+  const days = [];
+  const daysInYear = year % 4 === 0 ? 366 : 365; // Account for leap years
+
+  for (let d = 1; d <= daysInYear; d++) {
+    // Check if this day should be empty (no spending)
+    if (emptyDays.includes(d)) {
+      days.push({ day: d, value: 0 });
       continue;
     }
 
-    // Random chance of zero spending (20% chance for any week)
-    if (Math.random() > 0.8) {
-      weeks.push({ week: w, value: 0 });
+    // Random chance of zero spending (30% chance for any day - weekends, holidays, etc.)
+    if (Math.random() > 0.7) {
+      days.push({ day: d, value: 0 });
       continue;
     }
 
@@ -243,16 +245,22 @@ function generateWeeklyData(year: number, baseLine: number, variance: number, em
     const rawValue = baseLine + highVariance + randomSpike + randomDrop + extremeOutlier + quietPeriod;
     const value = Math.max(0, Math.min(100, Math.round(rawValue)));
 
-    weeks.push({ week: w, value });
+    days.push({ day: d, value });
   }
-  return weeks;
+  return days;
 }
 
+// Generate some empty day ranges (holidays, company shutdowns, etc.)
+const empty2023 = [1, 2, 3, 15, 50, 51, 52, 99, 100, 150, 151, 180, 181, 250, 270, 300, 350, 364, 365];
+const empty2024 = [1, 2, 3, 20, 60, 61, 62, 110, 111, 160, 161, 190, 191, 260, 280, 310, 355, 365, 366];
+const empty2025 = [1, 2, 3, 25, 70, 71, 72, 120, 121, 170, 171, 200, 201, 270, 290, 320, 360, 364, 365];
+const empty2026 = [1, 2, 3, 10, 20, 30, 40];
+
 const HEATMAP_DATA = [
-  { year: 2023, weeks: generateWeeklyData(2023, 45, 35, [1, 5, 12, 18, 26, 31, 38, 44, 52]) },
-  { year: 2024, weeks: generateWeeklyData(2024, 50, 40, [1, 7, 15, 20, 23, 29, 35, 41, 47, 50]) },
-  { year: 2025, weeks: generateWeeklyData(2025, 48, 38, [1, 4, 8, 13, 19, 25, 33, 39, 42, 48, 52]) },
-  { year: 2026, weeks: generateWeeklyData(2026, 52, 42, [1, 3, 5]).filter(w => w.week <= 7) },
+  { year: 2023, days: generateDailyData(2023, 45, 35, empty2023) },
+  { year: 2024, days: generateDailyData(2024, 50, 40, empty2024) },
+  { year: 2025, days: generateDailyData(2025, 48, 38, empty2025) },
+  { year: 2026, days: generateDailyData(2026, 52, 42, empty2026).filter(d => d.day <= 48) }, // Current day of year (Feb 17)
 ];
 
 const EMPLOYEE_TIME_DATA = [
