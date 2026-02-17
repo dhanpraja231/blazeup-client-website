@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, lazy } from 'react';
+import { useCallback, useMemo, useRef, lazy, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -19,6 +19,7 @@ import type { PolicyWorkflow, NodeType } from '../types/flow';
 
 interface FlowCanvasProps {
   workflow: PolicyWorkflow;
+  onCopyPositions?: () => void;
 }
 
 // Lazy load all node types for faster initial render
@@ -64,11 +65,38 @@ const edgeTypes = {
   default: CustomEdge,
 };
 
-export default function FlowCanvas({ workflow }: FlowCanvasProps) {
+export default function FlowCanvas({ workflow, onCopyPositions }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(workflow.nodes as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(workflow.edges as Edge[]);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, getViewport } = useReactFlow();
+
+  // TEMP: Expose copy function
+  useEffect(() => {
+    if (onCopyPositions) {
+      (window as any).__copyNodePositions = () => {
+        const viewport = getViewport();
+        const positions = nodes.map(n => ({
+          id: n.id,
+          type: n.type,
+          position: n.position,
+          data: { label: n.data.label }
+        }));
+        const output = {
+          viewport: {
+            x: viewport.x,
+            y: viewport.y,
+            zoom: viewport.zoom
+          },
+          nodes: positions
+        };
+        const jsonStr = JSON.stringify(output, null, 2);
+        navigator.clipboard.writeText(jsonStr);
+        console.log('📋 Copied node positions + viewport:', output);
+        alert(`Copied ${positions.length} node positions + viewport (zoom: ${viewport.zoom.toFixed(2)}) to clipboard!`);
+      };
+    }
+  }, [nodes, onCopyPositions, getViewport]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -211,12 +239,10 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
-        fitView
-        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         proOptions={proOptions}
         minZoom={0.3}
         maxZoom={1.5}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+        defaultViewport={{ x: -452.8567854655678, y: 352.10236275365946, zoom: 0.6083756878740173 }}
         snapToGrid={true}
         snapGrid={[20, 20]}
         defaultEdgeOptions={{

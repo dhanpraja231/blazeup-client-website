@@ -561,12 +561,11 @@ function EmployeeLookup() {
           <span className="col-span-2 text-right">Txns</span>
           <span className="col-span-2 text-center">Status</span>
         </div>
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="max-h-[400px] overflow-y-auto" style={{ scrollbarGutter: 'stable', scrollBehavior: 'auto' }}>
           {filtered.map((emp) => (
-            <motion.button key={emp.id} onClick={() => setSelectedEmployee(emp)}
+            <motion.button key={emp.id} onClick={(e) => { e.preventDefault(); setSelectedEmployee(emp); }}
               className="w-full grid grid-cols-12 gap-2 px-5 py-3 text-left transition-colors duration-150"
-              style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'}`, background: selectedEmployee?.id === emp.id ? 'rgba(22,163,74,0.08)' : 'transparent' }}
-              whileTap={{ scale: 0.995 }}>
+              style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'}`, background: selectedEmployee?.id === emp.id ? 'rgba(22,163,74,0.08)' : 'transparent' }}>
               <div className="col-span-4 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{emp.avatar}</div>
                 <div className="min-w-0"><p className="text-sm font-medium truncate" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{emp.name}</p><p className="text-[10px] truncate" style={{ color: L ? '#94a3b8' : 'rgba(255,255,255,0.3)' }}>{emp.role}</p></div>
