@@ -17,7 +17,7 @@ export default function PolicyPlayground() {
   const toggleSidePanel = useUIStore((state) => state.toggleSidePanel);
 
   return (
-    <div className="w-full h-full flex flex-col rounded-lg overflow-hidden" style={{ background: 'var(--dark-gray)' }}>
+    <div className="w-full h-full flex flex-col rounded-lg overflow-hidden" style={{ background: 'var(--dark-gray)', touchAction: 'none' }}>
       {/* Inline toolbar (replaces the fixed TopBar) */}
       <div className="shrink-0 h-12 flex items-center justify-between px-4" style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3">

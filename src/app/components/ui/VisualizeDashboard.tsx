@@ -3,6 +3,8 @@
 import React, { useState, useMemo, useCallback, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import { useDrag, useDrop } from 'react-dnd';
+import { MultiBackendDnDProvider } from './DnDProvider';
 
 const ThemeCtx = createContext(false);
 function useLight() { return useContext(ThemeCtx); }
@@ -306,21 +308,37 @@ const RealChart = React.memo(function RealChart({ chartType, kpiId, height }: { 
 /* ═══════════════ PALETTE ITEM ═══════════════ */
 const PaletteItem = React.memo(function PaletteItem({ widget }: { widget: typeof KPI_DIMENSIONS[number] }) {
   const L = useLight();
+  
+  const [{ isDragging }, drag, preview] = useDrag(() => ({
+    type: 'KPI_DIMENSION',
+    item: { id: widget.id },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  }), [widget.id]);
+
+  // Use callback ref to avoid type conflicts
+  const setDragRef = React.useCallback((node: HTMLDivElement | null) => {
+    drag(node);
+  }, [drag]);
+
   return (
-    <motion.div
-      draggable
-      onDragStart={(e) => {
-        (e as unknown as React.DragEvent).dataTransfer?.setData('text/kpi-dimension', widget.id);
-      }}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing select-none transition-colors duration-200 bg-gradient-to-r ${widget.color}`}
-      style={{ border: L ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.06)' }}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-    >
-      <GripVertical className="w-3.5 h-3.5 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.3)' }} />
-      <span style={{ color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.5)' }}>{widget.icon}</span>
-      <span className="text-xs font-semibold whitespace-nowrap" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{widget.label}</span>
-    </motion.div>
+    <div ref={setDragRef as any}>
+      <motion.div
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing select-none transition-colors duration-200 bg-gradient-to-r ${widget.color}`}
+        style={{ 
+          border: L ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.06)',
+          opacity: isDragging ? 0.5 : 1,
+          touchAction: 'none'
+        }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+      >
+        <GripVertical className="w-3.5 h-3.5 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.3)' }} />
+        <span style={{ color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.5)' }}>{widget.icon}</span>
+        <span className="text-xs font-semibold whitespace-nowrap" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{widget.label}</span>
+      </motion.div>
+    </div>
   );
 });
 
@@ -335,7 +353,6 @@ const DashboardZone = React.memo(function DashboardZone({
   onRemove: (zoneId: string) => void;
   onChartChange: (zoneId: string, chartType: string) => void;
 }) {
-  const [isDragOver, setIsDragOver] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const L = useLight();
   const kpi = widget ? KPI_DIMENSIONS.find(k => k.id === widget.kpiId) : null;
@@ -344,8 +361,28 @@ const DashboardZone = React.memo(function DashboardZone({
   const isPreview = mode === 'preview';
   const isLargeZone = zone.colSpan.includes('col-span-2') || zone.rowSpan.includes('row-span-2');
 
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'KPI_DIMENSION',
+    drop: (item: { id: string }) => {
+      if (!isPreview) {
+        onDrop(zone.id, item.id);
+      }
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
+  }), [zone.id, isPreview, onDrop]);
+
+  // Use callback ref to avoid type conflicts
+  const setDropRef = React.useCallback((node: HTMLDivElement | null) => {
+    drop(node);
+  }, [drop]);
+
+  const isDragOver = !isPreview && isOver;
+
   return (
     <motion.div
+      ref={setDropRef as any}
       layout
       className={`${zone.colSpan} ${zone.rowSpan} rounded-2xl flex flex-col relative overflow-hidden transition-all duration-300 ${
         isPreview
@@ -370,15 +407,6 @@ const DashboardZone = React.memo(function DashboardZone({
             : widget
               ? `1px solid ${L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`
               : `2px dashed ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`,
-      }}
-      onDragOver={(e) => { if (!isPreview) { e.preventDefault(); setIsDragOver(true); } }}
-      onDragLeave={() => setIsDragOver(false)}
-      onDrop={(e) => {
-        if (isPreview) return;
-        e.preventDefault();
-        setIsDragOver(false);
-        const kpiId = e.dataTransfer.getData('text/kpi-dimension');
-        if (kpiId) onDrop(zone.id, kpiId);
       }}
     >
       {/* Header */}
@@ -547,21 +575,21 @@ function EmployeeLookup() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Table */}
-      <div className="lg:col-span-7 rounded-2xl overflow-hidden" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
-        <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
+      <div className="lg:col-span-7 rounded-2xl overflow-hidden flex flex-col h-full" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
+        <div className="px-5 py-4 flex items-center gap-3 shrink-0" style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
           <Search className="w-4 h-4 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }} />
           <input type="text" placeholder="Search employees by name, department, or role..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="flex-1 bg-transparent text-sm outline-none" style={{ color: L ? '#1e293b' : '#fff' }} />
           {search && <button onClick={() => setSearch('')} className="p-1 rounded-md" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }}><X className="w-3.5 h-3.5" /></button>}
         </div>
-        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.25)', borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'}` }}>
+        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider shrink-0" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.25)', borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'}` }}>
           <span className="col-span-4">Employee</span>
           <span className="col-span-2">Department</span>
           <span className="col-span-2 text-right">Spend</span>
           <span className="col-span-2 text-right">Txns</span>
           <span className="col-span-2 text-center">Status</span>
         </div>
-        <div className="max-h-[400px] overflow-y-auto" style={{ scrollbarGutter: 'stable', scrollBehavior: 'auto' }}>
+        <div className="flex-1 overflow-y-auto min-h-0">
           {filtered.map((emp) => (
             <motion.button key={emp.id} onClick={(e) => { e.preventDefault(); setSelectedEmployee(emp); }}
               className="w-full grid grid-cols-12 gap-2 px-5 py-3 text-left transition-colors duration-150"
@@ -587,7 +615,7 @@ function EmployeeLookup() {
         <AnimatePresence mode="wait">
           {selectedEmployee ? (
             <motion.div key={selectedEmployee.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
+              transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5 h-full" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`, minHeight: '550px' }}>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{selectedEmployee.avatar}</div>
                 <div><h4 className="text-lg font-bold" style={{ color: L ? '#0f172a' : '#fff' }}>{selectedEmployee.name}</h4><p className="text-sm" style={{ color: L ? '#64748b' : 'rgba(255,255,255,0.4)' }}>{selectedEmployee.role} · {selectedEmployee.dept}</p></div>
@@ -692,6 +720,7 @@ export default function VisualizeDashboard() {
   const isPreview = mode === 'preview';
 
   return (
+    <MultiBackendDnDProvider>
     <ThemeCtx.Provider value={light}>
     <div className="min-h-screen" style={{ background: L ? '#f8fafc' : 'var(--dark-gray)', color: L ? '#1e293b' : '#fff', transition: 'background 0.3s, color 0.3s' }}>
       {/* Header */}
@@ -762,9 +791,7 @@ export default function VisualizeDashboard() {
                 <h3 className="text-[11px] font-semibold mb-3 px-1 uppercase tracking-wider" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.4)' }}>KPI Dimensions</h3>
                 <div className="flex flex-wrap lg:flex-col gap-2">
                   {KPI_DIMENSIONS.map((widget) => (
-                    <div key={widget.id} draggable onDragStart={(e) => { e.dataTransfer.setData('text/kpi-dimension', widget.id); e.dataTransfer.effectAllowed = 'copy'; }}>
-                      <PaletteItem widget={widget} />
-                    </div>
+                    <PaletteItem key={widget.id} widget={widget} />
                   ))}
                 </div>
                 <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
@@ -805,5 +832,6 @@ export default function VisualizeDashboard() {
       {showSubmitModal && <SubmitModal onClose={() => setShowSubmitModal(false)} widgetCount={widgetCount} />}
     </div>
     </ThemeCtx.Provider>
+    </MultiBackendDnDProvider>
   );
 }
