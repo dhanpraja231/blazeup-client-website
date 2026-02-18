@@ -465,47 +465,7 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: { alert: typeo
       className="relative flex items-center gap-4 rounded-2xl p-5 overflow-hidden"
       style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1, duration: 0.5 }}>
-      {/* Concentric circle pulse emanating from the icon center */}
-      <div className="absolute pointer-events-none" style={{ left: 'calc(20px + 22px)', top: '50%', transform: 'translate(-50%, -50%)', width: 0, height: 0 }}>
-        {[0, 1, 2].map((ring) => (
-          <motion.div
-            key={ring}
-            className="absolute rounded-full"
-            style={{
-              top: '50%',
-              left: '50%',
-              width: 44,
-              height: 44,
-              x: '-50%',
-              y: '-50%',
-              border: `2.5px solid ${ring === 0 ? alert.ringColor : alert.ringColor2}`,
-            }}
-            animate={{
-              scale: [1, 10],
-              opacity: [0.5, 0],
-            }}
-            transition={{
-              duration: 3 + ring * 0.5,
-              repeat: Infinity,
-              ease: 'easeOut',
-              delay: ring * 0.8,
-            }}
-          />
-        ))}
-        {/* Ambient glow */}
-        <div
-          className="absolute rounded-full blur-2xl"
-          style={{
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 60,
-            height: 60,
-            background: alert.accentColor,
-            opacity: 0.1,
-          }}
-        />
-      </div>
+
       <div className="relative z-10 shrink-0">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: alert.accentColor + '18', color: alert.accentColor }}>
           {alert.icon}
@@ -769,7 +729,7 @@ export default function VisualizeDashboard() {
                   ))}
                 </div>
                 <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
-                  <p className="text-[10px] leading-relaxed px-1" style={{ color: L ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.15)' }}>Drag a dimension into a zone, then choose a chart type from the dropdown.</p>
+                  <p className="text-xs leading-relaxed px-1" style={{ color: L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)' }}>Drag a dimension into a zone, then choose a chart type from the dropdown.</p>
                 </div>
               </div>
             </aside>

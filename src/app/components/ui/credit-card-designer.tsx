@@ -233,9 +233,10 @@ export default function CreditCardDesigner() {
   const [expandedPanel, setExpandedPanel] = useState<string | null>('components');
   const [collisionWarn, setCollisionWarn] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
-  const [spotlightColor, setSpotlightColor] = useState('#1a1a3e');
-  const [spotlightX, setSpotlightX] = useState(30);
-  const [spotlightY, setSpotlightY] = useState(30);
+  const [spotlightColor, setSpotlightColor] = useState('#3535cf');
+  const [spotlightX, setSpotlightX] = useState(89);
+  const [spotlightY, setSpotlightY] = useState(38);
+  const [spotlightEnabled, setSpotlightEnabled] = useState(true);
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [canvasLightMode, setCanvasLightMode] = useState(false);
@@ -970,13 +971,27 @@ export default function CreditCardDesigner() {
                 </div>
                 {/* Spotlight gradient */}
                 <div className={`pt-2 border-t ${light ? 'border-black/5' : 'border-white/5'}`}>
-                  <PropLabel>Spotlight Gradient</PropLabel>
-                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); const g = generateSpotlightGradient(v, spotlightX, spotlightY); setCardBg(g); pushHistory(); }} className="w-full" />
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => { const val = parseInt(e.target.value); setSpotlightX(val); const g = generateSpotlightGradient(spotlightColor, val, spotlightY); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
-                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => { const val = parseInt(e.target.value); setSpotlightY(val); const g = generateSpotlightGradient(spotlightColor, spotlightX, val); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <PropLabel>Spotlight Gradient</PropLabel>
+                    <button onClick={() => {
+                      if (spotlightEnabled) {
+                        // Turning OFF: reset background to solid spotlightColor, removing radial-gradient entirely
+                        setCardBg(spotlightColor);
+                        pushHistory();
+                      }
+                      setSpotlightEnabled(p => !p);
+                    }} className="relative w-10 h-5 rounded-full transition-colors" style={{ background: spotlightEnabled ? '#6366f1' : (light ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)') }}>
+                      <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: spotlightEnabled ? 22 : 2 }} />
+                    </button>
                   </div>
-                  <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }} />
+                  {spotlightEnabled && <>
+                    <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); const g = generateSpotlightGradient(v, spotlightX, spotlightY); setCardBg(g); pushHistory(); }} className="w-full" />
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => { const val = parseInt(e.target.value); setSpotlightX(val); const g = generateSpotlightGradient(spotlightColor, val, spotlightY); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                      <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => { const val = parseInt(e.target.value); setSpotlightY(val); const g = generateSpotlightGradient(spotlightColor, spotlightX, val); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                    </div>
+                    <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }} />
+                  </>}
                 </div>
               </div>}
             </div>
@@ -1180,8 +1195,8 @@ export default function CreditCardDesigner() {
                       transition: 'width 0.4s ease, height 0.4s ease, box-shadow 0.3s ease, border 0.3s ease',
                       boxShadow: isDragOver ? '0 0 40px rgba(99,102,241,.5),0 25px 60px rgba(0,0,0,.4)' : '0 25px 60px rgba(0,0,0,.4)',
                       border: isDragOver ? '2px dashed rgba(99,102,241,.6)' : '1px solid rgba(255,255,255,.08)' }}>
-                    <div className="absolute inset-0 pointer-events-none" style={{ opacity: .04 }}><svg width="100%" height="100%"><pattern id="cp" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#cp)"/></svg></div>
-                    {!light && <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />}
+
+                    {spotlightEnabled && !light && <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />}
                     {/* Pattern overlay */}
                     {activePattern.id && (() => {
                       const pat = CARD_PATTERNS.find(p => p.id === activePattern.id);
