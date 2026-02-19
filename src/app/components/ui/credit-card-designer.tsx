@@ -21,19 +21,30 @@ const ENABLE_AI_TEMPLATES = false;
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
-interface PatternState { id: string | null; color: string; opacity: number; scale: number; }
-const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.06, scale: 1 };
+interface PatternState { id: string | null; color: string; opacity: number; scale: number; strokeWidth: number; }
+const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.06, scale: 1, strokeWidth: 1 };
 
 // ============ PREDEFINED CARD PATTERNS ============
+// Helper: lighten a hex color for gradient end
+const lightenHex = (hex: string, amount = 40): string => {
+  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount);
+  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount);
+  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+};
+const patGradDef = (color: string, w: number, h: number) => {
+  const light = lightenHex(color.startsWith('#') ? color : '#ffffff', 60);
+  return `<defs><linearGradient id='patGrad' x1='0' y1='0' x2='${w}' y2='${h}' gradientUnits='userSpaceOnUse'><stop offset='0%' stop-color='${color}'/><stop offset='100%' stop-color='${light}'/></linearGradient></defs>`;
+};
 const CARD_PATTERNS = [
-  { id: 'geometric', name: 'Geometric', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${60*scale}' height='${60*scale}'><g fill='none' stroke='${color}' stroke-width='0.8'><rect x='${5*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${15*scale})'/><rect x='${35*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${15*scale})'/><rect x='${5*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${45*scale})'/><rect x='${35*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${45*scale})'/><line x1='0' y1='${30*scale}' x2='${60*scale}' y2='${30*scale}'/><line x1='${30*scale}' y1='0' x2='${30*scale}' y2='${60*scale}'/></g></svg>` },
-  { id: 'tessellation', name: 'Tessellation', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${80*scale}' height='${80*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><polygon points='${40*scale},${2*scale} ${78*scale},${20*scale} ${78*scale},${60*scale} ${40*scale},${78*scale} ${2*scale},${60*scale} ${2*scale},${20*scale}'/><line x1='${40*scale}' y1='${2*scale}' x2='${40*scale}' y2='${78*scale}'/><line x1='${2*scale}' y1='${20*scale}' x2='${78*scale}' y2='${60*scale}'/><line x1='${78*scale}' y1='${20*scale}' x2='${2*scale}' y2='${60*scale}'/></g></svg>` },
-  { id: 'waves', name: 'Waves', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${120*scale}' height='${20*scale}'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-linecap='round'><path d='M0,${10*scale} Q${15*scale},${2*scale} ${30*scale},${10*scale} Q${45*scale},${18*scale} ${60*scale},${10*scale} Q${75*scale},${2*scale} ${90*scale},${10*scale} Q${105*scale},${18*scale} ${120*scale},${10*scale}'/></g></svg>` },
-  { id: 'chevron', name: 'Chevron', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${40*scale}' height='${24*scale}'><g fill='none' stroke='${color}' stroke-width='1'><path d='M0,${24*scale} L${20*scale},${12*scale} L${40*scale},${24*scale}'/><path d='M0,${12*scale} L${20*scale},0 L${40*scale},${12*scale}'/></g></svg>` },
-  { id: 'hexagons', name: 'Hexagons', svg: (color: string, scale: number) => { const s = 20 * scale; const h = s * Math.sqrt(3); return `<svg xmlns='http://www.w3.org/2000/svg' width='${s*3}' height='${h}'><g fill='none' stroke='${color}' stroke-width='0.6'><polygon points='${s},0 ${s*2},0 ${s*2.5},${h/2} ${s*2},${h} ${s},${h} ${s*0.5},${h/2}'/><polygon points='${s*2.5},${h/2} ${s*3},0 ${s*3},0'/></g></svg>`; } },
-  { id: 'crosshatch', name: 'Crosshatch', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${20*scale}' height='${20*scale}'><g stroke='${color}' stroke-width='0.5'><line x1='0' y1='0' x2='${20*scale}' y2='${20*scale}'/><line x1='${20*scale}' y1='0' x2='0' y2='${20*scale}'/></g></svg>` },
-  { id: 'circles', name: 'Circles', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${40*scale}' height='${40*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><circle cx='${20*scale}' cy='${20*scale}' r='${8*scale}'/><circle cx='0' cy='0' r='${8*scale}'/><circle cx='${40*scale}' cy='0' r='${8*scale}'/><circle cx='0' cy='${40*scale}' r='${8*scale}'/><circle cx='${40*scale}' cy='${40*scale}' r='${8*scale}'/></g></svg>` },
-  { id: 'topographic', name: 'Topographic', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${100*scale}' height='${100*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><ellipse cx='${50*scale}' cy='${50*scale}' rx='${45*scale}' ry='${30*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${30*scale}' ry='${18*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${15*scale}' ry='${8*scale}'/></g></svg>` },
+  { id: 'geometric', name: 'Geometric', svg: (color: string, scale: number, sw = 1) => { const w = 60*scale, h = 60*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.8*sw}'><rect x='${5*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${15*scale})'/><rect x='${35*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${15*scale})'/><rect x='${5*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${45*scale})'/><rect x='${35*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${45*scale})'/><line x1='0' y1='${30*scale}' x2='${w}' y2='${30*scale}'/><line x1='${30*scale}' y1='0' x2='${30*scale}' y2='${h}'/></g></svg>`; } },
+  { id: 'tessellation', name: 'Tessellation', svg: (color: string, scale: number, sw = 1) => { const w = 80*scale, h = 80*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.6*sw}'><polygon points='${40*scale},${2*scale} ${78*scale},${20*scale} ${78*scale},${60*scale} ${40*scale},${78*scale} ${2*scale},${60*scale} ${2*scale},${20*scale}'/><line x1='${40*scale}' y1='${2*scale}' x2='${40*scale}' y2='${78*scale}'/><line x1='${2*scale}' y1='${20*scale}' x2='${78*scale}' y2='${60*scale}'/><line x1='${78*scale}' y1='${20*scale}' x2='${2*scale}' y2='${60*scale}'/></g></svg>`; } },
+  { id: 'waves', name: 'Waves', svg: (color: string, scale: number, sw = 1) => { const w = 120*scale, h = 20*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${1.2*sw}' stroke-linecap='round'><path d='M0,${10*scale} Q${15*scale},${2*scale} ${30*scale},${10*scale} Q${45*scale},${18*scale} ${60*scale},${10*scale} Q${75*scale},${2*scale} ${90*scale},${10*scale} Q${105*scale},${18*scale} ${w},${10*scale}'/></g></svg>`; } },
+  { id: 'chevron', name: 'Chevron', svg: (color: string, scale: number, sw = 1) => { const w = 40*scale, h = 24*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${1*sw}'><path d='M0,${h} L${20*scale},${12*scale} L${w},${h}'/><path d='M0,${12*scale} L${20*scale},0 L${w},${12*scale}'/></g></svg>`; } },
+  { id: 'hexagons', name: 'Hexagons', svg: (color: string, scale: number, sw = 1) => { const s = 20 * scale; const h = s * Math.sqrt(3); const w = s*3; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.6*sw}'><polygon points='${s},0 ${s*2},0 ${s*2.5},${h/2} ${s*2},${h} ${s},${h} ${s*0.5},${h/2}'/><polygon points='${s*2.5},${h/2} ${s*3},0 ${s*3},0'/></g></svg>`; } },
+  { id: 'crosshatch', name: 'Crosshatch', svg: (color: string, scale: number, sw = 1) => { const w = 20*scale, h = 20*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g stroke='url(#patGrad)' stroke-width='${0.5*sw}'><line x1='0' y1='0' x2='${w}' y2='${h}'/><line x1='${w}' y1='0' x2='0' y2='${h}'/></g></svg>`; } },
+  { id: 'circles', name: 'Circles', svg: (color: string, scale: number, sw = 1) => { const w = 40*scale, h = 40*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.6*sw}'><circle cx='${20*scale}' cy='${20*scale}' r='${8*scale}'/><circle cx='0' cy='0' r='${8*scale}'/><circle cx='${w}' cy='0' r='${8*scale}'/><circle cx='0' cy='${h}' r='${8*scale}'/><circle cx='${w}' cy='${h}' r='${8*scale}'/></g></svg>`; } },
+  { id: 'topographic', name: 'Topographic', svg: (color: string, scale: number, sw = 1) => { const w = 100*scale, h = 100*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.6*sw}'><ellipse cx='${50*scale}' cy='${50*scale}' rx='${45*scale}' ry='${30*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${30*scale}' ry='${18*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${15*scale}' ry='${8*scale}'/></g></svg>`; } },
 ];
 interface CardElement {
   id: string;
@@ -289,13 +300,22 @@ export default function CreditCardDesigner() {
     const t = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(t);
   }, [toast]);
-  // ---- sync front → back ----
+  // ---- bidirectional sync (front ↔ back) ----
+  const syncSourceRef = useRef<'front' | 'back' | null>(null);
   useEffect(() => {
-    if (!syncFaces) return;
+    if (!syncFaces || syncSourceRef.current === 'back') { syncSourceRef.current = null; return; }
+    syncSourceRef.current = 'front';
     setBackBg(frontBg);
     setBackPattern({ ...frontPattern });
     setBackLayout({ ...frontLayout });
   }, [syncFaces, frontBg, frontPattern, frontLayout]);
+  useEffect(() => {
+    if (!syncFaces || syncSourceRef.current === 'front') { syncSourceRef.current = null; return; }
+    syncSourceRef.current = 'back';
+    setFrontBg(backBg);
+    setFrontPattern({ ...backPattern });
+    setFrontLayout({ ...backLayout });
+  }, [syncFaces, backBg, backPattern, backLayout]);
   // ---- history ----
   const snap = useCallback((): HistoryState => ({
     frontElements: activeFace === 'front' ? elementsRef.current : frontElements,
@@ -1061,7 +1081,7 @@ export default function CreditCardDesigner() {
                     None
                   </button>
                   {CARD_PATTERNS.map(p => {
-                    const previewSvg = p.svg('#888888', 0.5);
+                    const previewSvg = p.svg('#888888', 0.5, 1);
                     const encoded = `url("data:image/svg+xml,${encodeURIComponent(previewSvg)}")`;
                     return (
                       <button key={p.id} onClick={() => setActivePattern(prev => ({ ...prev, id: p.id }))}
@@ -1076,6 +1096,7 @@ export default function CreditCardDesigner() {
                   <div><PropLabel>Pattern Color</PropLabel><ColorPicker value={activePattern.color} onChange={v => setActivePattern(p => ({ ...p, color: v }))} /></div>
                   <div><PropLabel>Opacity: {(activePattern.opacity*100).toFixed(0)}%</PropLabel><input type="range" min="0.01" max="0.3" step="0.01" value={activePattern.opacity} onChange={e => setActivePattern(p => ({ ...p, opacity: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
                   <div><PropLabel>Scale: {activePattern.scale.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="3" step="0.1" value={activePattern.scale} onChange={e => setActivePattern(p => ({ ...p, scale: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
+                  <div><PropLabel>Thickness: {activePattern.strokeWidth.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="4" step="0.1" value={activePattern.strokeWidth} onChange={e => setActivePattern(p => ({ ...p, strokeWidth: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
                 </>}
               </div>}
             </div>
@@ -1170,10 +1191,10 @@ export default function CreditCardDesigner() {
                     style={{ background: activeFace === f ? 'rgba(99,102,241,.15)' : 'transparent', color: activeFace === f ? '#818cf8' : '#64748b', border: activeFace === f ? '1px solid rgba(99,102,241,.3)' : '1px solid transparent' }}>
                     {f === 'front' ? 'Front Face' : 'Back Face'}
                   </button>))}
-                <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON — back mirrors front styles' : 'Sync OFF — faces are independent', type: 'info' }); }}
+                <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON — front & back styles stay in sync' : 'Sync OFF — faces are independent', type: 'info' }); }}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-1"
                   style={{ background: syncFaces ? 'rgba(34,197,94,.12)' : (light ? 'rgba(0,0,0,.03)' : 'rgba(255,255,255,.03)'), border: syncFaces ? '1px solid rgba(34,197,94,.3)' : (light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)'), color: syncFaces ? '#4ade80' : '#64748b' }}
-                  title={syncFaces ? 'Front → Back sync ON: back face mirrors front styles' : 'Sync styles from front to back face'}>
+                  title={syncFaces ? 'Front ↔ Back sync ON: both faces stay in sync' : 'Sync styles between front and back face'}>
                   {syncFaces ? <Link2 className="w-3 h-3" /> : <Unlink2 className="w-3 h-3" />}
                   {syncFaces ? 'Synced' : 'Sync'}
                 </button>
@@ -1201,7 +1222,7 @@ export default function CreditCardDesigner() {
                     {activePattern.id && (() => {
                       const pat = CARD_PATTERNS.find(p => p.id === activePattern.id);
                       if (!pat) return null;
-                      const svgStr = pat.svg(activePattern.color, activePattern.scale);
+                      const svgStr = pat.svg(activePattern.color, activePattern.scale, activePattern.strokeWidth);
                       const encoded = `url("data:image/svg+xml,${encodeURIComponent(svgStr)}")`;
                       return <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: encoded, backgroundRepeat: 'repeat', opacity: activePattern.opacity, borderRadius: CARD.R }} />;
                     })()}
