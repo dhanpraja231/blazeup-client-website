@@ -21,30 +21,24 @@ const ENABLE_AI_TEMPLATES = false;
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
-interface PatternState { id: string | null; color: string; opacity: number; scale: number; strokeWidth: number; }
-const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.06, scale: 1, strokeWidth: 1 };
+interface PatternState { id: string | null; color: string; opacity: number; scale: number; strokeWidth: number; useGradient: boolean; gradientColor: string; }
+const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.06, scale: 1, strokeWidth: 1, useGradient: false, gradientColor: '#6366f1' };
 
 // ============ PREDEFINED CARD PATTERNS ============
-// Helper: lighten a hex color for gradient end
-const lightenHex = (hex: string, amount = 40): string => {
-  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount);
-  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount);
-  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount);
-  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+const patGradDef = (color: string, color2: string | null, w: number, h: number) => {
+  if (!color2) return ''; // no gradient — flat color used directly
+  return `<defs><linearGradient id='patGrad' x1='0' y1='0' x2='${w}' y2='${h}' gradientUnits='userSpaceOnUse'><stop offset='0%' stop-color='${color}'/><stop offset='100%' stop-color='${color2}'/></linearGradient></defs>`;
 };
-const patGradDef = (color: string, w: number, h: number) => {
-  const light = lightenHex(color.startsWith('#') ? color : '#ffffff', 60);
-  return `<defs><linearGradient id='patGrad' x1='0' y1='0' x2='${w}' y2='${h}' gradientUnits='userSpaceOnUse'><stop offset='0%' stop-color='${color}'/><stop offset='100%' stop-color='${light}'/></linearGradient></defs>`;
-};
+const patStroke = (color: string, color2: string | null) => color2 ? 'url(#patGrad)' : color;
 const CARD_PATTERNS = [
-  { id: 'geometric', name: 'Geometric', svg: (color: string, scale: number, sw = 1) => { const w = 60*scale, h = 60*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.8*sw}'><rect x='${5*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${15*scale})'/><rect x='${35*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${15*scale})'/><rect x='${5*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${45*scale})'/><rect x='${35*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${45*scale})'/><line x1='0' y1='${30*scale}' x2='${w}' y2='${30*scale}'/><line x1='${30*scale}' y1='0' x2='${30*scale}' y2='${h}'/></g></svg>`; } },
-  { id: 'tessellation', name: 'Tessellation', svg: (color: string, scale: number, sw = 1) => { const w = 80*scale, h = 80*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.6*sw}'><polygon points='${40*scale},${2*scale} ${78*scale},${20*scale} ${78*scale},${60*scale} ${40*scale},${78*scale} ${2*scale},${60*scale} ${2*scale},${20*scale}'/><line x1='${40*scale}' y1='${2*scale}' x2='${40*scale}' y2='${78*scale}'/><line x1='${2*scale}' y1='${20*scale}' x2='${78*scale}' y2='${60*scale}'/><line x1='${78*scale}' y1='${20*scale}' x2='${2*scale}' y2='${60*scale}'/></g></svg>`; } },
-  { id: 'waves', name: 'Waves', svg: (color: string, scale: number, sw = 1) => { const w = 120*scale, h = 20*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${1.2*sw}' stroke-linecap='round'><path d='M0,${10*scale} Q${15*scale},${2*scale} ${30*scale},${10*scale} Q${45*scale},${18*scale} ${60*scale},${10*scale} Q${75*scale},${2*scale} ${90*scale},${10*scale} Q${105*scale},${18*scale} ${w},${10*scale}'/></g></svg>`; } },
-  { id: 'chevron', name: 'Chevron', svg: (color: string, scale: number, sw = 1) => { const w = 40*scale, h = 24*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${1*sw}'><path d='M0,${h} L${20*scale},${12*scale} L${w},${h}'/><path d='M0,${12*scale} L${20*scale},0 L${w},${12*scale}'/></g></svg>`; } },
-  { id: 'hexagons', name: 'Hexagons', svg: (color: string, scale: number, sw = 1) => { const s = 20 * scale; const h = s * Math.sqrt(3); const w = s*3; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.6*sw}'><polygon points='${s},0 ${s*2},0 ${s*2.5},${h/2} ${s*2},${h} ${s},${h} ${s*0.5},${h/2}'/><polygon points='${s*2.5},${h/2} ${s*3},0 ${s*3},0'/></g></svg>`; } },
-  { id: 'crosshatch', name: 'Crosshatch', svg: (color: string, scale: number, sw = 1) => { const w = 20*scale, h = 20*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g stroke='url(#patGrad)' stroke-width='${0.5*sw}'><line x1='0' y1='0' x2='${w}' y2='${h}'/><line x1='${w}' y1='0' x2='0' y2='${h}'/></g></svg>`; } },
-  { id: 'circles', name: 'Circles', svg: (color: string, scale: number, sw = 1) => { const w = 40*scale, h = 40*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.6*sw}'><circle cx='${20*scale}' cy='${20*scale}' r='${8*scale}'/><circle cx='0' cy='0' r='${8*scale}'/><circle cx='${w}' cy='0' r='${8*scale}'/><circle cx='0' cy='${h}' r='${8*scale}'/><circle cx='${w}' cy='${h}' r='${8*scale}'/></g></svg>`; } },
-  { id: 'topographic', name: 'Topographic', svg: (color: string, scale: number, sw = 1) => { const w = 100*scale, h = 100*scale; return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, w, h)}<g fill='none' stroke='url(#patGrad)' stroke-width='${0.6*sw}'><ellipse cx='${50*scale}' cy='${50*scale}' rx='${45*scale}' ry='${30*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${30*scale}' ry='${18*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${15*scale}' ry='${8*scale}'/></g></svg>`; } },
+  { id: 'geometric', name: 'Geometric', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 60*scale, h = 60*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.8*sw}'><rect x='${5*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${15*scale})'/><rect x='${35*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${15*scale})'/><rect x='${5*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${45*scale})'/><rect x='${35*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${45*scale})'/><line x1='0' y1='${30*scale}' x2='${w}' y2='${30*scale}'/><line x1='${30*scale}' y1='0' x2='${30*scale}' y2='${h}'/></g></svg>`; } },
+  { id: 'tessellation', name: 'Tessellation', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 80*scale, h = 80*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.6*sw}'><polygon points='${40*scale},${2*scale} ${78*scale},${20*scale} ${78*scale},${60*scale} ${40*scale},${78*scale} ${2*scale},${60*scale} ${2*scale},${20*scale}'/><line x1='${40*scale}' y1='${2*scale}' x2='${40*scale}' y2='${78*scale}'/><line x1='${2*scale}' y1='${20*scale}' x2='${78*scale}' y2='${60*scale}'/><line x1='${78*scale}' y1='${20*scale}' x2='${2*scale}' y2='${60*scale}'/></g></svg>`; } },
+  { id: 'waves', name: 'Waves', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 120*scale, h = 20*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${1.2*sw}' stroke-linecap='round'><path d='M0,${10*scale} Q${15*scale},${2*scale} ${30*scale},${10*scale} Q${45*scale},${18*scale} ${60*scale},${10*scale} Q${75*scale},${2*scale} ${90*scale},${10*scale} Q${105*scale},${18*scale} ${w},${10*scale}'/></g></svg>`; } },
+  { id: 'chevron', name: 'Chevron', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 40*scale, h = 24*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${1*sw}'><path d='M0,${h} L${20*scale},${12*scale} L${w},${h}'/><path d='M0,${12*scale} L${20*scale},0 L${w},${12*scale}'/></g></svg>`; } },
+  { id: 'hexagons', name: 'Hexagons', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const sz = 20 * scale; const h = sz * Math.sqrt(3); const w = sz*3; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.6*sw}'><polygon points='${sz},0 ${sz*2},0 ${sz*2.5},${h/2} ${sz*2},${h} ${sz},${h} ${sz*0.5},${h/2}'/><polygon points='${sz*2.5},${h/2} ${sz*3},0 ${sz*3},0'/></g></svg>`; } },
+  { id: 'crosshatch', name: 'Crosshatch', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 20*scale, h = 20*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g stroke='${s}' stroke-width='${0.5*sw}'><line x1='0' y1='0' x2='${w}' y2='${h}'/><line x1='${w}' y1='0' x2='0' y2='${h}'/></g></svg>`; } },
+  { id: 'circles', name: 'Circles', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 40*scale, h = 40*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.6*sw}'><circle cx='${20*scale}' cy='${20*scale}' r='${8*scale}'/><circle cx='0' cy='0' r='${8*scale}'/><circle cx='${w}' cy='0' r='${8*scale}'/><circle cx='0' cy='${h}' r='${8*scale}'/><circle cx='${w}' cy='${h}' r='${8*scale}'/></g></svg>`; } },
+  { id: 'topographic', name: 'Topographic', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 100*scale, h = 100*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.6*sw}'><ellipse cx='${50*scale}' cy='${50*scale}' rx='${45*scale}' ry='${30*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${30*scale}' ry='${18*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${15*scale}' ry='${8*scale}'/></g></svg>`; } },
 ];
 interface CardElement {
   id: string;
@@ -104,6 +98,7 @@ const DEFAULT_ICONS = [
 ];
 // ====================== COLOR HELPERS ======================
 function hexToHSL(hex: string): [number, number, number] {
+  if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length < 7) return [0, 0, 50];
   const r = parseInt(hex.slice(1, 3), 16) / 255;
   const g = parseInt(hex.slice(3, 5), 16) / 255;
   const b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -1094,6 +1089,15 @@ export default function CreditCardDesigner() {
                 {/* Customization controls */}
                 {activePattern.id && <>
                   <div><PropLabel>Pattern Color</PropLabel><ColorPicker value={activePattern.color} onChange={v => setActivePattern(p => ({ ...p, color: v }))} /></div>
+                  {/* Gradient toggle + end color */}
+                  <div className={`flex items-center justify-between p-2 rounded-lg`} style={{ background: light ? 'rgba(0,0,0,.02)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }}>
+                    <span className={`text-xs ${light ? 'text-slate-500' : 'text-slate-400'}`}>Gradient Stroke</span>
+                    <button onClick={() => setActivePattern(p => ({ ...p, useGradient: !p.useGradient }))} className="relative w-10 h-5 rounded-full transition-colors" style={{ background: activePattern.useGradient ? '#f43f5e' : (light ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)') }}>
+                      <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: activePattern.useGradient ? 22 : 2 }} />
+                    </button>
+                  </div>
+                  {activePattern.useGradient && <div><PropLabel>Gradient End Color</PropLabel><ColorPicker value={activePattern.gradientColor} onChange={v => setActivePattern(p => ({ ...p, gradientColor: v }))} /></div>}
+                  {activePattern.useGradient && <div className="h-5 rounded-lg" style={{ background: `linear-gradient(135deg, ${activePattern.color}, ${activePattern.gradientColor})`, border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }} />}
                   <div><PropLabel>Opacity: {(activePattern.opacity*100).toFixed(0)}%</PropLabel><input type="range" min="0.01" max="0.3" step="0.01" value={activePattern.opacity} onChange={e => setActivePattern(p => ({ ...p, opacity: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
                   <div><PropLabel>Scale: {activePattern.scale.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="3" step="0.1" value={activePattern.scale} onChange={e => setActivePattern(p => ({ ...p, scale: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
                   <div><PropLabel>Thickness: {activePattern.strokeWidth.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="4" step="0.1" value={activePattern.strokeWidth} onChange={e => setActivePattern(p => ({ ...p, strokeWidth: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
@@ -1222,7 +1226,8 @@ export default function CreditCardDesigner() {
                     {activePattern.id && (() => {
                       const pat = CARD_PATTERNS.find(p => p.id === activePattern.id);
                       if (!pat) return null;
-                      const svgStr = pat.svg(activePattern.color, activePattern.scale, activePattern.strokeWidth);
+                      const gc = activePattern.useGradient ? activePattern.gradientColor : null;
+                      const svgStr = pat.svg(activePattern.color, activePattern.scale, activePattern.strokeWidth, gc);
                       const encoded = `url("data:image/svg+xml,${encodeURIComponent(svgStr)}")`;
                       return <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: encoded, backgroundRepeat: 'repeat', opacity: activePattern.opacity, borderRadius: CARD.R }} />;
                     })()}
