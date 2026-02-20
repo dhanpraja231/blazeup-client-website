@@ -42,6 +42,7 @@ import {
 const BarGraph = dynamic(() => import('@/components/charts/bar-graph').then(m => ({ default: m.BarGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const LineGraph = dynamic(() => import('@/components/charts/line-graph').then(m => ({ default: m.LineGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const DonutChart = dynamic(() => import('@/components/charts/donut-chart').then(m => ({ default: m.DonutChart })), { ssr: false, loading: () => <ChartSkeleton /> });
+const PieChart = dynamic(() => import('@/components/charts/pie-chart').then(m => ({ default: m.PieChartComponent })),{ ssr: false, loading: () => <ChartSkeleton /> });
 const ScatterGraph = dynamic(() => import('@/components/charts/scatter-graph').then(m => ({ default: m.ScatterGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const SpendingHeatmap = dynamic(() => import('@/components/charts/spending-heatmap').then(m => ({ default: m.SpendingHeatmap })), { ssr: false, loading: () => <ChartSkeleton /> });
 
@@ -294,8 +295,8 @@ const RealChart = React.memo(function RealChart({ chartType, kpiId, height }: { 
     return <DonutChart data={data} dataKey="value" nameKey="name" height={h} light={light} />;
   }
   if (chartType === 'pie') {
-    return <DonutChart data={data} dataKey="value" nameKey="name" height={h} light={light} />;
-  }
+  return <PieChart data={data} dataKey="value" nameKey="name" height={h} light={light} />;
+}
   if (chartType === 'scatter') {
     const scatterData = SCATTER_DATA[kpiId] || SCATTER_DATA['time'];
     return <ScatterGraph data={scatterData} color={kpi?.accent} height={h} light={light} />;
