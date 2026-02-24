@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useId } from 'react';
+import { useState, useMemo, useCallback, useId, useRef } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, Sector } from 'recharts';
 import { CHART_THEME, formatCurrency } from './chart-config';
 import { ArrowLeft } from 'lucide-react';
@@ -48,100 +48,92 @@ function generateSubSegments(label: string, total: number) {
   });
 }
 
-const GAP_WIDTH = 4; // The size of your true transparent gap
+const GAP_WIDTH = 4;
+// Scale factor applied to the active slice — CSS transition animates this smoothly
+const ACTIVE_SCALE = 1.06;
 
-// Active shape — uses a mask to genuinely erase the borders
-const renderActiveShape = (props: any) => {
-  const { cx, cy, outerRadius, startAngle, endAngle, fill, percent, chartId } = props;
-  
-  // Generate a strictly unique ID using the chart instance ID and angles
-  const maskId = `mask-active-${chartId}-${startAngle}-${endAngle}`.replace(/[^a-zA-Z0-9-]/g, '-');
+const renderCustomShape = (props: any) => {
+  const { cx, cy, outerRadius, startAngle, endAngle, fill, percent, chartId, index, activeIndexRef } = props;
 
-  const labelAngle = ((startAngle + endAngle) / 2) * (Math.PI / 180);
+  const activeIndex = activeIndexRef.current;
+  const isActive = activeIndex === index;
+  const isDimmed = activeIndex !== undefined && activeIndex !== index;
+
+  const maskId = `mask-${chartId}-${index}`.replace(/[^a-zA-Z0-9-]/g, '-');
+
+  const centerX = Number(cx) || 0;
+  const centerY = Number(cy) || 0;
+  const midAngle = ((startAngle + endAngle) / 2) * (Math.PI / 180);
+
   const labelR = outerRadius * 0.6;
-  const labelX = cx + labelR * Math.cos(-labelAngle);
-  const labelY = cy + labelR * Math.sin(-labelAngle);
+  const labelX = centerX + labelR * Math.cos(-midAngle);
+  const labelY = centerY + labelR * Math.sin(-midAngle);
 
   return (
-    <g>
+    // outerRadius is NEVER changed — hit detection stays perfectly aligned.
+    // CSS scale on this <g> drives the visual expansion with a smooth transition.
+    <g
+      style={{
+        transform: isActive ? `scale(${ACTIVE_SCALE})` : 'scale(1)',
+        // Pin the scale origin to the pie center so slices expand radially outward
+        transformOrigin: `${centerX}px ${centerY}px`,
+        opacity: isDimmed ? 0.35 : 1,
+        transition: 'transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.2s ease',
+      }}
+    >
       <defs>
         <mask id={maskId}>
-          {/* 1. White fills the area, meaning "keep this visible" */}
-          <Sector cx={cx} cy={cy} innerRadius={0} outerRadius={outerRadius + 8} startAngle={startAngle} endAngle={endAngle} fill="#ffffff" />
-          {/* 2. Black strokes the border, meaning "erase this path" */}
-          <Sector cx={cx} cy={cy} innerRadius={0} outerRadius={outerRadius + 8} startAngle={startAngle} endAngle={endAngle} fill="none" stroke="#000000" strokeWidth={GAP_WIDTH} strokeLinejoin="round" />
+          <Sector
+            cx={centerX} cy={centerY}
+            innerRadius={0} outerRadius={outerRadius + 20}
+            startAngle={startAngle} endAngle={endAngle}
+            fill="#ffffff"
+          />
+          <Sector
+            cx={centerX} cy={centerY}
+            innerRadius={0} outerRadius={outerRadius + 20}
+            startAngle={startAngle} endAngle={endAngle}
+            fill="none" stroke="#000000" strokeWidth={GAP_WIDTH} strokeLinejoin="round"
+          />
         </mask>
       </defs>
 
-      {/* Outer glow ring (not masked, so it glows behind the gap) */}
+      {/* Glow ring — fades in when active */}
       <Sector
-        cx={cx} cy={cy}
-        innerRadius={outerRadius + 4}
+        cx={centerX} cy={centerY}
+        innerRadius={outerRadius + 2}
         outerRadius={outerRadius + 12}
-        startAngle={startAngle}
-        endAngle={endAngle}
+        startAngle={startAngle} endAngle={endAngle}
         fill={fill}
-        opacity={0.18}
+        style={{
+          opacity: isActive ? 0.18 : 0,
+          transition: 'opacity 0.2s ease',
+        }}
       />
-      
-      {/* Main expanded sector (Masked) */}
+
+      {/* Main sector — geometry never changes, CSS scale drives the visual expansion */}
       <Sector
-        cx={cx} cy={cy}
-        innerRadius={0}
-        outerRadius={outerRadius + 8}
-        startAngle={startAngle}
-        endAngle={endAngle}
-        fill={fill}
-        mask={`url(#${maskId})`}
-      />
-      
-      {/* Threshold set to > 0.03 so it shows up on smaller slices */}
-      {percent > 0.03 && (
-        <text x={labelX} y={labelY} textAnchor="middle" dominantBaseline="central" fill="#fff" fontSize="11px" fontWeight={700} style={{ pointerEvents: 'none', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-          {`${(percent * 100).toFixed(0)}%`}
-        </text>
-      )}
-    </g>
-  );
-};
-
-// Default shape — uses a mask to genuinely erase the borders
-const renderDefaultShape = (props: any) => {
-  const { cx, cy, outerRadius, startAngle, endAngle, fill, percent, chartId } = props;
-
-  // Generate a strictly unique ID using the chart instance ID and angles
-  const maskId = `mask-default-${chartId}-${startAngle}-${endAngle}`.replace(/[^a-zA-Z0-9-]/g, '-');
-
-  const labelAngle = ((startAngle + endAngle) / 2) * (Math.PI / 180);
-  const labelR = outerRadius * 0.6;
-  const labelX = cx + labelR * Math.cos(-labelAngle);
-  const labelY = cy + labelR * Math.sin(-labelAngle);
-
-  return (
-    <g>
-      <defs>
-        <mask id={maskId}>
-          {/* 1. White fills the area, meaning "keep this visible" */}
-          <Sector cx={cx} cy={cy} innerRadius={0} outerRadius={outerRadius} startAngle={startAngle} endAngle={endAngle} fill="#ffffff" />
-          {/* 2. Black strokes the border, meaning "erase this path" */}
-          <Sector cx={cx} cy={cy} innerRadius={0} outerRadius={outerRadius} startAngle={startAngle} endAngle={endAngle} fill="none" stroke="#000000" strokeWidth={GAP_WIDTH} strokeLinejoin="round" />
-        </mask>
-      </defs>
-
-      {/* Main sector (Masked) */}
-      <Sector
-        cx={cx} cy={cy}
+        cx={centerX} cy={centerY}
         innerRadius={0}
         outerRadius={outerRadius}
-        startAngle={startAngle}
-        endAngle={endAngle}
+        startAngle={startAngle} endAngle={endAngle}
         fill={fill}
         mask={`url(#${maskId})`}
       />
-      
-      {/* Threshold set to > 0.03 so it shows up on smaller slices */}
+
       {percent > 0.03 && (
-        <text x={labelX} y={labelY} textAnchor="middle" dominantBaseline="central" fill="rgba(255,255,255,0.75)" fontSize="10px" fontWeight={600} style={{ pointerEvents: 'none', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+        <text
+          x={labelX} y={labelY}
+          textAnchor="middle" dominantBaseline="central"
+          fill={isActive ? '#fff' : 'rgba(255,255,255,0.85)'}
+          fontSize={isActive ? '12px' : '11px'}
+          fontWeight={isActive ? 700 : 600}
+          style={{
+            pointerEvents: 'none',
+            textShadow: isActive ? '0 1px 4px rgba(0,0,0,0.6)' : '0 1px 3px rgba(0,0,0,0.5)',
+            transition: 'font-size 0.2s ease',
+          }}
+        >
           {`${(percent * 100).toFixed(0)}%`}
         </text>
       )}
@@ -150,9 +142,11 @@ const renderDefaultShape = (props: any) => {
 };
 
 export function PieChartComponent({ data, dataKey, nameKey, height = 300, light = false }: PieChartProps) {
-  const chartId = useId(); // Generates a unique ID for this specific chart component instance
-  
+  const chartId = useId();
+
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
+  const activeIndexRef = useRef<number | undefined>(undefined);
+
   const [drilldown, setDrilldown] = useState<{ label: string; data: any[] } | null>(null);
 
   const subCache = useMemo(() => {
@@ -176,21 +170,30 @@ export function PieChartComponent({ data, dataKey, nameKey, height = 300, light 
     if (drilldown) return;
     const label = data[index][nameKey];
     setDrilldown({ label, data: subCache[label] });
+    activeIndexRef.current = undefined;
     setActiveIndex(undefined);
   }, [drilldown, data, nameKey, subCache]);
 
   const handleMouseEnter = useCallback((_: any, index: number) => {
+    activeIndexRef.current = index;
     setActiveIndex(index);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
+    activeIndexRef.current = undefined;
     setActiveIndex(undefined);
   }, []);
 
   const handleBack = useCallback(() => {
     setDrilldown(null);
+    activeIndexRef.current = undefined;
     setActiveIndex(undefined);
   }, []);
+
+  const shapeRenderer = useCallback(
+    (props: any) => renderCustomShape({ ...props, activeIndexRef, chartId }),
+    [chartId],
+  );
 
   return (
     <div style={{ width: '100%', height: height + 24, position: 'relative' }}>
@@ -235,20 +238,20 @@ export function PieChartComponent({ data, dataKey, nameKey, height = 300, light 
           style={{ width: '100%', height }}
         >
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            {/* onMouseLeave on PieChart catches exits that the Pie-level handler misses —
+                e.g. fast mouse movement off the edge, or crossing slice borders briefly */}
+            <PieChart onMouseLeave={handleMouseLeave}>
               <Pie
                 data={activeData}
                 cx="50%"
                 cy="52%"
                 innerRadius={0}
                 outerRadius={outerRadius}
-                paddingAngle={0} 
+                paddingAngle={0}
                 cornerRadius={0}
                 dataKey={activeDataKey}
                 nameKey={activeNameKey}
-                // Pass the strictly unique chartId down into our custom shape functions
-                activeShape={(props: any) => renderActiveShape({ ...props, light, chartId })}
-                shape={(props: any) => renderDefaultShape({ ...props, light, chartId })}
+                shape={shapeRenderer}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onClick={handlePieClick}
@@ -259,14 +262,7 @@ export function PieChartComponent({ data, dataKey, nameKey, height = 300, light 
                 style={{ cursor: drilldown ? 'default' : 'pointer', outline: 'none' }}
               >
                 {activeData.map((_: any, index: number) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={activeColors[index % activeColors.length]}
-                    style={{
-                      transition: 'opacity 0.3s ease',
-                      opacity: activeIndex === undefined || activeIndex === index ? 1 : 0.45,
-                    }}
-                  />
+                  <Cell key={`cell-${index}`} fill={activeColors[index % activeColors.length]} />
                 ))}
               </Pie>
 
