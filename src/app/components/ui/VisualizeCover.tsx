@@ -17,6 +17,10 @@ const DonutChart = dynamic(
   () => import('@/components/charts/donut-chart').then(m => ({ default: m.DonutChart })),
   { ssr: false }
 );
+const PieChartComponent = dynamic(
+  () => import('@/components/charts/pie-chart').then(m => ({ default: m.PieChartComponent })),
+  { ssr: false }
+);
 
 // ── Sample data ──
 const LINE_DATA = [
@@ -104,7 +108,7 @@ function ChartRenderer({ chartId }: { chartId: string }) {
       );
     case 'pie':
       return (
-        <DonutChart
+        <PieChartComponent
           data={PIE_DATA}
           dataKey="value"
           nameKey="name"
@@ -116,12 +120,13 @@ function ChartRenderer({ chartId }: { chartId: string }) {
   }
 }
 
-export default function VisualizeCover() {
+export default function VisualizeCover({ isActive = true, onCycleComplete }: { isActive?: boolean; onCycleComplete?: () => void }) {
   const [currentChart, setCurrentChart] = useState(0);
   const curtainRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAnimatingRef = useRef(false);
+  const transitionCountRef = useRef(0);
 
   const transition = useCallback((nextIndex: number) => {
     const curtain = curtainRef.current;
@@ -202,11 +207,21 @@ export default function VisualizeCover() {
   }, []);
 
   useEffect(() => {
-    // Auto-cycle every 4 seconds
+    if (!isActive) {
+      transitionCountRef.current = 0;
+      return;
+    }
+
+    // Auto-cycle every 3 seconds when active
     const cycle = () => {
       timerRef.current = setTimeout(() => {
         const next = (currentChart + 1) % CHART_CONFIGS.length;
         transition(next);
+        transitionCountRef.current++;
+        if (transitionCountRef.current >= 2 && onCycleComplete) {
+          transitionCountRef.current = 0;
+          setTimeout(() => onCycleComplete(), 2000);
+        }
         cycle();
       }, 3000);
     };
@@ -216,18 +231,19 @@ export default function VisualizeCover() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [currentChart, transition]);
+  }, [currentChart, transition, isActive, onCycleComplete]);
 
   const config = CHART_CONFIGS[currentChart];
 
   return (
     <div style={{
-      position: 'absolute',
-      inset: 0,
+      width: '100%',
+      height: '100%',
       borderRadius: 20,
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
+      justifyContent: 'center',
     }}>
       {/* Chart label */}
       <div
@@ -251,9 +267,9 @@ export default function VisualizeCover() {
 
       {/* Chart area */}
       <div style={{
-        flex: 1,
+        width: '100%',
+        maxHeight: 220,
         padding: '0 8px 8px',
-        minHeight: 0,
         position: 'relative',
         zIndex: 1,
         pointerEvents: 'none',

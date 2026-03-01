@@ -34,7 +34,7 @@ const CARD_NUMBERS = [
   '3782 •••• •••• 0012',
   '6521 •••• •••• 8834',
 ];
-const NAMES = ['ALEX CHEN', 'SARAH PARK', 'JAMES LEE', 'ARIA JOHNSON'];
+const NAMES = ['HARI SRINIVASAN', 'SRI HARI', 'VISHNU MUTHIAH', 'ARIA JOHNSON'];
 
 // Crypto scramble characters
 const CRYPTO_CHARS = '0123456789ABCDEF#$@!%&*?';
@@ -52,11 +52,12 @@ const GLOW_COLORS = [
   'rgba(6, 182, 212, 0.2)',
 ];
 
-export default function FlippingCardCover() {
+export default function FlippingCardCover({ isActive = true, onCycleComplete }: { isActive?: boolean; onCycleComplete?: () => void }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const cardFaceRef = useRef<HTMLDivElement>(null);
   const patternRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
+  const tlRef = useRef<gsap.core.Timeline | null>(null);
 
   // Display state
   const [displayNumber, setDisplayNumber] = useState(CARD_NUMBERS[0]);
@@ -167,28 +168,63 @@ export default function FlippingCardCover() {
     const el = outerRef.current;
     if (!el) return;
 
-    // ── Card tilted 45° on its corner, spinning around fixed vertical axis ──
-    const proxy = { angle: 0 };
-    const tween = gsap.to(proxy, {
-      angle: 360,
-      duration: 8,
-      ease: 'none',
+    // Initial design
+    cycleColors();
+
+    // ── Card squish-swap: no rotation, no inverted text ──
+    let repeatCount = 0;
+    const tl = gsap.timeline({
       repeat: -1,
-      onUpdate: () => {
-        el.style.transform = `rotateY(${proxy.angle}deg) rotateZ(45deg)`;
+      paused: !isActive,
+      onRepeat: () => {
+        repeatCount++;
+        if (repeatCount >= 2 && onCycleComplete) {
+          repeatCount = 0;
+          onCycleComplete();
+        }
       },
     });
+    tlRef.current = tl;
 
-    // Cycle design every 5s
-    cycleColors();
-    const interval = setInterval(cycleColors, 3000);
+    // Hold showing current design
+    tl.to({}, { duration: 3 });
+
+    // Squish card horizontally to nothing
+    tl.to(el, {
+      scaleX: 0,
+      duration: 0.3,
+      ease: 'power2.in',
+    });
+
+    // Swap design while card is invisible
+    tl.call(() => cycleColors());
+
+    // Small pause for React to render new colors
+    tl.to({}, { duration: 0.05 });
+
+    // Expand card back with new design
+    tl.to(el, {
+      scaleX: 1,
+      duration: 0.3,
+      ease: 'power2.out',
+    });
 
     return () => {
-      tween.kill();
-      clearInterval(interval);
+      tl.kill();
       if (scrambleTimerRef.current) clearInterval(scrambleTimerRef.current);
     };
   }, [cycleColors]);
+
+  // Pause/resume based on isActive
+  useEffect(() => {
+    const tl = tlRef.current;
+    if (!tl) return;
+    if (isActive) {
+      tl.resume();
+    } else {
+      tl.pause();
+    }
+  }, [isActive]);
 
   // ── Hover: ONLY glow — rotation is untouched ──
   const handleMouseEnter = () => {
@@ -267,7 +303,7 @@ export default function FlippingCardCover() {
           transformStyle: 'preserve-3d',
           borderRadius: 14,
           willChange: 'transform',
-          transform: 'rotateY(0deg) rotateZ(45deg)',
+          transform: 'rotateY(0deg)',
         }}
       >
         {/* Card face */}

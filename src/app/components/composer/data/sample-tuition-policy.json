@@ -30,7 +30,7 @@
     {
       "id": "3",
       "type": "category_limits",
-      "position": { "x": 900, "y": 250 },
+      "position": { "x": 900, "y": 200 },
       "data": {
         "label": "Annual Limit Check",
         "categories": [
@@ -133,7 +133,7 @@
     {
       "id": "10",
       "type": "integration",
-      "position": { "x": 2200, "y": 350 },
+      "position": { "x": 2200, "y": 450 },
       "data": {
         "label": "Log to Finance System",
         "service": "sheets",

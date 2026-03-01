@@ -15,6 +15,7 @@ import {
 import CreditCardDesigner from './credit-card-designer';
 import FlippingCardCover from './FlippingCardCover';
 import VisualizeCover from './VisualizeCover';
+import EvaluateCover from './EvaluateCover';
 
 const PolicyPlayground = dynamic(
   () => import('@/components/composer/PolicyPlayground'),
@@ -86,12 +87,48 @@ const COLUMNS: ColumnConfig[] = [
 export default function WorkflowTabs() {
   const [expandedColumn, setExpandedColumn] = useState<ColumnId | null>(null);
   const [hoveredColumn, setHoveredColumn] = useState<ColumnId | null>(null);
+  const [activeAnimCol, setActiveAnimCol] = useState<ColumnId>('design');
+  const isHoveringRef = useRef(false);
   const columnRefs = useRef<Record<ColumnId, HTMLDivElement | null>>({
     design: null,
     evaluate: null,
     visualize: null,
   });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const ANIM_ORDER: ColumnId[] = ['design', 'evaluate', 'visualize'];
+
+  // Callback: advance to next column when current finishes a cycle
+  const advanceAnimation = useCallback(() => {
+    if (isHoveringRef.current) return; // Don't advance while hovering
+    setActiveAnimCol(prev => {
+      const idx = ANIM_ORDER.indexOf(prev);
+      return ANIM_ORDER[(idx + 1) % ANIM_ORDER.length];
+    });
+  }, []);
+
+  // Apply subtle glow to the active animation column
+  useEffect(() => {
+    COLUMNS.forEach(c => {
+      const el = columnRefs.current[c.id];
+      if (!el || hoveredColumn) return; // Don't apply glow when hovering (hover has its own)
+      if (c.id === activeAnimCol) {
+        gsap.to(el, {
+          boxShadow: `0 0 20px ${c.glowColor}, 0 4px 20px rgba(0,0,0,0.2)`,
+          borderColor: 'rgba(255,255,255,0.1)',
+          duration: 0.5,
+          ease: 'power2.out',
+        });
+      } else {
+        gsap.to(el, {
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          borderColor: 'rgba(255,255,255,0.06)',
+          duration: 0.5,
+          ease: 'power2.out',
+        });
+      }
+    });
+  }, [activeAnimCol, hoveredColumn]);
 
   // Close on Escape
   useEffect(() => {
@@ -117,8 +154,13 @@ export default function WorkflowTabs() {
   const handleColumnHover = useCallback((colId: ColumnId) => {
     if (expandedColumn) return; // don't animate hover when one is expanded
 
+    isHoveringRef.current = true;
     setHoveredColumn(colId);
+    setActiveAnimCol(colId); // Override animation cycle on hover
     const col = COLUMNS.find(c => c.id === colId)!;
+
+    // Evaluate column takes over the entire row
+    const isEvaluate = colId === 'evaluate';
 
     // Expand hovered column, shrink others
     COLUMNS.forEach(c => {
@@ -127,7 +169,7 @@ export default function WorkflowTabs() {
 
       if (c.id === colId) {
         gsap.to(el, {
-          flex: 1.5,
+          flex: isEvaluate ? 6 : 1.5,
           duration: 0.5,
           ease: 'power3.out',
         });
@@ -135,12 +177,14 @@ export default function WorkflowTabs() {
         gsap.to(el, {
           boxShadow: `0 0 40px ${col.glowColor}, 0 8px 32px rgba(0,0,0,0.3)`,
           borderColor: `rgba(255,255,255,0.15)`,
+          opacity: 1,
           duration: 0.4,
           ease: 'power2.out',
         });
       } else {
         gsap.to(el, {
-          flex: 0.85,
+          flex: isEvaluate ? 0.15 : 0.85,
+          opacity: isEvaluate ? 0 : 1,
           duration: 0.5,
           ease: 'power3.out',
         });
@@ -157,18 +201,21 @@ export default function WorkflowTabs() {
   const handleColumnLeave = useCallback(() => {
     if (expandedColumn) return;
 
+    isHoveringRef.current = false;
     setHoveredColumn(null);
 
-    // Reset all columns to equal
+    // Reset all columns to equal — single tween for smooth return
     COLUMNS.forEach(c => {
       const el = columnRefs.current[c.id];
       if (!el) return;
       gsap.to(el, {
         flex: 1,
+        opacity: 1,
         boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
         borderColor: 'rgba(255,255,255,0.06)',
-        duration: 0.5,
-        ease: 'power3.out',
+        duration: 0.6,
+        ease: 'power2.inOut',
+        overwrite: true,
       });
     });
   }, [expandedColumn]);
@@ -179,6 +226,23 @@ export default function WorkflowTabs() {
 
   const handleClose = useCallback(() => {
     setExpandedColumn(null);
+    isHoveringRef.current = false;
+    setHoveredColumn(null);
+
+    // Reset all columns to default state
+    COLUMNS.forEach(c => {
+      const el = columnRefs.current[c.id];
+      if (!el) return;
+      gsap.to(el, {
+        flex: 1,
+        opacity: 1,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+        borderColor: 'rgba(255,255,255,0.06)',
+        duration: 0.6,
+        ease: 'power2.inOut',
+        overwrite: true,
+      });
+    });
   }, []);
 
   /* ── Cover content for each column ── */
@@ -190,11 +254,7 @@ export default function WorkflowTabs() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
           height: '100%',
-          padding: '32px 24px',
-          gap: 24,
           cursor: 'pointer',
           position: 'relative',
           overflow: 'hidden',
@@ -232,74 +292,55 @@ export default function WorkflowTabs() {
           }}
         />
 
-
-
-        {/* Special card animation for Design column */}
-        {col.id === 'design' && (
-          <div style={{ margin: '0' }}>
-            <FlippingCardCover />
-          </div>
-        )}
-
-        {/* Evaluate cover */}
-        {col.id === 'evaluate' && (
-          <div style={{
-            width: '100%',
-            maxWidth: 240,
-            aspectRatio: '16/10',
-            borderRadius: 12,
-            background: 'rgba(99, 102, 241, 0.08)',
-            border: '1px solid rgba(99, 102, 241, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden',
-          }}>
-            {/* Mini flow diagram */}
-            <svg width="160" height="90" viewBox="0 0 160 90">
-              <defs>
-                <linearGradient id="evalGrad" x1="0" y1="0" x2="160" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="100%" stopColor="#8b5cf6" />
-                </linearGradient>
-              </defs>
-              {/* Nodes */}
-              <rect x="5" y="30" width="36" height="28" rx="6" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.4)" strokeWidth="1" />
-              <rect x="62" y="10" width="36" height="28" rx="6" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.4)" strokeWidth="1" />
-              <rect x="62" y="52" width="36" height="28" rx="6" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.4)" strokeWidth="1" />
-              <rect x="119" y="30" width="36" height="28" rx="6" fill="rgba(99,102,241,0.2)" stroke="rgba(139,92,246,0.5)" strokeWidth="1" />
-              {/* Connectors */}
-              <line x1="41" y1="44" x2="62" y2="24" stroke="url(#evalGrad)" strokeWidth="1.5" opacity="0.5" />
-              <line x1="41" y1="44" x2="62" y2="66" stroke="url(#evalGrad)" strokeWidth="1.5" opacity="0.5" />
-              <line x1="98" y1="24" x2="119" y2="44" stroke="url(#evalGrad)" strokeWidth="1.5" opacity="0.5" />
-              <line x1="98" y1="66" x2="119" y2="44" stroke="url(#evalGrad)" strokeWidth="1.5" opacity="0.5" />
-              {/* Dots on nodes */}
-              <circle cx="23" cy="44" r="3" fill="#6366f1" opacity="0.7" />
-              <circle cx="80" cy="24" r="3" fill="#6366f1" opacity="0.7" />
-              <circle cx="80" cy="66" r="3" fill="#6366f1" opacity="0.7" />
-              <circle cx="137" cy="44" r="3" fill="#8b5cf6" opacity="0.7" />
-            </svg>
-          </div>
-        )}
-
-        {/* Visualize cover — fills entire column */}
-        {col.id === 'visualize' && (
-          <VisualizeCover />
-        )}
-
-        {/* Label — floats at bottom for visualize, centered for others */}
+        {/* Content area — fills available space above label */}
         <div style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 0,
+          overflow: 'hidden',
+          padding: '16px 12px 0',
+        }}>
+          {/* Special card animation for Design column */}
+          {col.id === 'design' && (
+            <div style={{ margin: '0' }}>
+              <FlippingCardCover isActive={activeAnimCol === 'design'} onCycleComplete={advanceAnimation} />
+            </div>
+          )}
+
+          {/* Evaluate cover */}
+          {col.id === 'evaluate' && (
+            <EvaluateCover isHovered={hoveredColumn === 'evaluate'} isActive={activeAnimCol === 'evaluate'} onCycleComplete={advanceAnimation} />
+          )}
+
+          {/* Visualize cover — hide charts when evaluate is hovered */}
+          {col.id === 'visualize' && (
+            hoveredColumn === 'evaluate' ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
+                opacity: 0.3,
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
+                  <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M7 16l4-8 4 4 5-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            ) : (
+              <VisualizeCover isActive={activeAnimCol === 'visualize'} onCycleComplete={advanceAnimation} />
+            )
+          )}
+        </div>
+
+        {/* Label — always pinned at bottom, same position for all columns */}
+        <div style={{
+          flexShrink: 0,
           textAlign: 'center',
-          ...(col.id === 'visualize' ? {
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10,
-            padding: '40px 16px 20px',
-            background: 'linear-gradient(to top, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.7) 60%, transparent 100%)',
-          } : {}),
+          padding: '16px 16px 20px',
         }}>
           <h3 style={{
             fontSize: 18,
@@ -326,11 +367,13 @@ export default function WorkflowTabs() {
           style={{
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: 6,
             fontSize: 12,
             fontWeight: 600,
             color: col.accentFrom,
             opacity: isHovered ? 1 : 0,
+            paddingBottom: 16,
           }}
           animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 8 }}
           transition={{ duration: 0.3 }}
@@ -528,9 +571,9 @@ export default function WorkflowTabs() {
               <motion.div
                 key={col.id}
                 ref={(el) => { columnRefs.current[col.id] = el; }}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                transition={{ duration: 0.6, delay: idx * 0.5 }}
                 viewport={{ once: true }}
                 onMouseEnter={() => handleColumnHover(col.id)}
                 style={{

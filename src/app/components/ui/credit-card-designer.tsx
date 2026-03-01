@@ -1043,7 +1043,7 @@ export default function CreditCardDesigner() {
                         setCardBg(spotlightColor);
                         pushHistory();
                       }
-                      setSpotlightEnabled(p => !p);
+                      setSpotlightEnabled((p: boolean) => !p);
                     }} className="relative w-10 h-5 rounded-full transition-colors" style={{ background: spotlightEnabled ? '#6366f1' : (light ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)') }}>
                       <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: spotlightEnabled ? 22 : 2 }} />
                     </button>
