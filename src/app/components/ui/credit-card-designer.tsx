@@ -225,25 +225,37 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
     { id: 'hw-fine-print', type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
   ];
 }
+// ====================== LOCALSTORAGE PERSISTENCE ======================
+const STORAGE_KEY = 'blazeup-card-state';
+function loadSavedState() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
 export default function CreditCardDesigner() {
     // Add this to your state declarations (around line 280)
     const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const _saved = useRef(loadSavedState());
   const [activeFace, setActiveFace] = useState<CardFace>('front');
-  const [network, setNetwork] = useState<NetworkType>('Visa');
-  const [frontElements, setFrontElements] = useState<CardElement[]>(() => createFrontTemplate());
-  const [backElements, setBackElements] = useState<CardElement[]>(() => createBackTemplate('horizontal', 'Visa'));
-  const [frontBg, setFrontBg] = useState(GRADIENTS[0].value);
-  const [backBg, setBackBg] = useState('linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)');
+  const [network, setNetwork] = useState<NetworkType>(() => _saved.current?.network ?? 'Visa');
+  const [frontElements, setFrontElements] = useState<CardElement[]>(() => _saved.current?.frontElements ?? createFrontTemplate());
+  const [backElements, setBackElements] = useState<CardElement[]>(() => _saved.current?.backElements ?? createBackTemplate('horizontal', _saved.current?.network ?? 'Visa'));
+  const [frontBg, setFrontBg] = useState(() => _saved.current?.frontBg ?? GRADIENTS[0].value);
+  const [backBg, setBackBg] = useState(() => _saved.current?.backBg ?? 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [expandedPanel, setExpandedPanel] = useState<string | null>('components');
   const [collisionWarn, setCollisionWarn] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
-  const [spotlightColor, setSpotlightColor] = useState('#3535cf');
-  const [spotlightX, setSpotlightX] = useState(89);
-  const [spotlightY, setSpotlightY] = useState(38);
-  const [spotlightEnabled, setSpotlightEnabled] = useState(true);
-  const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [spotlightColor, setSpotlightColor] = useState(() => _saved.current?.spotlightColor ?? '#3535cf');
+  const [spotlightX, setSpotlightX] = useState(() => _saved.current?.spotlightX ?? 89);
+  const [spotlightY, setSpotlightY] = useState(() => _saved.current?.spotlightY ?? 38);
+  const [spotlightEnabled, setSpotlightEnabled] = useState(() => _saved.current?.spotlightEnabled ?? true);
+  const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>(() => _saved.current?.orientation ?? 'horizontal');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [canvasLightMode, setCanvasLightMode] = useState(false);
   // Background removal parameters (from backgroundslider.html)
@@ -254,24 +266,27 @@ export default function CreditCardDesigner() {
   // Image clipboard
   const [imageClipboard, setImageClipboard] = useState<{ id: string; dataUrl: string; name: string }[]>([]);
   // Pattern overlay (per face)
-  const [frontPattern, setFrontPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
-  const [backPattern, setBackPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
+  const [frontPattern, setFrontPattern] = useState<PatternState>(() => _saved.current?.frontPattern ?? { ...DEFAULT_PATTERN });
+  const [backPattern, setBackPattern] = useState<PatternState>(() => _saved.current?.backPattern ?? { ...DEFAULT_PATTERN });
   // Sync faces toggle
   const [syncFaces, setSyncFaces] = useState(false);
   const activePattern = activeFace === 'front' ? frontPattern : backPattern;
   const setActivePattern = activeFace === 'front' ? setFrontPattern : setBackPattern;
   // Layout state (per face)
   interface LayoutState { id: LayoutId; baseColor: string; overlayColor: string; }
-  const [frontLayout, setFrontLayout] = useState<LayoutState>({ id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
-  const [backLayout, setBackLayout] = useState<LayoutState>({ id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
+  const [frontLayout, setFrontLayout] = useState<LayoutState>(() => _saved.current?.frontLayout ?? { id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
+  const [backLayout, setBackLayout] = useState<LayoutState>(() => _saved.current?.backLayout ?? { id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
   const activeLayout = activeFace === 'front' ? frontLayout : backLayout;
   const setActiveLayout = activeFace === 'front' ? setFrontLayout : setBackLayout;
   // Computed card dimensions based on orientation
   const cardW = orientation === 'horizontal' ? CARD.W : CARD.H;
   const cardH = orientation === 'horizontal' ? CARD.H : CARD.W;
   const [history, setHistory] = useState<HistoryState[]>([{
-    frontElements: createFrontTemplate(), backElements: createBackTemplate('horizontal', 'Visa'),
-    frontBg: GRADIENTS[0].value, backBg: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)', network: 'Visa',
+    frontElements: _saved.current?.frontElements ?? createFrontTemplate(),
+    backElements: _saved.current?.backElements ?? createBackTemplate('horizontal', _saved.current?.network ?? 'Visa'),
+    frontBg: _saved.current?.frontBg ?? GRADIENTS[0].value,
+    backBg: _saved.current?.backBg ?? 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)',
+    network: _saved.current?.network ?? 'Visa',
   }]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -289,6 +304,22 @@ export default function CreditCardDesigner() {
   const setCardBg = activeFace === 'front' ? setFrontBg : setBackBg;
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
+  // ---- localStorage debounced save ----
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        const state = {
+          frontElements, backElements, frontBg, backBg, network, orientation,
+          frontPattern, backPattern, frontLayout, backLayout,
+          spotlightColor, spotlightX, spotlightY, spotlightEnabled,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch { /* quota exceeded — silently ignore */ }
+    }, 500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [frontElements, backElements, frontBg, backBg, network, orientation, frontPattern, backPattern, frontLayout, backLayout, spotlightColor, spotlightX, spotlightY, spotlightEnabled]);
   // ---- toast auto-dismiss ----
   useEffect(() => {
     if (!toast) return;
@@ -355,23 +386,41 @@ export default function CreditCardDesigner() {
   useEffect(() => {
     const wrapper = canvasWrapperRef.current;
     if (!wrapper) return;
+    // Find the nearest scrollable ancestor (overlay div or window)
+    let scrollContainer: HTMLElement | Window = window;
+    let el: HTMLElement | null = wrapper.parentElement;
+    while (el) {
+      const style = getComputedStyle(el);
+      const overflowY = style.overflowY;
+      if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+        scrollContainer = el;
+        break;
+      }
+      el = el.parentElement;
+    }
+    const isWindow = scrollContainer === window;
     // gsap.quickTo creates a single reusable tween that smoothly interpolates — no jitter
     const setY = gsap.quickTo(wrapper, 'y', { duration: 0.4, ease: 'power3' });
     // Cache the original offset top once after layout
     const cacheTop = () => {
       gsap.set(wrapper, { y: 0 });
-      canvasOriginalTop.current = wrapper.getBoundingClientRect().top + window.scrollY;
+      if (isWindow) {
+        canvasOriginalTop.current = wrapper.getBoundingClientRect().top + window.scrollY;
+      } else {
+        canvasOriginalTop.current = wrapper.getBoundingClientRect().top - (scrollContainer as HTMLElement).getBoundingClientRect().top + (scrollContainer as HTMLElement).scrollTop;
+      }
     };
     cacheTop();
     const onScroll = () => {
       if (window.innerWidth < 1024) { setY(0); return; }
-      const scrollY = window.scrollY;
+      const scrollY = isWindow ? window.scrollY : (scrollContainer as HTMLElement).scrollTop;
       const pinStart = canvasOriginalTop.current - 32;
       setY(scrollY > pinStart ? scrollY - pinStart : 0);
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
+    const target = isWindow ? window : scrollContainer;
+    target.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', cacheTop);
-    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', cacheTop); };
+    return () => { target.removeEventListener('scroll', onScroll); window.removeEventListener('resize', cacheTop); };
   }, []);
   // ---- collision ----
   const checkCollision = useCallback((x: number, y: number, w: number, h: number, cw: number): string | null => {
