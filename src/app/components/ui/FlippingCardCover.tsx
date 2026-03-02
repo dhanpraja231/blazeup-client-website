@@ -163,7 +163,7 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
       paused: !isActive,
       onRepeat: () => {
         repeatCount++;
-        if (repeatCount >= 2 && onCycleComplete) {
+        if (repeatCount >= 1 && onCycleComplete) {
           repeatCount = 0;
           onCycleComplete();
         }
@@ -172,7 +172,7 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
     tlRef.current = tl;
 
     // Hold showing current design
-    tl.to({}, { duration: 3 });
+    tl.to({}, { duration: 1.5 });
 
     // Squish card horizontally to nothing
     tl.to(el, {

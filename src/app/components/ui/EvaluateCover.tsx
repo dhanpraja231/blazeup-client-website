@@ -83,6 +83,7 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const coverTlRef = useRef<gsap.core.Timeline | null>(null);
   const isHoveredRef = useRef(isHovered);
+  const hasPlayedRef = useRef(false);
 
   useEffect(() => { isHoveredRef.current = isHovered; }, [isHovered]);
 
@@ -113,10 +114,21 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
     const result = svg.querySelector('.cover-result');
 
     // Reset
-    cards.forEach(el => gsap.set(el, { opacity: 0, y: 20 }));
-    lines.forEach(el => gsap.set(el, { strokeDasharray: 200, strokeDashoffset: 200, opacity: 0 }));
     flows.forEach(el => gsap.set(el, { opacity: 0 }));
     if (result) gsap.set(result, { opacity: 0 });
+
+    const isFirstPlay = !hasPlayedRef.current;
+    hasPlayedRef.current = true;
+
+    if (isFirstPlay) {
+      // First time: slide cards in from below
+      cards.forEach(el => gsap.set(el, { opacity: 0, y: 20 }));
+      lines.forEach(el => gsap.set(el, { strokeDasharray: 200, strokeDashoffset: 200, opacity: 0 }));
+    } else {
+      // Subsequent times: cards and lines already visible, just reset borders
+      cards.forEach(el => gsap.set(el, { opacity: 1, y: 0, borderColor: '' }));
+      lines.forEach(el => gsap.set(el, { strokeDasharray: 200, strokeDashoffset: 0, opacity: 1 }));
+    }
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -127,11 +139,12 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
     });
     coverTlRef.current = tl;
 
-    // 1. Cards slide in
-    tl.to(cards, { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)' });
-
-    // 2. Lines draw
-    tl.to(lines, { strokeDashoffset: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power2.inOut' }, '-=0.1');
+    if (isFirstPlay) {
+      // 1. Cards slide in
+      tl.to(cards, { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)' });
+      // 2. Lines draw
+      tl.to(lines, { strokeDashoffset: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power2.inOut' }, '-=0.1');
+    }
 
     // 3. Flow dots travel along lines (left pair then right pair)
     const flowEls = Array.from(flows);
@@ -154,7 +167,7 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
     if (result) tl.to(result, { opacity: 1, duration: 0.5, ease: 'power2.out' }, '-=0.2');
 
     // 7. Hold
-    tl.to({}, { duration: 2 });
+    tl.to({}, { duration: 1 });
 
     return () => { tl.kill(); };
   }, [isHovered, isExpanded, isActive]);

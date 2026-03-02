@@ -220,10 +220,10 @@ export default function VisualizeCover({ isActive = true, onCycleComplete }: { i
         transitionCountRef.current++;
         if (transitionCountRef.current >= 2 && onCycleComplete) {
           transitionCountRef.current = 0;
-          setTimeout(() => onCycleComplete(), 2000);
+          setTimeout(() => onCycleComplete(), 500);
         }
         cycle();
-      }, 3000);
+      }, 1800);
     };
 
     cycle();
