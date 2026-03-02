@@ -36,28 +36,37 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
     const updatePosition = () => {
       const rect = triggerRef.current!.getBoundingClientRect();
       const popupW = 280;
+      const popupH = popupRef.current?.offsetHeight || 480;
       const viewW = window.innerWidth;
+      const viewH = window.innerHeight;
 
-      // Try to position to the right of the trigger
+      // Horizontal: try right of trigger, then left, then center
       let left = rect.right + 12;
-
-      // If not enough room on right, position to the left
       if (left + popupW > viewW - 20) {
         left = rect.left - popupW - 12;
       }
-
-      // If still not enough room, center in viewport
       if (left < 20) {
         left = Math.max(20, (viewW - popupW) / 2);
       }
 
-      // Vertically align with trigger
+      // Vertical: try aligning with trigger top, if overflows then flip above, else center
       let top = rect.top;
+      if (top + popupH > viewH - 20) {
+        // Try positioning so popup bottom aligns with trigger bottom
+        top = rect.bottom - popupH;
+      }
+      if (top < 20) {
+        // Still doesn't fit — center in viewport
+        top = Math.max(20, (viewH - popupH) / 2);
+      }
 
       setPosition({ top, left });
     };
 
+    // Initial position + re-measure after render
     updatePosition();
+    requestAnimationFrame(updatePosition);
+
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
 

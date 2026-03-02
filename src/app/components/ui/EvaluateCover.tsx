@@ -355,7 +355,7 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
 
                 {/* Source tag */}
                 <div className="modal-anim" style={{ marginTop: 14, fontSize: 9, color: '#555', letterSpacing: 0.5 }}>
-                  GENERATED FROM VISUAL FLOW
+                  
                 </div>
               </div>
               </div>
