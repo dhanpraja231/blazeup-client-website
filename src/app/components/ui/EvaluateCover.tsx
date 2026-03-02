@@ -3,29 +3,31 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
-// ── Node data for full animated canvas ──
+// ── Node data — coordinates designed for ~900×450 expanded column ──
+const NODE_W = 195;
+
 const NODES = [
   {
     id: 'node1', theme: 'purple', iconUrl: '', title: 'Category Limits',
     bodyTitle: 'Tuition Reimbursement', bodySub: 'per calendar year',
     amount: '₹105,000', extra: '+ Add category',
-    left: 40, top: 110, handleY: 80,
+    left: 15, top: 80, handleY: 65,
   },
   {
     id: 'node2', theme: 'blue', iconUrl: '', title: 'Policy Check',
     bodyTitle: 'Course Approval Requirements', bodySub: '4 items configured',
     footer: 'Approval Required',
-    left: 340, top: 70, handleY: 70,
+    left: 255, top: 45, handleY: 60,
   },
   {
     id: 'node3', theme: 'green', iconUrl: '', title: 'Action',
     bodyTitle: 'Approve Reimbursement', bodySub: 'Tuition reimbursement approved',
-    left: 630, top: 80, handleY: 60,
+    left: 490, top: 50, handleY: 55,
   },
   {
     id: 'node4', theme: 'orange', iconUrl: '', title: 'Condition',
     bodyTitle: 'employment_status', bodySub: '= full_time',
-    left: 340, top: 240, handleY: 60,
+    left: 255, top: 200, handleY: 55,
   },
   {
     id: 'node5', theme: 'dark', iconUrl: '', title: 'Slack',
@@ -33,21 +35,25 @@ const NODES = [
     bodyTitle: 'Notify HR & Manager',
     bodySub: 'Tuition reimbursement approved for {employee_name} - ₹{amount}',
     connected: true,
-    left: 910, top: 80, handleY: 60,
+    left: 710, top: 45, handleY: 55,
   },
 ];
 
+// Handle positions: right = left + NODE_W + 4, left = left - 4, Y = top + handleY
+// node1 right: (214, 145)  node2 left: (251, 105) right: (454, 105)
+// node3 left: (486, 105) right: (689, 105)   node4 left: (251, 255) right: (454, 255)
+// node5 left: (706, 100)
 const EDGES = [
-  { id: 'line1', d: 'M 284 190 C 310 190, 310 140, 336 140' },
-  { id: 'line2', d: 'M 584 140 C 606 140, 606 140, 626 140' },
-  { id: 'line3', d: 'M 284 190 C 310 190, 310 300, 336 300' },
-  { id: 'line4', d: 'M 584 300 C 606 300, 606 140, 626 140' },
-  { id: 'line5', d: 'M 874 140 C 890 140, 890 140, 906 140' },
+  { id: 'line1', d: 'M 214 145 C 232 145, 232 105, 251 105' },
+  { id: 'line2', d: 'M 454 105 C 470 105, 470 105, 486 105' },
+  { id: 'line3', d: 'M 214 145 C 232 145, 232 255, 251 255' },
+  { id: 'line4', d: 'M 454 255 C 470 255, 470 105, 486 105' },
+  { id: 'line5', d: 'M 689 105 C 698 105, 698 100, 706 100' },
 ];
 
 const LABELS = [
-  { id: 'label1', text: 'Within limit', left: 275, top: 154 },
-  { id: 'label2', text: 'Eligible course', left: 574, top: 118 },
+  { id: 'label1', text: 'Within limit', left: 206, top: 85 },
+  { id: 'label2', text: 'Eligible course', left: 458, top: 82 },
 ];
 
 const THEMES: Record<string, { border: string; bg: string; headerBg: string; headerColor: string; accent: string; handleBg: string }> = {
@@ -65,13 +71,6 @@ const MODAL_RULES = [
   { label: 'Manager Slack Notification', color: '#a78bfa' },
 ];
 
-// ── Cover nodes (vertical column layout) ──
-const COVER_NODES = [
-  { title: 'Category Limits', subtitle: '₹105,000 / year', accent: '#8b5cf6', bgAccent: 'rgba(139,92,246,0.08)', borderAccent: 'rgba(139,92,246,0.25)' },
-  { title: 'Policy Check', subtitle: '4 rules configured', accent: '#3b82f6', bgAccent: 'rgba(59,130,246,0.08)', borderAccent: 'rgba(59,130,246,0.25)' },
-  { title: 'Approve Action', subtitle: 'Auto-reimbursement', accent: '#22c55e', bgAccent: 'rgba(34,197,94,0.08)', borderAccent: 'rgba(34,197,94,0.25)' },
-];
-
 interface EvaluateCoverProps {
   isExpanded?: boolean;
   isHovered?: boolean;
@@ -84,53 +83,10 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
   const flipperRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const isHoveredRef = useRef(isHovered);
-  const coverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { isHoveredRef.current = isHovered; }, [isHovered]);
 
-  // ── Cover idle animation (connecting lines pulse) ──
-  useEffect(() => {
-    if (isHovered || isExpanded) return;
-    const el = coverRef.current;
-    if (!el) return;
-
-    const connectors = el.querySelectorAll('.cover-connector');
-    const dots = el.querySelectorAll('.cover-dot');
-
-    const tl = gsap.timeline({ repeat: -1 });
-
-    // Pulse dots sequentially
-    dots.forEach((dot, i) => {
-      tl.to(dot, {
-        boxShadow: `0 0 10px ${['#8b5cf6', '#3b82f6', '#22c55e'][i]}60`,
-        scale: 1.3,
-        duration: 0.5,
-        ease: 'power2.out',
-      }, i * 1.2);
-      tl.to(dot, {
-        boxShadow: 'none',
-        scale: 1,
-        duration: 0.5,
-        ease: 'power2.inOut',
-      }, i * 1.2 + 0.5);
-    });
-
-    // Animate connector dashes
-    connectors.forEach((conn) => {
-      tl.to(conn, {
-        strokeDashoffset: -20,
-        duration: 1.5,
-        ease: 'none',
-        repeat: 1,
-      }, 0);
-    });
-
-    tl.to({}, { duration: 1 });
-
-    return () => { tl.kill(); };
-  }, [isHovered, isExpanded]);
-
-  // ── Full canvas animation (unchanged) ──
+  // ── Full canvas animation ──
   useEffect(() => {
     const scene = sceneRef.current;
     const flipper = flipperRef.current;
@@ -144,18 +100,9 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
       paused: !isActive,
       onComplete: () => {
         if (isHoveredRef.current) {
-          NODES.forEach(n => {
-            const el = scene.querySelector(`#${n.id}`);
-            if (el) gsap.set(el, { opacity: 0 });
-          });
-          EDGES.forEach(e => {
-            const el = scene.querySelector(`.${e.id}`);
-            if (el) gsap.set(el, { strokeDashoffset: 500 });
-          });
-          LABELS.forEach(l => {
-            const el = scene.querySelector(`#${l.id}`);
-            if (el) gsap.set(el, { opacity: 0, scale: 0.5 });
-          });
+          NODES.forEach(n => { const el = scene.querySelector(`#${n.id}`); if (el) gsap.set(el, { opacity: 0 }); });
+          EDGES.forEach(e => { const el = scene.querySelector(`.${e.id}`); if (el) gsap.set(el, { strokeDashoffset: 500 }); });
+          LABELS.forEach(l => { const el = scene.querySelector(`#${l.id}`); if (el) gsap.set(el, { opacity: 0, scale: 0.5 }); });
           gsap.set(modalEls, { y: 15, opacity: 0 });
           gsap.to(flipper, {
             rotationY: 360, duration: 0.8, ease: 'power3.inOut',
@@ -219,10 +166,7 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
     } else { tl.pause(); }
   }, [isActive]);
 
-  const canvasW = 1180;
-  const canvasH = 600;
   const showFullCanvas = isHovered || isExpanded;
-  const scale = isExpanded ? 1 : 0.9;
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -232,18 +176,14 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
         <div style={{ width: '100%', height: '100%' }} />
       )}
 
-      {/* ═══ Full animated canvas (shown on hover/expanded) ═══ */}
+      {/* ═══ Full animated canvas — fills the container natively, no scaling ═══ */}
       <div
         ref={sceneRef}
         style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: `translate(-50%, -50%) scale(${scale})`,
-          width: canvasW,
-          height: canvasH,
+          inset: 0,
           perspective: 1500,
-          transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'opacity 0.4s ease',
           ...(showFullCanvas ? {} : { pointerEvents: 'none', opacity: 0 }),
         }}
       >
@@ -264,6 +204,7 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
             border: '1px solid #2A2B36', overflow: 'hidden',
             transform: 'rotateY(0deg)',
           }}>
+            {/* SVG edges */}
             <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
               {EDGES.map(e => (
                 <path key={e.id} className={e.id} d={e.d}
@@ -271,6 +212,8 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                   strokeDasharray={500} strokeDashoffset={500} />
               ))}
             </svg>
+
+            {/* Edge labels */}
             {LABELS.map(l => (
               <div key={l.id} id={l.id} style={{
                 position: 'absolute', left: l.left, top: l.top,
@@ -279,87 +222,146 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                 padding: '4px 10px', borderRadius: 12, zIndex: 3, opacity: 0,
               }}>{l.text}</div>
             ))}
+
+            {/* Node blocks */}
             {NODES.map(n => {
               const t = THEMES[n.theme];
               return (
                 <div key={n.id} id={n.id} style={{
-                  position: 'absolute', width: 240, left: n.left, top: n.top,
+                  position: 'absolute', width: NODE_W, left: n.left, top: n.top,
                   borderRadius: 8, border: `1px solid ${t.border}`, backgroundColor: t.bg,
                   boxShadow: '0 12px 24px rgba(0,0,0,0.4)', zIndex: 2, opacity: 0,
                 }}>
+                  {/* Handles */}
                   <div style={{ position: 'absolute', left: -7, top: n.handleY, transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: t.handleBg, border: `2px solid ${t.bg}`, zIndex: 5 }} />
                   {n.id !== 'node5' && (
                     <div style={{ position: 'absolute', right: -7, top: n.handleY, transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: t.handleBg, border: `2px solid ${t.bg}`, zIndex: 5 }} />
                   )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderTopLeftRadius: 8, borderTopRightRadius: 8, fontSize: 13, fontWeight: 600, backgroundColor: t.headerBg, color: t.headerColor }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderTopLeftRadius: 8, borderTopRightRadius: 8, fontSize: 12, fontWeight: 600, backgroundColor: t.headerBg, color: t.headerColor }}>
                     {n.iconUrl ? (
-                      <img src={n.iconUrl} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'cover' }} />
+                      <img src={n.iconUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'cover' }} />
                     ) : (
-                      <div style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+                      <div style={{ width: 18, height: 18, borderRadius: 4, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
                     )}
                     <span>{n.title}</span>
-                    {n.titleExtra && <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af' }}>{n.titleExtra}</span>}
+                    {n.titleExtra && <span style={{ marginLeft: 'auto', fontSize: 10, color: '#9ca3af' }}>{n.titleExtra}</span>}
                   </div>
-                  <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {/* Body */}
+                  <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#f3f4f6' }}>{n.bodyTitle}</div>
-                        <div style={{ fontSize: 11, marginTop: 4, color: t.accent, ...(n.id === 'node5' ? { whiteSpace: 'normal' as const, lineHeight: 1.4, marginTop: 6 } : {}) }}>{n.bodySub}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#f3f4f6' }}>{n.bodyTitle}</div>
+                        <div style={{ fontSize: 10, marginTop: 3, color: t.accent,
+                          ...(n.id === 'node5' ? { whiteSpace: 'normal' as const, lineHeight: 1.4, marginTop: 5 } : {}),
+                        }}>{n.bodySub}</div>
                       </div>
-                      {n.amount && <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{n.amount}</div>}
+                      {n.amount && <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{n.amount}</div>}
                     </div>
-                    {n.extra && <div style={{ fontSize: 12, fontWeight: 500, color: t.accent, cursor: 'pointer', marginTop: 6 }}>{n.extra}</div>}
-                    {n.footer && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 8 }}>{n.footer}</div>}
-                    {n.connected && <div style={{ fontSize: 12, fontWeight: 500, color: '#4ade80', marginTop: 4 }}>● Connected</div>}
+                    {n.extra && <div style={{ fontSize: 11, fontWeight: 500, color: t.accent, cursor: 'pointer', marginTop: 4 }}>{n.extra}</div>}
+                    {n.footer && <div style={{ fontSize: 10, color: '#6b7280', marginTop: 6 }}>{n.footer}</div>}
+                    {n.connected && <div style={{ fontSize: 11, fontWeight: 500, color: '#4ade80', marginTop: 3 }}>● Connected</div>}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* ═══ BACK: Policy Modal ═══ */}
+          {/* ═══ BACK: Policy Card — compact, fills the column ═══ */}
           <div style={{
             width: '100%', height: '100%', position: 'absolute', top: 0, left: 0,
             backfaceVisibility: 'hidden',
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
             transform: 'rotateY(180deg)',
           }}>
-            <div style={{ width: '100%', maxWidth: 520, borderRadius: 12, backgroundColor: '#16161A', border: '1px solid #2A2B36', padding: 48 }}>
-              <div className="modal-anim" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h2 style={{ color: '#fff', margin: 0, fontSize: 20, fontWeight: 600 }}>Automated Tuition Policy</h2>
-                <div style={{ background: '#2A2B36', color: '#aaa', width: 32, height: 32, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>✕</div>
+            <div style={{
+              width: '100%', height: '100%',
+              borderRadius: 12,
+              backgroundColor: '#16161A',
+              border: '1px solid #2A2B36',
+              overflow: 'hidden',
+            }}>
+            {/* Inner layout — horizontal split */}
+            <div style={{
+              display: 'flex',
+              width: '100%',
+              height: '100%',
+            }}>
+              {/* Left column — policy info */}
+              <div style={{
+                flex: 1,
+                padding: '24px 28px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                borderRight: '1px solid #2A2B36',
+                minWidth: 0,
+              }}>
+                {/* Header row */}
+                <div className="modal-anim" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <h2 style={{ color: '#fff', margin: 0, fontSize: 17, fontWeight: 700, lineHeight: 1.3 }}>Automated Tuition Policy</h2>
+                  <div style={{ background: '#2A2B36', color: '#aaa', width: 26, height: 26, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, marginLeft: 12 }}>✕</div>
+                </div>
+
+                {/* Status badge */}
+                <div className="modal-anim" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ background: '#1B4527', color: '#4ade80', padding: '2px 8px', borderRadius: 10, fontSize: 9, fontWeight: 700, border: '1px solid #22c55e' }}>● ACTIVE</span>
+                  <span style={{ color: '#6b7280', fontSize: 10 }}>Live as of 10/02/2026</span>
+                </div>
+
+                {/* Description */}
+                <p className="modal-anim" style={{
+                  color: '#9ca3af', fontSize: 12, margin: 0, marginBottom: 16,
+                  paddingBottom: 14, borderBottom: '1px solid #2A2B36', lineHeight: 1.55,
+                }}>
+                  This automated workflow enforces strict annual budget caps before evaluating specialized curriculum and provider requirements.
+                </p>
+
+                {/* Applied group */}
+                <div className="modal-anim" style={{ marginBottom: 16 }}>
+                  <span style={{ fontSize: 9, color: '#6b7280', display: 'block', marginBottom: 5, letterSpacing: 0.5, fontWeight: 600 }}>APPLIES TO</span>
+                  <span style={{ background: '#1e3a5f', color: '#93c5fd', padding: '4px 10px', borderRadius: 14, fontSize: 10, fontWeight: 500, border: '1px solid #3b82f6', display: 'inline-block' }}>👥 Global Employees</span>
+                </div>
+
+                {/* Buttons */}
+                <div className="modal-anim" style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                  <button style={{ padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, border: 'none', background: '#2A2B36', color: '#fff', cursor: 'pointer' }}>Close</button>
+                  <button style={{ padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer' }}>✏️ Edit Flow</button>
+                </div>
               </div>
-              <div className="modal-anim" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <span style={{ background: '#1B4527', color: '#4ade80', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, border: '1px solid #22c55e' }}>● ACTIVE</span>
-                <span style={{ color: '#6b7280', fontSize: 12 }}>Generated from visual flow · Live as of 10/02/2026</span>
-              </div>
-              <p className="modal-anim" style={{ color: '#9ca3af', fontSize: 14, marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #2A2B36', lineHeight: 1.5 }}>
-                This automated workflow enforces strict annual budget caps before evaluating specialized curriculum and provider requirements for all organizational reimbursements.
-              </p>
-              <div className="modal-anim">
-                <h4 style={{ color: '#6b7280', fontSize: 12, margin: '0 0 16px 0', letterSpacing: 0.5 }}>IMPLEMENTED LOGIC NODES (5)</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+
+              {/* Right column — logic nodes */}
+              <div style={{
+                width: 280,
+                flexShrink: 0,
+                padding: '24px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}>
+                <h4 className="modal-anim" style={{ color: '#6b7280', fontSize: 10, margin: '0 0 12px 0', letterSpacing: 0.5, fontWeight: 600 }}>LOGIC NODES (5)</h4>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {MODAL_RULES.map((r, i) => (
-                    <div key={i} className="modal-anim" style={{ background: '#1C1D22', border: '1px solid #2A2B36', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, color: '#e5e7eb', fontSize: 13, fontWeight: 500 }}>
-                      <div style={{ width: 8, height: 8, background: r.color, borderRadius: '50%', boxShadow: `0 0 8px ${r.color}40` }} />
+                    <div key={i} className="modal-anim" style={{
+                      background: '#1C1D22', border: '1px solid #2A2B36', borderRadius: 8,
+                      padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 8,
+                      color: '#e5e7eb', fontSize: 11, fontWeight: 500,
+                    }}>
+                      <div style={{ width: 7, height: 7, background: r.color, borderRadius: '50%', boxShadow: `0 0 6px ${r.color}40`, flexShrink: 0 }} />
                       {r.label}
                     </div>
                   ))}
                 </div>
+
+                {/* Source tag */}
+                <div className="modal-anim" style={{ marginTop: 14, fontSize: 9, color: '#555', letterSpacing: 0.5 }}>
+                  GENERATED FROM VISUAL FLOW
+                </div>
               </div>
-              <div className="modal-anim" style={{ borderTop: '1px solid #2A2B36', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                <div>
-                  <span style={{ fontSize: 11, color: '#6b7280', display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>APPLIES TO GROUPS</span>
-                  <span style={{ background: '#1e3a5f', color: '#93c5fd', padding: '6px 12px', borderRadius: 16, fontSize: 12, fontWeight: 500, border: '1px solid #3b82f6', whiteSpace: 'nowrap', display: 'inline-block' }}>👥 Global Employees</span>
-                </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <button style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: 'none', background: '#2A2B36', color: '#fff', cursor: 'pointer' }}>Close Window</button>
-                  <button style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer' }}>✏️ Edit Builder Flow</button>
-                </div>
               </div>
             </div>
+            </div>
           </div>
-        </div>
       </div>
     </div>
   );

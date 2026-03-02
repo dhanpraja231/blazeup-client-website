@@ -230,8 +230,8 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
     <div
       style={{
         perspective: 900,
-        width: 280,
-        height: 280,
+        width: 340,
+        height: 340,
         margin: '0 auto',
         position: 'relative',
         display: 'flex',
@@ -243,8 +243,8 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
       <div
         ref={outerRef}
         style={{
-          width: 260,
-          height: 164,
+          width: 320,
+          height: 200,
           position: 'relative',
           transformStyle: 'preserve-3d',
           borderRadius: 14,
