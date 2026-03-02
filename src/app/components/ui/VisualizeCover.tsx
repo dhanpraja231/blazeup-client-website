@@ -84,7 +84,7 @@ function ChartRenderer({ chartId }: { chartId: string }) {
             { key: 'value', name: 'Spending', color: '#10b981' },
             { key: 'budget', name: 'Budget', color: '#6366f1' },
           ]}
-          height={260}
+          height={280}
         />
       );
     case 'bar':
@@ -94,7 +94,7 @@ function ChartRenderer({ chartId }: { chartId: string }) {
           xKey="name"
           dataKey="value"
           color="#06b6d4"
-          height={260}
+          height={280}
         />
       );
     case 'donut':
@@ -103,7 +103,7 @@ function ChartRenderer({ chartId }: { chartId: string }) {
           data={DONUT_DATA}
           dataKey="value"
           nameKey="name"
-          height={260}
+          height={280}
         />
       );
     case 'pie':
@@ -112,7 +112,7 @@ function ChartRenderer({ chartId }: { chartId: string }) {
           data={PIE_DATA}
           dataKey="value"
           nameKey="name"
-          height={260}
+          height={280}
         />
       );
     default:
@@ -241,16 +241,17 @@ export default function VisualizeCover({ isActive = true, onCycleComplete }: { i
       height: '100%',
       borderRadius: 20,
       overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
+      position: 'relative',
     }}>
-      {/* Chart label */}
+      {/* Chart label — pinned top */}
       <div
         ref={labelRef}
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
           padding: '12px 16px 4px',
-          flexShrink: 0,
           zIndex: 2,
         }}
       >
@@ -265,16 +266,22 @@ export default function VisualizeCover({ isActive = true, onCycleComplete }: { i
         </div>
       </div>
 
-      {/* Chart area */}
+      {/* Chart area — absolute, fills all space below label */}
       <div style={{
-        width: '100%',
-        maxHeight: 220,
+        position: 'absolute',
+        top: 28,
+        left: 0,
+        right: 0,
+        bottom: 0,
         padding: '0 8px 8px',
-        position: 'relative',
-        zIndex: 1,
+        overflow: 'hidden',
         pointerEvents: 'none',
+        display: 'flex',
+        alignItems: 'center',
       }}>
-        <ChartRenderer chartId={config.id} />
+        <div style={{ width: '100%' }}>
+          <ChartRenderer chartId={config.id} />
+        </div>
       </div>
 
       {/* Color curtain — sweeps across to transition */}

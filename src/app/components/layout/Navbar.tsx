@@ -21,17 +21,25 @@ export default function Navbar() {
   const handleNavClick = (href: string) => {
     setIsMobileMenuOpen(false);
     
-    // Smooth scroll to section
-    const element = document.querySelector(href);
-    if (element) {
-      const offset = 80; // Account for navbar height
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+    // If it's a page route (starts with /), navigate to it
+    if (href.startsWith('/')) {
+      window.location.href = href;
+      return;
+    }
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
+    // If it's a hash link (#section), check if we're on the home page
+    if (href.startsWith('#')) {
+      const element = document.querySelector(href);
+      if (element) {
+        // Section exists on current page — smooth scroll
+        const offset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      } else {
+        // Section doesn't exist — navigate to home page with hash
+        window.location.href = `/home${href}`;
+      }
     }
   };
 

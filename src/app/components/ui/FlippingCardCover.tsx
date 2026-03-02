@@ -43,20 +43,13 @@ function randomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-const GLOW_COLORS = [
-  'rgba(99, 102, 241, 0.25)',
-  'rgba(139, 92, 246, 0.25)',
-  'rgba(236, 72, 153, 0.2)',
-  'rgba(16, 185, 129, 0.2)',
-  'rgba(249, 115, 22, 0.2)',
-  'rgba(6, 182, 212, 0.2)',
-];
+
 
 export default function FlippingCardCover({ isActive = true, onCycleComplete }: { isActive?: boolean; onCycleComplete?: () => void }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const cardFaceRef = useRef<HTMLDivElement>(null);
   const patternRef = useRef<HTMLDivElement>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
+
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
   // Display state
@@ -111,13 +104,12 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
   const cycleColors = useCallback(() => {
     const face = cardFaceRef.current;
     const pattern = patternRef.current;
-    const glow = glowRef.current;
+
     if (!face || !pattern) return;
 
     const nextGradient = randomItem(COVER_GRADIENTS);
     const nextPatIdx = Math.floor(Math.random() * COVER_PATTERNS.length);
     const nextPatColor = `rgba(255,255,255,${(Math.random() * 0.08 + 0.03).toFixed(2)})`;
-    const nextGlow = randomItem(GLOW_COLORS);
     const svg = COVER_PATTERNS[nextPatIdx](nextPatColor);
     const patternUrl = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 
@@ -150,14 +142,7 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
       },
     });
 
-    // Glow color transition
-    if (glow) {
-      gsap.to(glow, {
-        background: `radial-gradient(ellipse at center, ${nextGlow} 0%, transparent 70%)`,
-        duration: 0.8,
-        ease: 'power1.inOut',
-      });
-    }
+
 
     // Scramble card number + update text
     scrambleToNewNumber();
@@ -226,30 +211,7 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
     }
   }, [isActive]);
 
-  // ── Hover: ONLY glow — rotation is untouched ──
-  const handleMouseEnter = () => {
-    const glow = glowRef.current;
-    if (glow) {
-      gsap.to(glow, {
-        opacity: 1,
-        scale: 1.3,
-        duration: 0.5,
-        ease: 'power2.out',
-      });
-    }
-  };
 
-  const handleMouseLeave = () => {
-    const glow = glowRef.current;
-    if (glow) {
-      gsap.to(glow, {
-        opacity: 0.7,
-        scale: 1,
-        duration: 0.5,
-        ease: 'power2.out',
-      });
-    }
-  };
 
   const getPatternBg = (patIdx: number, color: string) => {
     const svg = COVER_PATTERNS[patIdx](color);
@@ -276,23 +238,7 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
         alignItems: 'center',
         justifyContent: 'center',
       }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
-      {/* Ambient glow behind card — hover target is separate from rotation */}
-      <div
-        ref={glowRef}
-        style={{
-          position: 'absolute',
-          inset: -24,
-          borderRadius: 30,
-          background: 'radial-gradient(ellipse at center, rgba(99, 102, 241, 0.2) 0%, transparent 70%)',
-          filter: 'blur(20px)',
-          pointerEvents: 'none',
-          opacity: 0.7,
-          zIndex: -1,
-        }}
-      />
 
       <div
         ref={outerRef}

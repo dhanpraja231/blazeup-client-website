@@ -50,18 +50,16 @@ interface ColumnConfig {
   icon: React.ReactNode;
   accentFrom: string;
   accentTo: string;
-  glowColor: string;
 }
 
 const COLUMNS: ColumnConfig[] = [
   {
     id: 'design',
-    label: 'Card Designer',
+    label: 'Design',
     description: 'Create stunning credit card designs with AI-powered templates and live preview',
     icon: <Palette className="w-6 h-6" />,
     accentFrom: '#f97316',
     accentTo: '#ec4899',
-    glowColor: 'rgba(249, 115, 22, 0.15)',
   },
   {
     id: 'evaluate',
@@ -70,7 +68,6 @@ const COLUMNS: ColumnConfig[] = [
     icon: <SearchCheck className="w-6 h-6" />,
     accentFrom: '#6366f1',
     accentTo: '#8b5cf6',
-    glowColor: 'rgba(99, 102, 241, 0.15)',
   },
   {
     id: 'visualize',
@@ -79,7 +76,6 @@ const COLUMNS: ColumnConfig[] = [
     icon: <BarChart3 className="w-6 h-6" />,
     accentFrom: '#10b981',
     accentTo: '#06b6d4',
-    glowColor: 'rgba(16, 185, 129, 0.15)',
   },
 ];
 
@@ -107,21 +103,19 @@ export default function WorkflowTabs() {
     });
   }, []);
 
-  // Apply subtle glow to the active animation column
+  // Highlight active animation column border subtly
   useEffect(() => {
     COLUMNS.forEach(c => {
       const el = columnRefs.current[c.id];
-      if (!el || hoveredColumn) return; // Don't apply glow when hovering (hover has its own)
+      if (!el || hoveredColumn) return;
       if (c.id === activeAnimCol) {
         gsap.to(el, {
-          boxShadow: `0 0 20px ${c.glowColor}, 0 4px 20px rgba(0,0,0,0.2)`,
-          borderColor: 'rgba(255,255,255,0.1)',
+          borderColor: 'rgba(255,255,255,0.12)',
           duration: 0.5,
           ease: 'power2.out',
         });
       } else {
         gsap.to(el, {
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
           borderColor: 'rgba(255,255,255,0.06)',
           duration: 0.5,
           ease: 'power2.out',
@@ -173,10 +167,10 @@ export default function WorkflowTabs() {
           duration: 0.5,
           ease: 'power3.out',
         });
-        // Glow effect
+        // Subtle border highlight on hover (no glow)
         gsap.to(el, {
-          boxShadow: `0 0 40px ${col.glowColor}, 0 8px 32px rgba(0,0,0,0.3)`,
-          borderColor: `rgba(255,255,255,0.15)`,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          borderColor: 'rgba(255,255,255,0.15)',
           opacity: 1,
           duration: 0.4,
           ease: 'power2.out',
@@ -275,22 +269,7 @@ export default function WorkflowTabs() {
           }}
         />
 
-        {/* Ambient glow */}
-        <div
-          style={{
-            position: 'absolute',
-            top: -60,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 200,
-            height: 200,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${col.glowColor} 0%, transparent 70%)`,
-            opacity: isHovered ? 1 : 0,
-            transition: 'opacity 0.5s ease',
-            pointerEvents: 'none',
-          }}
-        />
+
 
         {/* Content area — fills available space above label */}
         <div style={{
@@ -309,7 +288,7 @@ export default function WorkflowTabs() {
             </div>
           )}
 
-          {/* Evaluate cover */}
+          {/* Evaluate cover — empty at rest, animated on hover */}
           {col.id === 'evaluate' && (
             <EvaluateCover isHovered={hoveredColumn === 'evaluate'} isActive={activeAnimCol === 'evaluate'} onCycleComplete={advanceAnimation} />
           )}
@@ -336,30 +315,21 @@ export default function WorkflowTabs() {
           )}
         </div>
 
-        {/* Label — always pinned at bottom, same position for all columns */}
+        {/* Label — always pinned at bottom */}
         <div style={{
           flexShrink: 0,
           textAlign: 'center',
           padding: '16px 16px 20px',
         }}>
           <h3 style={{
-            fontSize: 18,
+            fontSize: 28,
             fontWeight: 700,
             color: '#fff',
-            marginBottom: 6,
-            letterSpacing: '-0.01em',
+            marginBottom: 0,
+            letterSpacing: '-0.02em',
           }}>
             {col.label}
           </h3>
-          <p style={{
-            fontSize: 13,
-            color: 'rgba(255,255,255,0.4)',
-            lineHeight: 1.5,
-            maxWidth: 220,
-            margin: '0 auto',
-          }}>
-            {col.description}
-          </p>
         </div>
 
         {/* Expand hint */}
@@ -378,7 +348,7 @@ export default function WorkflowTabs() {
           animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 8 }}
           transition={{ duration: 0.3 }}
         >
-          Click to open <ChevronRight className="w-4 h-4" />
+          Try Here <ChevronRight className="w-4 h-4" />
         </motion.div>
       </div>
     );
