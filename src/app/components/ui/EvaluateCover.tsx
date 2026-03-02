@@ -79,7 +79,7 @@ interface EvaluateCoverProps {
 export default function EvaluateCover({ isExpanded = false, isHovered = false, isActive = true, onCycleComplete }: EvaluateCoverProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
   const flipperRef = useRef<HTMLDivElement>(null);
-  const coverRef = useRef<SVGSVGElement>(null);
+  const coverRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const coverTlRef = useRef<gsap.core.Timeline | null>(null);
   const isHoveredRef = useRef(isHovered);
