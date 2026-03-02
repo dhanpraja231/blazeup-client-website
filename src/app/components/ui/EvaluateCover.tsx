@@ -39,10 +39,6 @@ const NODES = [
   },
 ];
 
-// Handle positions: right = left + NODE_W + 4, left = left - 4, Y = top + handleY
-// node1 right: (214, 145)  node2 left: (251, 105) right: (454, 105)
-// node3 left: (486, 105) right: (689, 105)   node4 left: (251, 255) right: (454, 255)
-// node5 left: (706, 100)
 const EDGES = [
   { id: 'line1', d: 'M 214 145 C 232 145, 232 105, 251 105' },
   { id: 'line2', d: 'M 454 105 C 470 105, 470 105, 486 105' },
@@ -71,6 +67,8 @@ const MODAL_RULES = [
   { label: 'Manager Slack Notification', color: '#a78bfa' },
 ];
 
+
+
 interface EvaluateCoverProps {
   isExpanded?: boolean;
   isHovered?: boolean;
@@ -81,12 +79,87 @@ interface EvaluateCoverProps {
 export default function EvaluateCover({ isExpanded = false, isHovered = false, isActive = true, onCycleComplete }: EvaluateCoverProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
   const flipperRef = useRef<HTMLDivElement>(null);
+  const coverRef = useRef<SVGSVGElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const coverTlRef = useRef<gsap.core.Timeline | null>(null);
   const isHoveredRef = useRef(isHovered);
 
   useEffect(() => { isHoveredRef.current = isHovered; }, [isHovered]);
 
-  // ── Full canvas animation ──
+  // ═══ COVER ANIMATION — simple nodes + flow + checkmark ═══
+  useEffect(() => {
+    const svg = coverRef.current;
+    if (!svg) return;
+
+    if (coverTlRef.current) coverTlRef.current.kill();
+
+    const showFullCanvas = isHovered || isExpanded;
+    if (showFullCanvas) {
+      return; // full canvas handles hover
+    }
+    if (!isActive) {
+      // Show static state — cards + lines visible, no animation
+      svg.querySelectorAll('.cover-card').forEach(el => gsap.set(el, { opacity: 1, y: 0, borderColor: '' }));
+      svg.querySelectorAll('.cover-line').forEach(el => gsap.set(el, { strokeDashoffset: 0, opacity: 1 }));
+      svg.querySelectorAll('.cover-flow').forEach(el => gsap.set(el, { opacity: 0 }));
+      const result = svg.querySelector('.cover-result');
+      if (result) gsap.set(result, { opacity: 0 });
+      return;
+    }
+
+    const cards = svg.querySelectorAll('.cover-card');
+    const lines = svg.querySelectorAll('.cover-line');
+    const flows = svg.querySelectorAll('.cover-flow');
+    const result = svg.querySelector('.cover-result');
+
+    // Reset
+    cards.forEach(el => gsap.set(el, { opacity: 0, y: 20 }));
+    lines.forEach(el => gsap.set(el, { strokeDasharray: 200, strokeDashoffset: 200, opacity: 0 }));
+    flows.forEach(el => gsap.set(el, { opacity: 0 }));
+    if (result) gsap.set(result, { opacity: 0 });
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        if (!isHoveredRef.current && onCycleComplete) {
+          onCycleComplete();
+        }
+      },
+    });
+    coverTlRef.current = tl;
+
+    // 1. Cards slide in
+    tl.to(cards, { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)' });
+
+    // 2. Lines draw
+    tl.to(lines, { strokeDashoffset: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power2.inOut' }, '-=0.1');
+
+    // 3. Flow dots travel along lines (left pair then right pair)
+    const flowEls = Array.from(flows);
+    // Left pair: dot 0 travels (125,75)→(145,185), dot 1 travels (125,300)→(145,185)
+    if (flowEls[0]) tl.fromTo(flowEls[0], { attr: { cx: 125, cy: 75 }, opacity: 0 }, { attr: { cx: 145, cy: 185 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.1');
+    if (flowEls[1]) tl.fromTo(flowEls[1], { attr: { cx: 125, cy: 300 }, opacity: 0 }, { attr: { cx: 145, cy: 185 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.4');
+    tl.to([flowEls[0], flowEls[1]], { opacity: 0, duration: 0.15 });
+    // Right pair: dot 2 travels (265,185)→(285,140), dot 3 travels (265,185)→(285,260)
+    if (flowEls[2]) tl.fromTo(flowEls[2], { attr: { cx: 265, cy: 185 }, opacity: 0 }, { attr: { cx: 285, cy: 140 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.1');
+    if (flowEls[3]) tl.fromTo(flowEls[3], { attr: { cx: 265, cy: 185 }, opacity: 0 }, { attr: { cx: 285, cy: 260 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.4');
+    tl.to([flowEls[2], flowEls[3]], { opacity: 0, duration: 0.15 });
+
+    // 4. Cards pulse green border
+    tl.to(cards, { borderColor: '#22c55e', duration: 0.3, stagger: 0.05 }, '-=0.1');
+
+    // 5. Fade cards + lines
+    tl.to([cards, lines], { opacity: 0.15, duration: 0.4 }, '+=0.3');
+
+    // 6. Show checkmark + text overlay
+    if (result) tl.to(result, { opacity: 1, duration: 0.5, ease: 'power2.out' }, '-=0.2');
+
+    // 7. Hold
+    tl.to({}, { duration: 2 });
+
+    return () => { tl.kill(); };
+  }, [isHovered, isExpanded, isActive]);
+
+  // ═══ FULL CANVAS ANIMATION (on hover) ═══
   useEffect(() => {
     const scene = sceneRef.current;
     const flipper = flipperRef.current;
@@ -97,7 +170,7 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
 
     const tl = gsap.timeline({
       repeat: 0,
-      paused: !isActive,
+      paused: true,
       onComplete: () => {
         if (isHoveredRef.current) {
           NODES.forEach(n => { const el = scene.querySelector(`#${n.id}`); if (el) gsap.set(el, { opacity: 0 }); });
@@ -108,8 +181,6 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
             rotationY: 360, duration: 0.8, ease: 'power3.inOut',
             onComplete: () => { gsap.set(flipper, { rotationY: 0 }); tl.restart(); },
           });
-        } else {
-          if (onCycleComplete) onCycleComplete();
         }
       },
     });
@@ -145,38 +216,131 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
     return () => { tl.kill(); };
   }, [isExpanded]);
 
+  // Start/stop full canvas animation on hover
   useEffect(() => {
     const tl = tlRef.current;
     const flipper = flipperRef.current;
     const scene = sceneRef.current;
     if (!tl || !flipper || !scene) return;
 
-    if (isActive) {
+    if (isHovered) {
+      // Kill cover animation
+      if (coverTlRef.current) coverTlRef.current.kill();
+
       NODES.forEach(n => { const el = scene.querySelector(`#${n.id}`); if (el) gsap.set(el, { opacity: 0 }); });
       EDGES.forEach(e => { const el = scene.querySelector(`.${e.id}`); if (el) gsap.set(el, { strokeDashoffset: 500 }); });
       LABELS.forEach(l => { const el = scene.querySelector(`#${l.id}`); if (el) gsap.set(el, { opacity: 0, scale: 0.5 }); });
       const modalEls = scene.querySelectorAll('.modal-anim');
       gsap.set(modalEls, { y: 15, opacity: 0 });
-      const currentRotation = gsap.getProperty(flipper, 'rotationY') as number;
-      if (currentRotation >= 170) {
-        gsap.to(flipper, { rotationY: 360, duration: 0.8, ease: 'power3.inOut',
-          onComplete: () => { gsap.set(flipper, { rotationY: 0 }); tl.restart(); },
-        });
-      } else { gsap.set(flipper, { rotationY: 0 }); tl.restart(); }
-    } else { tl.pause(); }
-  }, [isActive]);
+      gsap.set(flipper, { rotationY: 0 });
+      tl.restart();
+    } else {
+      tl.pause();
+    }
+  }, [isHovered]);
 
   const showFullCanvas = isHovered || isExpanded;
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Empty cover at rest */}
+      {/* ═══ Cover Animation — mini card nodes → flow → checkmark ═══ */}
       {!showFullCanvas && (
-        <div style={{ width: '100%', height: '100%' }} />
+        <div
+          ref={coverRef}
+          style={{
+            width: '100%', height: '100%',
+            position: 'relative',
+          }}
+        >
+          {/* SVG overlay for connection lines + flow dots */}
+          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+            {/* Connection lines — from card right-center to card left-center */}
+            <line className="cover-line" x1="125" y1="75" x2="145" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+            <line className="cover-line" x1="125" y1="300" x2="145" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+            <line className="cover-line" x1="265" y1="185" x2="285" y2="140" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+            <line className="cover-line" x1="265" y1="185" x2="285" y2="260" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+            {/* Flow dots */}
+            <circle className="cover-flow" cx="125" cy="75" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+            <circle className="cover-flow" cx="125" cy="300" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+            <circle className="cover-flow" cx="265" cy="185" r="4" fill="#22c55e" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }} />
+            <circle className="cover-flow" cx="265" cy="185" r="4" fill="#22c55e" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }} />
+          </svg>
+
+          {/* Mini Node 1 — Category Limits (purple, top-left) — starts visible */}
+          <div className="cover-card" style={{ position: 'absolute', left: 15, top: 50, width: 110, borderRadius: 6, border: '1px solid #8b5cf6', background: '#2D2B3D', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
+            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+              <span style={{ fontSize: 8, fontWeight: 600, color: '#e9d5ff' }}>Category Limits</span>
+            </div>
+            <div style={{ padding: '6px 8px' }}>
+              <div style={{ height: 3, width: '75%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+              <div style={{ height: 3, width: '50%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+            </div>
+          </div>
+
+          {/* Mini Node 2 — Condition (orange, bottom-left) */}
+          <div className="cover-card" style={{ position: 'absolute', left: 15, top: 275, width: 110, borderRadius: 6, border: '1px solid #b45309', background: '#382718', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
+            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+              <span style={{ fontSize: 8, fontWeight: 600, color: '#fde68a' }}>Condition</span>
+            </div>
+            <div style={{ padding: '6px 8px' }}>
+              <div style={{ height: 3, width: '65%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+              <div style={{ height: 3, width: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+            </div>
+          </div>
+
+          {/* Mini Node 3 — Policy Check (blue, center) */}
+          <div className="cover-card" style={{ position: 'absolute', left: 145, top: 155, width: 120, borderRadius: 6, border: '1px solid #3b82f6', background: '#2B3045', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
+            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+              <span style={{ fontSize: 8, fontWeight: 600, color: '#bfdbfe' }}>Policy Check</span>
+            </div>
+            <div style={{ padding: '6px 8px' }}>
+              <div style={{ height: 3, width: '80%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+              <div style={{ height: 3, width: '55%', background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginBottom: 4 }} />
+              <div style={{ height: 3, width: '35%', background: 'rgba(255,255,255,0.04)', borderRadius: 2 }} />
+            </div>
+          </div>
+
+          {/* Mini Node 4 — Action (green, top-right) */}
+          <div className="cover-card" style={{ position: 'absolute', left: 285, top: 115, width: 110, borderRadius: 6, border: '1px solid #22c55e', background: '#25332C', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
+            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+              <span style={{ fontSize: 8, fontWeight: 600, color: '#bbf7d0' }}>Action</span>
+            </div>
+            <div style={{ padding: '6px 8px' }}>
+              <div style={{ height: 3, width: '70%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+              <div style={{ height: 3, width: '45%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+            </div>
+          </div>
+
+          {/* Mini Node 5 — Notify (dark, bottom-right) */}
+          <div className="cover-card" style={{ position: 'absolute', left: 285, top: 235, width: 110, borderRadius: 6, border: '1px solid #4c1d95', background: '#1a1924', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
+            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+              <span style={{ fontSize: 8, fontWeight: 600, color: '#ddd6fe' }}>Notify</span>
+            </div>
+            <div style={{ padding: '6px 8px' }}>
+              <div style={{ height: 3, width: '60%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+              <div style={{ height: 3, width: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+            </div>
+          </div>
+
+          {/* Checkmark result overlay */}
+          <div className="cover-result" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10, pointerEvents: 'none', opacity: 0 }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(34,197,94,0.1)', border: '2px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <polyline points="7,14 12,20 21,9" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span style={{ color: '#fff', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Transaction Verified</span>
+          </div>
+        </div>
       )}
 
-      {/* ═══ Full animated canvas — fills the container natively, no scaling ═══ */}
+      {/* ═══ Full animated canvas (shown on hover/expanded) ═══ */}
       <div
         ref={sceneRef}
         style={{
@@ -204,7 +368,6 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
             border: '1px solid #2A2B36', overflow: 'hidden',
             transform: 'rotateY(0deg)',
           }}>
-            {/* SVG edges */}
             <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
               {EDGES.map(e => (
                 <path key={e.id} className={e.id} d={e.d}
@@ -212,8 +375,6 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                   strokeDasharray={500} strokeDashoffset={500} />
               ))}
             </svg>
-
-            {/* Edge labels */}
             {LABELS.map(l => (
               <div key={l.id} id={l.id} style={{
                 position: 'absolute', left: l.left, top: l.top,
@@ -222,8 +383,6 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                 padding: '4px 10px', borderRadius: 12, zIndex: 3, opacity: 0,
               }}>{l.text}</div>
             ))}
-
-            {/* Node blocks */}
             {NODES.map(n => {
               const t = THEMES[n.theme];
               return (
@@ -232,12 +391,10 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                   borderRadius: 8, border: `1px solid ${t.border}`, backgroundColor: t.bg,
                   boxShadow: '0 12px 24px rgba(0,0,0,0.4)', zIndex: 2, opacity: 0,
                 }}>
-                  {/* Handles */}
                   <div style={{ position: 'absolute', left: -7, top: n.handleY, transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: t.handleBg, border: `2px solid ${t.bg}`, zIndex: 5 }} />
                   {n.id !== 'node5' && (
                     <div style={{ position: 'absolute', right: -7, top: n.handleY, transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: t.handleBg, border: `2px solid ${t.bg}`, zIndex: 5 }} />
                   )}
-                  {/* Header */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderTopLeftRadius: 8, borderTopRightRadius: 8, fontSize: 12, fontWeight: 600, backgroundColor: t.headerBg, color: t.headerColor }}>
                     {n.iconUrl ? (
                       <img src={n.iconUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'cover' }} />
@@ -247,7 +404,6 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                     <span>{n.title}</span>
                     {n.titleExtra && <span style={{ marginLeft: 'auto', fontSize: 10, color: '#9ca3af' }}>{n.titleExtra}</span>}
                   </div>
-                  {/* Body */}
                   <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
@@ -267,7 +423,7 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
             })}
           </div>
 
-          {/* ═══ BACK: Policy Card — compact, fills the column ═══ */}
+          {/* ═══ BACK: Policy Card ═══ */}
           <div style={{
             width: '100%', height: '100%', position: 'absolute', top: 0, left: 0,
             backfaceVisibility: 'hidden',
@@ -296,33 +452,21 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                 borderRight: '1px solid #2A2B36',
                 minWidth: 0,
               }}>
-                {/* Header row */}
                 <div className="modal-anim" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                   <h2 style={{ color: '#fff', margin: 0, fontSize: 17, fontWeight: 700, lineHeight: 1.3 }}>Automated Tuition Policy</h2>
                   <div style={{ background: '#2A2B36', color: '#aaa', width: 26, height: 26, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, marginLeft: 12 }}>✕</div>
                 </div>
-
-                {/* Status badge */}
                 <div className="modal-anim" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <span style={{ background: '#1B4527', color: '#4ade80', padding: '2px 8px', borderRadius: 10, fontSize: 9, fontWeight: 700, border: '1px solid #22c55e' }}>● ACTIVE</span>
                   <span style={{ color: '#6b7280', fontSize: 10 }}>Live as of 10/02/2026</span>
                 </div>
-
-                {/* Description */}
-                <p className="modal-anim" style={{
-                  color: '#9ca3af', fontSize: 12, margin: 0, marginBottom: 16,
-                  paddingBottom: 14, borderBottom: '1px solid #2A2B36', lineHeight: 1.55,
-                }}>
+                <p className="modal-anim" style={{ color: '#9ca3af', fontSize: 12, margin: 0, marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid #2A2B36', lineHeight: 1.55 }}>
                   This automated workflow enforces strict annual budget caps before evaluating specialized curriculum and provider requirements.
                 </p>
-
-                {/* Applied group */}
                 <div className="modal-anim" style={{ marginBottom: 16 }}>
                   <span style={{ fontSize: 9, color: '#6b7280', display: 'block', marginBottom: 5, letterSpacing: 0.5, fontWeight: 600 }}>APPLIES TO</span>
                   <span style={{ background: '#1e3a5f', color: '#93c5fd', padding: '4px 10px', borderRadius: 14, fontSize: 10, fontWeight: 500, border: '1px solid #3b82f6', display: 'inline-block' }}>👥 Global Employees</span>
                 </div>
-
-                {/* Buttons */}
                 <div className="modal-anim" style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
                   <button style={{ padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, border: 'none', background: '#2A2B36', color: '#fff', cursor: 'pointer' }}>Close</button>
                   <button style={{ padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer' }}>✏️ Edit Flow</button>
@@ -339,7 +483,6 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                 justifyContent: 'center',
               }}>
                 <h4 className="modal-anim" style={{ color: '#6b7280', fontSize: 10, margin: '0 0 12px 0', letterSpacing: 0.5, fontWeight: 600 }}>LOGIC NODES (5)</h4>
-
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {MODAL_RULES.map((r, i) => (
                     <div key={i} className="modal-anim" style={{
@@ -352,16 +495,14 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
                     </div>
                   ))}
                 </div>
-
-                {/* Source tag */}
                 <div className="modal-anim" style={{ marginTop: 14, fontSize: 9, color: '#555', letterSpacing: 0.5 }}>
                   
                 </div>
               </div>
-              </div>
             </div>
             </div>
           </div>
+        </div>
       </div>
     </div>
   );
