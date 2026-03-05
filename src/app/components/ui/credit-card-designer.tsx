@@ -816,9 +816,6 @@ export default function CreditCardDesigner() {
   const selectedData = elements.find(el => el.id === selectedElement);
   const comps = [
     { type: 'text' as const, icon: Type, label: 'Text', dv: 'Double click to edit' },
-    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: 'XXXX XXXX XXXX XXXX' },
-    { type: 'circle' as const, icon: Circle, label: 'Circle', dv: '' },
-    { type: 'rectangle' as const, icon: Square, label: 'Rectangle', dv: '' },
     { type: 'icon' as const, icon: Sparkles, label: 'Icon', dv: '' },
     { type: 'image' as const, icon: Upload, label: 'Upload Logo', dv: '' },
   ];
