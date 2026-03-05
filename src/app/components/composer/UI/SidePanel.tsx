@@ -227,8 +227,8 @@ export default function SidePanel({ onAddNode }: SidePanelProps) {
             animate={{ x: 0 }}
             exit={{ x: -320 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed left-0 top-12 bottom-0 w-80 border-r z-40 flex flex-col shadow-xl"
-            style={{ background: 'var(--dark-gray)', borderColor: 'rgba(255,255,255,0.06)' }}
+            className="fixed left-0 bottom-0 w-80 border-r z-40 flex flex-col shadow-xl"
+            style={{ top: 70, background: 'var(--dark-gray)', borderColor: 'rgba(255,255,255,0.06)' }}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>

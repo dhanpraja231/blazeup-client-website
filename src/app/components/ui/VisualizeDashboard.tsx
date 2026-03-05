@@ -587,7 +587,7 @@ function EmployeeLookup() {
   );
 }
 
-/* ═══════════════ SUBMIT MODAL ═══════════════ */
+/* ═══════════════ SUBMIT MODAL ═══════════════ 
 function SubmitModal({ onClose, widgetCount }: { onClose: () => void; widgetCount: number }) {
   const [submitted, setSubmitted] = useState(false);
   return (
@@ -627,12 +627,12 @@ function SubmitModal({ onClose, widgetCount }: { onClose: () => void; widgetCoun
     </div>
   );
 }
-
+*/
 /* ═══════════════ MAIN DASHBOARD ═══════════════ */
 export default function VisualizeDashboard() {
   const [mode, setMode] = useState<DashboardMode>('edit');
   const [zones, setZones] = useState<Record<string, PlacedWidget>>({});
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
+ // const [showSubmitModal, setShowSubmitModal] = useState(false); submit button yeehaw
   const [light, setLight] = useState(false);
   const L = light;
 
@@ -681,10 +681,10 @@ export default function VisualizeDashboard() {
                   <Eye className="w-3.5 h-3.5" /> Preview
                 </button>
               </div>
-              <button onClick={() => setShowSubmitModal(true)} disabled={widgetCount === 0}
+              {/* <button onClick={() => setShowSubmitModal(true)} disabled={widgetCount === 0}
                 className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-30 disabled:cursor-not-allowed">
                 <Send className="w-3.5 h-3.5" /> Submit
-              </button>
+              </button> */}
               <button onClick={() => setLight(v => !v)} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 text-sm" style={{ background: L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`, color: L ? '#475569' : 'rgba(255,255,255,0.5)' }}>
                 {L ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
               </button>
@@ -764,7 +764,7 @@ export default function VisualizeDashboard() {
         </div>
       </div>
 
-      {showSubmitModal && <SubmitModal onClose={() => setShowSubmitModal(false)} widgetCount={widgetCount} />}
+      {/* {showSubmitModal && <SubmitModal onClose={() => setShowSubmitModal(false)} widgetCount={widgetCount} />} */}
     </div>
     </ThemeCtx.Provider>
   );

@@ -248,7 +248,7 @@ export default function CreditCardDesigner() {
   const [backBg, setBackBg] = useState(() => _saved.current?.backBg ?? 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [expandedPanel, setExpandedPanel] = useState<string | null>('components');
+  const [expandedPanel, setExpandedPanel] = useState<string | null>('');
   const [collisionWarn, setCollisionWarn] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [spotlightColor, setSpotlightColor] = useState(() => _saved.current?.spotlightColor ?? '#3535cf');
