@@ -11,23 +11,23 @@ const NODES = [
     id: 'node1', theme: 'purple', iconUrl: '', title: 'Category Limits',
     bodyTitle: 'Tuition Reimbursement', bodySub: 'per calendar year',
     amount: '₹105,000', extra: '+ Add category',
-    left: 15, top: 80, handleY: 65,
+    left: 90, top: 80, handleY: 65,
   },
   {
     id: 'node2', theme: 'blue', iconUrl: '', title: 'Policy Check',
     bodyTitle: 'Course Approval Requirements', bodySub: '4 items configured',
     footer: 'Approval Required',
-    left: 255, top: 45, handleY: 60,
+    left: 430, top: 40, handleY: 60,
   },
   {
     id: 'node3', theme: 'green', iconUrl: '', title: 'Action',
     bodyTitle: 'Approve Reimbursement', bodySub: 'Tuition reimbursement approved',
-    left: 490, top: 50, handleY: 55,
+    left: 780, top: 70, handleY: 55,
   },
   {
     id: 'node4', theme: 'orange', iconUrl: '', title: 'Condition',
     bodyTitle: 'employment_status', bodySub: '= full_time',
-    left: 255, top: 200, handleY: 55,
+    left: 430, top: 225, handleY: 55,
   },
   {
     id: 'node5', theme: 'dark', iconUrl: '', title: 'Slack',
@@ -35,21 +35,21 @@ const NODES = [
     bodyTitle: 'Notify HR & Manager',
     bodySub: 'Tuition reimbursement approved for {employee_name} - ₹{amount}',
     connected: true,
-    left: 710, top: 45, handleY: 55,
+    left: 1070, top: 85, handleY: 55,
   },
 ];
 
 const EDGES = [
-  { id: 'line1', d: 'M 214 145 C 232 145, 232 105, 251 105' },
-  { id: 'line2', d: 'M 454 105 C 470 105, 470 105, 486 105' },
-  { id: 'line3', d: 'M 214 145 C 232 145, 232 255, 251 255' },
-  { id: 'line4', d: 'M 454 255 C 470 255, 470 105, 486 105' },
-  { id: 'line5', d: 'M 689 105 C 698 105, 698 100, 706 100' },
+  { id: 'line1', d: 'M 285 145 C 357 145, 357 100, 430 100' }, // node1 -> node2
+  { id: 'line2', d: 'M 625 100 C 703 100, 703 125, 780 125' }, // node2 -> node3
+  { id: 'line3', d: 'M 285 145 C 357 145, 357 280, 430 280' }, // node1 -> node4
+  { id: 'line4', d: 'M 625 280 C 703 280, 703 125, 780 125' }, // node4 -> node3
+  { id: 'line5', d: 'M 975 125 C 1023 125, 1023 140, 1070 140' }, // node3 -> node5
 ];
 
 const LABELS = [
-  { id: 'label1', text: 'Within limit', left: 206, top: 85 },
-  { id: 'label2', text: 'Eligible course', left: 458, top: 82 },
+  { id: 'label1', text: 'Within limit', left: 315, top: 110 },
+  { id: 'label2', text: 'Eligible course', left: 660, top: 95 },
 ];
 
 const THEMES: Record<string, { border: string; bg: string; headerBg: string; headerColor: string; accent: string; handleBg: string }> = {
