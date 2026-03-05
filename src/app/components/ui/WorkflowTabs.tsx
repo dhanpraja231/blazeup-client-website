@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
@@ -79,11 +79,46 @@ const COLUMNS: ColumnConfig[] = [
   },
 ];
 
+// ── Static styles extracted to avoid re-allocation on every render ──
+const COVER_CONTAINER_STYLE: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  cursor: 'pointer',
+  position: 'relative',
+  overflow: 'hidden',
+};
+
+const COVER_CONTENT_STYLE: React.CSSProperties = {
+  flex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: 0,
+  overflow: 'hidden',
+  padding: '16px 12px 0',
+};
+
+const COVER_LABEL_STYLE: React.CSSProperties = {
+  flexShrink: 0,
+  textAlign: 'center',
+  padding: '16px 16px 20px',
+};
+
+const COVER_LABEL_H3_STYLE: React.CSSProperties = {
+  fontSize: 28,
+  fontWeight: 700,
+  color: '#fff',
+  marginBottom: 0,
+  letterSpacing: '-0.02em',
+};
+
 /* ═══════════ Main Component ═══════════ */
 export default function WorkflowTabs() {
   const [expandedColumn, setExpandedColumn] = useState<ColumnId | null>(null);
   const [hoveredColumn, setHoveredColumn] = useState<ColumnId | null>(null);
   const [activeAnimCol, setActiveAnimCol] = useState<ColumnId>('design');
+  const [isMobile, setIsMobile] = useState(false);
   const isHoveringRef = useRef(false);
   const columnRefs = useRef<Record<ColumnId, HTMLDivElement | null>>({
     design: null,
@@ -91,6 +126,15 @@ export default function WorkflowTabs() {
     visualize: null,
   });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const ANIM_ORDER: ColumnId[] = ['design', 'evaluate', 'visualize'];
 
@@ -113,12 +157,14 @@ export default function WorkflowTabs() {
           borderColor: 'rgba(255,255,255,0.12)',
           duration: 0.5,
           ease: 'power2.out',
+          overwrite: 'auto',
         });
       } else {
         gsap.to(el, {
           borderColor: 'rgba(255,255,255,0.06)',
           duration: 0.5,
           ease: 'power2.out',
+          overwrite: 'auto',
         });
       }
     });
@@ -146,7 +192,7 @@ export default function WorkflowTabs() {
 
   // GSAP hover animation for columns
   const handleColumnHover = useCallback((colId: ColumnId) => {
-    if (expandedColumn) return; // don't animate hover when one is expanded
+    if (expandedColumn || isMobile) return; // don't animate hover when expanded or on mobile
 
     isHoveringRef.current = true;
     setHoveredColumn(colId);
@@ -164,36 +210,29 @@ export default function WorkflowTabs() {
       if (c.id === colId) {
         gsap.to(el, {
           flex: isEvaluate ? 6 : 1.5,
-          duration: 0.5,
-          ease: 'power3.out',
-        });
-        // Subtle border highlight on hover (no glow)
-        gsap.to(el, {
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           borderColor: 'rgba(255,255,255,0.15)',
           opacity: 1,
-          duration: 0.4,
-          ease: 'power2.out',
+          duration: 0.45,
+          ease: 'power3.out',
+          overwrite: true,
         });
       } else {
         gsap.to(el, {
           flex: isEvaluate ? 0.15 : 0.85,
           opacity: isEvaluate ? 0 : 1,
-          duration: 0.5,
-          ease: 'power3.out',
-        });
-        gsap.to(el, {
           boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
           borderColor: 'rgba(255,255,255,0.06)',
-          duration: 0.4,
-          ease: 'power2.out',
+          duration: 0.45,
+          ease: 'power3.out',
+          overwrite: true,
         });
       }
     });
-  }, [expandedColumn]);
+  }, [expandedColumn, isMobile]);
 
   const handleColumnLeave = useCallback(() => {
-    if (expandedColumn) return;
+    if (expandedColumn || isMobile) return;
 
     isHoveringRef.current = false;
     setHoveredColumn(null);
@@ -212,7 +251,7 @@ export default function WorkflowTabs() {
         overwrite: true,
       });
     });
-  }, [expandedColumn]);
+  }, [expandedColumn, isMobile]);
 
   const handleExpand = useCallback((colId: ColumnId) => {
     setExpandedColumn(colId);
@@ -239,20 +278,47 @@ export default function WorkflowTabs() {
     });
   }, []);
 
+  // ── Memoized cover props to prevent unnecessary child re-renders ──
+  const designActive = activeAnimCol === 'design';
+  const evaluateActive = activeAnimCol === 'evaluate';
+  const evaluateHovered = hoveredColumn === 'evaluate';
+  const visualizeActive = activeAnimCol === 'visualize';
+
+  const designCover = useMemo(() => (
+    <FlippingCardCover isActive={designActive} onCycleComplete={advanceAnimation} />
+  ), [designActive, advanceAnimation]);
+
+  const evaluateCover = useMemo(() => (
+    <EvaluateCover isHovered={evaluateHovered} isActive={evaluateActive} onCycleComplete={advanceAnimation} />
+  ), [evaluateHovered, evaluateActive, advanceAnimation]);
+
+  const visualizeCover = useMemo(() => (
+    <VisualizeCover isActive={visualizeActive} onCycleComplete={advanceAnimation} />
+  ), [visualizeActive, advanceAnimation]);
+
+  const evaluateCollapsedIcon = useMemo(() => (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      height: '100%',
+      opacity: 0.3,
+    }}>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
+        <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M7 16l4-8 4 4 5-6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  ), []);
+
   /* ── Cover content for each column ── */
-  const renderCover = (col: ColumnConfig) => {
+  const renderCover = useCallback((col: ColumnConfig) => {
     const isHovered = hoveredColumn === col.id;
 
     return (
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          cursor: 'pointer',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
+        style={COVER_CONTAINER_STYLE}
         onClick={() => handleExpand(col.id)}
       >
         {/* Background gradient accent */}
@@ -269,65 +335,22 @@ export default function WorkflowTabs() {
           }}
         />
 
-
-
         {/* Content area — fills available space above label */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 0,
-          overflow: 'hidden',
-          padding: '16px 12px 0',
-        }}>
-          {/* Special card animation for Design column */}
+        <div style={COVER_CONTENT_STYLE}>
           {col.id === 'design' && (
-            <div style={{ margin: '0' }}>
-              <FlippingCardCover isActive={activeAnimCol === 'design'} onCycleComplete={advanceAnimation} />
-            </div>
+            <div style={{ margin: '0' }}>{designCover}</div>
           )}
 
-          {/* Evaluate cover — empty at rest, animated on hover */}
-          {col.id === 'evaluate' && (
-            <EvaluateCover isHovered={hoveredColumn === 'evaluate'} isActive={activeAnimCol === 'evaluate'} onCycleComplete={advanceAnimation} />
-          )}
+          {col.id === 'evaluate' && evaluateCover}
 
-          {/* Visualize cover — hide charts when evaluate is hovered */}
           {col.id === 'visualize' && (
-            hoveredColumn === 'evaluate' ? (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                height: '100%',
-                opacity: 0.3,
-              }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
-                  <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M7 16l4-8 4 4 5-6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            ) : (
-              <VisualizeCover isActive={activeAnimCol === 'visualize'} onCycleComplete={advanceAnimation} />
-            )
+            evaluateHovered ? evaluateCollapsedIcon : visualizeCover
           )}
         </div>
 
         {/* Label — always pinned at bottom */}
-        <div style={{
-          flexShrink: 0,
-          textAlign: 'center',
-          padding: '16px 16px 20px',
-        }}>
-          <h3 style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: '#fff',
-            marginBottom: 0,
-            letterSpacing: '-0.02em',
-          }}>
+        <div style={COVER_LABEL_STYLE}>
+          <h3 style={COVER_LABEL_H3_STYLE}>
             {col.label}
           </h3>
         </div>
@@ -352,10 +375,10 @@ export default function WorkflowTabs() {
         </motion.div>
       </div>
     );
-  };
+  }, [hoveredColumn, handleExpand, designCover, evaluateCover, visualizeCover, evaluateHovered, evaluateCollapsedIcon]);
 
-  /* ── Expanded full-screen overlay ── */
-  const renderExpandedView = () => {
+  /* ── Expanded full-screen overlay (memoized) ── */
+  const renderExpandedView = useCallback(() => {
     if (!expandedColumn) return null;
     const col = COLUMNS.find(c => c.id === expandedColumn)!;
 
@@ -502,7 +525,7 @@ export default function WorkflowTabs() {
         </motion.div>
       </AnimatePresence>
     );
-  };
+  }, [expandedColumn, handleClose]);
 
   return (
     <>
@@ -533,8 +556,9 @@ export default function WorkflowTabs() {
             onMouseLeave={handleColumnLeave}
             style={{
               display: 'flex',
-              gap: 16,
-              minHeight: 520,
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? 12 : 16,
+              minHeight: isMobile ? undefined : 520,
             }}
           >
             {COLUMNS.map((col, idx) => (
@@ -547,7 +571,8 @@ export default function WorkflowTabs() {
                 viewport={{ once: true }}
                 onMouseEnter={() => handleColumnHover(col.id)}
                 style={{
-                  flex: 1,
+                  flex: isMobile ? 'none' : 1,
+                  height: isMobile ? 350 : undefined,
                   borderRadius: 20,
                   border: '1px solid rgba(255,255,255,0.06)',
                   background: 'rgba(255,255,255,0.02)',
@@ -555,7 +580,8 @@ export default function WorkflowTabs() {
                   overflow: 'hidden',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
                   transition: 'none',
-                  willChange: 'flex, box-shadow',
+                  willChange: isMobile ? undefined : 'flex, box-shadow, opacity',
+                  transform: 'translateZ(0)',
                 }}
               >
                 {renderCover(col)}

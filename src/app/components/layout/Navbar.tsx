@@ -44,7 +44,11 @@ export default function Navbar() {
   };
 
   const handleLogoClick = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.location.pathname === '/home' || window.location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.location.href = '/home';
+    }
   };
 
   return (

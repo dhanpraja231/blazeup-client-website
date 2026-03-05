@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import gsap from 'gsap';
 
 // ── Rich gradient palette ──
@@ -45,7 +45,7 @@ function randomItem<T>(arr: T[]): T {
 
 
 
-export default function FlippingCardCover({ isActive = true, onCycleComplete }: { isActive?: boolean; onCycleComplete?: () => void }) {
+export default React.memo(function FlippingCardCover({ isActive = true, onCycleComplete }: { isActive?: boolean; onCycleComplete?: () => void }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const cardFaceRef = useRef<HTMLDivElement>(null);
   const patternRef = useRef<HTMLDivElement>(null);
@@ -118,9 +118,10 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
       opacity: 0,
       duration: 0.5,
       ease: 'power2.inOut',
+      overwrite: 'auto',
       onComplete: () => {
         pattern.style.backgroundImage = patternUrl;
-        gsap.to(pattern, { opacity: 0.6, duration: 0.5, ease: 'power2.inOut' });
+        gsap.to(pattern, { opacity: 0.6, duration: 0.5, ease: 'power2.inOut', overwrite: 'auto' });
       },
     });
 
@@ -136,6 +137,7 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
       opacity: 1,
       duration: 0.8,
       ease: 'power1.inOut',
+      overwrite: 'auto',
       onComplete: () => {
         face.style.background = nextGradient;
         overlay.remove();
@@ -145,7 +147,7 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
 
 
     // Scramble card number + update text
-    scrambleToNewNumber();
+    // scrambleToNewNumber();
     setDesign(generateRandomDesign());
   }, [generateRandomDesign, scrambleToNewNumber]);
 
@@ -262,6 +264,8 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
             overflow: 'hidden',
             background: COVER_GRADIENTS[0],
             boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            willChange: 'transform, opacity',
+            transform: 'translateZ(0)',
           }}
         >
           {/* Pattern overlay */}
@@ -430,4 +434,4 @@ export default function FlippingCardCover({ isActive = true, onCycleComplete }: 
       </div>
     </div>
   );
-}
+});

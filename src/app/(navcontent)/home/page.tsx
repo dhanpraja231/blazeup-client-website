@@ -11,7 +11,8 @@ export default function HomePage() {
       <Hero />
       <WorkflowTabs />
       <Integrations />
-      <Pricing />
+      {/*  <Pricing /> */}
+
       {/* <Testimonials /> */}
       {/* <Footer /> */}
     </main>

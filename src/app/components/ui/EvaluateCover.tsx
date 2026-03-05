@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 
 // ── Node data — coordinates designed for ~900×450 expanded column ──
@@ -76,7 +76,7 @@ interface EvaluateCoverProps {
   onCycleComplete?: () => void;
 }
 
-export default function EvaluateCover({ isExpanded = false, isHovered = false, isActive = true, onCycleComplete }: EvaluateCoverProps) {
+export default React.memo(function EvaluateCover({ isExpanded = false, isHovered = false, isActive = true, onCycleComplete }: EvaluateCoverProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
   const flipperRef = useRef<HTMLDivElement>(null);
   const coverRef = useRef<HTMLDivElement>(null);
@@ -84,6 +84,16 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
   const coverTlRef = useRef<gsap.core.Timeline | null>(null);
   const isHoveredRef = useRef(isHovered);
   const hasPlayedRef = useRef(false);
+  const [isTooSmall, setIsTooSmall] = useState(false);
+
+  // Detect truly small viewports (phones) — NOT container resize from hover
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 480px)');
+    setIsTooSmall(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsTooSmall(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => { isHoveredRef.current = isHovered; }, [isHovered]);
 
@@ -95,8 +105,8 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
     if (coverTlRef.current) coverTlRef.current.kill();
 
     const showFullCanvas = isHovered || isExpanded;
-    if (showFullCanvas) {
-      return; // full canvas handles hover
+    if (showFullCanvas || isTooSmall) {
+      return; // full canvas handles hover; isTooSmall shows fallback
     }
     if (!isActive) {
       // Show static state — cards + lines visible, no animation
@@ -141,9 +151,9 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
 
     if (isFirstPlay) {
       // 1. Cards slide in
-      tl.to(cards, { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)' });
+      tl.to(cards, { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)', overwrite: 'auto' });
       // 2. Lines draw
-      tl.to(lines, { strokeDashoffset: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power2.inOut' }, '-=0.1');
+      tl.to(lines, { strokeDashoffset: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power2.inOut', overwrite: 'auto' }, '-=0.1');
     }
 
     // 3. Flow dots travel along lines (left pair then right pair)
@@ -151,26 +161,28 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
     // Left pair: dot 0 travels (125,75)→(145,185), dot 1 travels (125,300)→(145,185)
     if (flowEls[0]) tl.fromTo(flowEls[0], { attr: { cx: 125, cy: 75 }, opacity: 0 }, { attr: { cx: 145, cy: 185 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.1');
     if (flowEls[1]) tl.fromTo(flowEls[1], { attr: { cx: 125, cy: 300 }, opacity: 0 }, { attr: { cx: 145, cy: 185 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.4');
-    tl.to([flowEls[0], flowEls[1]], { opacity: 0, duration: 0.15 });
+    const leftDots = [flowEls[0], flowEls[1]].filter(Boolean);
+    if (leftDots.length) tl.to(leftDots, { opacity: 0, duration: 0.15 });
     // Right pair: dot 2 travels (265,185)→(285,140), dot 3 travels (265,185)→(285,260)
     if (flowEls[2]) tl.fromTo(flowEls[2], { attr: { cx: 265, cy: 185 }, opacity: 0 }, { attr: { cx: 285, cy: 140 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.1');
     if (flowEls[3]) tl.fromTo(flowEls[3], { attr: { cx: 265, cy: 185 }, opacity: 0 }, { attr: { cx: 285, cy: 260 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.4');
-    tl.to([flowEls[2], flowEls[3]], { opacity: 0, duration: 0.15 });
+    const rightDots = [flowEls[2], flowEls[3]].filter(Boolean);
+    if (rightDots.length) tl.to(rightDots, { opacity: 0, duration: 0.15 });
 
     // 4. Cards pulse green border
-    tl.to(cards, { borderColor: '#22c55e', duration: 0.3, stagger: 0.05 }, '-=0.1');
+    tl.to(cards, { borderColor: '#22c55e', duration: 0.3, stagger: 0.05, overwrite: 'auto' }, '-=0.1');
 
     // 5. Fade cards + lines
-    tl.to([cards, lines], { opacity: 0.15, duration: 0.4 }, '+=0.3');
+    tl.to([cards, lines], { opacity: 0.15, duration: 0.4, overwrite: 'auto' }, '+=0.3');
 
     // 6. Show checkmark + text overlay
-    if (result) tl.to(result, { opacity: 1, duration: 0.5, ease: 'power2.out' }, '-=0.2');
+    if (result) tl.to(result, { opacity: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' }, '-=0.2');
 
     // 7. Hold
     tl.to({}, { duration: 1 });
 
     return () => { tl.kill(); };
-  }, [isHovered, isExpanded, isActive]);
+  }, [isHovered, isExpanded, isActive, isTooSmall]);
 
   // ═══ FULL CANVAS ANIMATION (on hover) ═══
   useEffect(() => {
@@ -266,90 +278,125 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
             position: 'relative',
           }}
         >
-          {/* SVG overlay for connection lines + flow dots */}
-          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-            {/* Connection lines — from card right-center to card left-center */}
-            <line className="cover-line" x1="125" y1="75" x2="145" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
-            <line className="cover-line" x1="125" y1="300" x2="145" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
-            <line className="cover-line" x1="265" y1="185" x2="285" y2="140" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
-            <line className="cover-line" x1="265" y1="185" x2="285" y2="260" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
-            {/* Flow dots */}
-            <circle className="cover-flow" cx="125" cy="75" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
-            <circle className="cover-flow" cx="125" cy="300" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
-            <circle className="cover-flow" cx="265" cy="185" r="4" fill="#22c55e" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }} />
-            <circle className="cover-flow" cx="265" cy="185" r="4" fill="#22c55e" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }} />
-          </svg>
-
-          {/* Mini Node 1 — Category Limits (purple, top-left) — starts visible */}
-          <div className="cover-card" style={{ position: 'absolute', left: 15, top: 50, width: 110, borderRadius: 6, border: '1px solid #8b5cf6', background: '#2D2B3D', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
-            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
-              <span style={{ fontSize: 8, fontWeight: 600, color: '#e9d5ff' }}>Category Limits</span>
-            </div>
-            <div style={{ padding: '6px 8px' }}>
-              <div style={{ height: 3, width: '75%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
-              <div style={{ height: 3, width: '50%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
-            </div>
-          </div>
-
-          {/* Mini Node 2 — Condition (orange, bottom-left) */}
-          <div className="cover-card" style={{ position: 'absolute', left: 15, top: 275, width: 110, borderRadius: 6, border: '1px solid #b45309', background: '#382718', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
-            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
-              <span style={{ fontSize: 8, fontWeight: 600, color: '#fde68a' }}>Condition</span>
-            </div>
-            <div style={{ padding: '6px 8px' }}>
-              <div style={{ height: 3, width: '65%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
-              <div style={{ height: 3, width: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
-            </div>
-          </div>
-
-          {/* Mini Node 3 — Policy Check (blue, center) */}
-          <div className="cover-card" style={{ position: 'absolute', left: 145, top: 155, width: 120, borderRadius: 6, border: '1px solid #3b82f6', background: '#2B3045', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
-            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
-              <span style={{ fontSize: 8, fontWeight: 600, color: '#bfdbfe' }}>Policy Check</span>
-            </div>
-            <div style={{ padding: '6px 8px' }}>
-              <div style={{ height: 3, width: '80%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
-              <div style={{ height: 3, width: '55%', background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginBottom: 4 }} />
-              <div style={{ height: 3, width: '35%', background: 'rgba(255,255,255,0.04)', borderRadius: 2 }} />
-            </div>
-          </div>
-
-          {/* Mini Node 4 — Action (green, top-right) */}
-          <div className="cover-card" style={{ position: 'absolute', left: 285, top: 115, width: 110, borderRadius: 6, border: '1px solid #22c55e', background: '#25332C', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
-            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
-              <span style={{ fontSize: 8, fontWeight: 600, color: '#bbf7d0' }}>Action</span>
-            </div>
-            <div style={{ padding: '6px 8px' }}>
-              <div style={{ height: 3, width: '70%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
-              <div style={{ height: 3, width: '45%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
-            </div>
-          </div>
-
-          {/* Mini Node 5 — Notify (dark, bottom-right) */}
-          <div className="cover-card" style={{ position: 'absolute', left: 285, top: 235, width: 110, borderRadius: 6, border: '1px solid #4c1d95', background: '#1a1924', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: 1, zIndex: 2 }}>
-            <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
-              <span style={{ fontSize: 8, fontWeight: 600, color: '#ddd6fe' }}>Notify</span>
-            </div>
-            <div style={{ padding: '6px 8px' }}>
-              <div style={{ height: 3, width: '60%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
-              <div style={{ height: 3, width: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
-            </div>
-          </div>
-
-          {/* Checkmark result overlay */}
-          <div className="cover-result" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10, pointerEvents: 'none', opacity: 0 }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(34,197,94,0.1)', border: '2px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <polyline points="7,14 12,20 21,9" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          {isTooSmall ? (
+            /* ── Mobile fallback: message instead of animation ── */
+            <div style={{
+              width: '100%', height: '100%',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 12, padding: 20,
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(99,102,241,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8" />
+                <path d="M12 17v4" />
               </svg>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 500, textAlign: 'center', lineHeight: 1.5 }}>
+                View on a larger screen<br/>for the best experience
+              </span>
             </div>
-            <span style={{ color: '#fff', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Transaction Verified</span>
-          </div>
+          ) : (
+            /* ── Scaled SVG cover animation ── */
+            <svg
+              style={{ width: '100%', height: '100%', display: 'block' }}
+              viewBox="0 0 420 360"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              {/* Connection lines */}
+              <line className="cover-line" x1="125" y1="75" x2="145" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              <line className="cover-line" x1="125" y1="300" x2="145" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              <line className="cover-line" x1="265" y1="185" x2="285" y2="140" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              <line className="cover-line" x1="265" y1="185" x2="285" y2="260" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              {/* Flow dots */}
+              <circle className="cover-flow" cx="125" cy="75" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+              <circle className="cover-flow" cx="125" cy="300" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+              <circle className="cover-flow" cx="265" cy="185" r="4" fill="#22c55e" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }} />
+              <circle className="cover-flow" cx="265" cy="185" r="4" fill="#22c55e" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }} />
+
+              {/* Card 1 — Category Limits (purple) */}
+              <foreignObject className="cover-card" x="15" y="50" width="110" height="55" style={{ overflow: 'visible' }}>
+                <div style={{ width: 110, borderRadius: 6, border: '1px solid #8b5cf6', background: '#2D2B3D', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                  <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+                    <span style={{ fontSize: 8, fontWeight: 600, color: '#e9d5ff' }}>Category Limits</span>
+                  </div>
+                  <div style={{ padding: '6px 8px' }}>
+                    <div style={{ height: 3, width: '75%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+                    <div style={{ height: 3, width: '50%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+                  </div>
+                </div>
+              </foreignObject>
+
+              {/* Card 2 — Condition (orange) */}
+              <foreignObject className="cover-card" x="15" y="275" width="110" height="55" style={{ overflow: 'visible' }}>
+                <div style={{ width: 110, borderRadius: 6, border: '1px solid #b45309', background: '#382718', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                  <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+                    <span style={{ fontSize: 8, fontWeight: 600, color: '#fde68a' }}>Condition</span>
+                  </div>
+                  <div style={{ padding: '6px 8px' }}>
+                    <div style={{ height: 3, width: '65%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+                    <div style={{ height: 3, width: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+                  </div>
+                </div>
+              </foreignObject>
+
+              {/* Card 3 — Policy Check (blue) */}
+              <foreignObject className="cover-card" x="145" y="155" width="120" height="70" style={{ overflow: 'visible' }}>
+                <div style={{ width: 120, borderRadius: 6, border: '1px solid #3b82f6', background: '#2B3045', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                  <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+                    <span style={{ fontSize: 8, fontWeight: 600, color: '#bfdbfe' }}>Policy Check</span>
+                  </div>
+                  <div style={{ padding: '6px 8px' }}>
+                    <div style={{ height: 3, width: '80%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+                    <div style={{ height: 3, width: '55%', background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginBottom: 4 }} />
+                    <div style={{ height: 3, width: '35%', background: 'rgba(255,255,255,0.04)', borderRadius: 2 }} />
+                  </div>
+                </div>
+              </foreignObject>
+
+              {/* Card 4 — Action (green) */}
+              <foreignObject className="cover-card" x="285" y="115" width="110" height="55" style={{ overflow: 'visible' }}>
+                <div style={{ width: 110, borderRadius: 6, border: '1px solid #22c55e', background: '#25332C', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                  <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+                    <span style={{ fontSize: 8, fontWeight: 600, color: '#bbf7d0' }}>Action</span>
+                  </div>
+                  <div style={{ padding: '6px 8px' }}>
+                    <div style={{ height: 3, width: '70%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+                    <div style={{ height: 3, width: '45%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+                  </div>
+                </div>
+              </foreignObject>
+
+              {/* Card 5 — Notify (dark) */}
+              <foreignObject className="cover-card" x="285" y="235" width="110" height="55" style={{ overflow: 'visible' }}>
+                <div style={{ width: 110, borderRadius: 6, border: '1px solid #4c1d95', background: '#1a1924', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                  <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+                    <span style={{ fontSize: 8, fontWeight: 600, color: '#ddd6fe' }}>Notify</span>
+                  </div>
+                  <div style={{ padding: '6px 8px' }}>
+                    <div style={{ height: 3, width: '60%', background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }} />
+                    <div style={{ height: 3, width: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+                  </div>
+                </div>
+              </foreignObject>
+
+              {/* Checkmark result overlay */}
+              <foreignObject className="cover-result" x="0" y="0" width="420" height="360" style={{ pointerEvents: 'none', opacity: 0 }}>
+                <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(34,197,94,0.1)', border: '2px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                      <polyline points="7,14 12,20 21,9" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span style={{ color: '#fff', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Transaction Verified</span>
+                </div>
+              </foreignObject>
+            </svg>
+          )}
         </div>
       )}
 
@@ -519,4 +566,4 @@ export default function EvaluateCover({ isExpanded = false, isHovered = false, i
       </div>
     </div>
   );
-}
+});

@@ -73,7 +73,7 @@ const CHART_CONFIGS: ChartConfig[] = [
   { id: 'pie', label: 'Quarterly Split', sweepColor: '#1a120a', sweepFrom: 'bottom' },
 ];
 
-function ChartRenderer({ chartId }: { chartId: string }) {
+const ChartRenderer = React.memo(function ChartRenderer({ chartId }: { chartId: string }) {
   switch (chartId) {
     case 'line':
       return (
@@ -118,9 +118,9 @@ function ChartRenderer({ chartId }: { chartId: string }) {
     default:
       return null;
   }
-}
+});
 
-export default function VisualizeCover({ isActive = true, onCycleComplete }: { isActive?: boolean; onCycleComplete?: () => void }) {
+export default React.memo(function VisualizeCover({ isActive = true, onCycleComplete }: { isActive?: boolean; onCycleComplete?: () => void }) {
   const [currentChart, setCurrentChart] = useState(0);
   const curtainRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -170,13 +170,14 @@ export default function VisualizeCover({ isActive = true, onCycleComplete }: { i
     gsap.set(curtain, { ...resetPos, opacity: 1 });
 
     // Fade out label
-    if (label) gsap.to(label, { opacity: 0, duration: 0.15 });
+    if (label) gsap.to(label, { opacity: 0, duration: 0.15, overwrite: 'auto' });
 
     // Sweep curtain IN (covers current chart)
     gsap.to(curtain, {
       ...sweepIn,
       duration: 0.3,
       ease: 'power2.inOut',
+      overwrite: 'auto',
       onComplete: () => {
         // Swap chart while curtain covers everything
         setCurrentChart(nextIndex);
@@ -191,6 +192,7 @@ export default function VisualizeCover({ isActive = true, onCycleComplete }: { i
               duration: 0.3,
               ease: 'power2.inOut',
               delay: 0.08,
+              overwrite: 'auto',
               onComplete: () => {
                 isAnimatingRef.current = false;
               },
@@ -198,7 +200,7 @@ export default function VisualizeCover({ isActive = true, onCycleComplete }: { i
 
             // Fade label back in
             if (label) {
-              gsap.to(label, { opacity: 1, duration: 0.2, delay: 0.15 });
+              gsap.to(label, { opacity: 1, duration: 0.2, delay: 0.15, overwrite: 'auto' });
             }
           }, 30);
         }
@@ -294,8 +296,10 @@ export default function VisualizeCover({ isActive = true, onCycleComplete }: { i
           pointerEvents: 'none',
           opacity: 0,
           borderRadius: 20,
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
         }}
       />
     </div>
   );
-}
+});
