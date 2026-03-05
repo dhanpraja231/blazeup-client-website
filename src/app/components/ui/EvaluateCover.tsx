@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { useTheme } from '@/components/ThemeProvider';
 
 // ── Node data — coordinates designed for ~900×450 expanded column ──
 const NODE_W = 195;
@@ -78,6 +79,7 @@ interface EvaluateCoverProps {
 
 export default React.memo(function EvaluateCover({ isExpanded = false, isHovered = false, isActive = true, onCycleComplete }: EvaluateCoverProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
+  const { light } = useTheme();
   const flipperRef = useRef<HTMLDivElement>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
@@ -303,10 +305,10 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
               preserveAspectRatio="xMidYMid meet"
             >
               {/* Connection lines */}
-              <line className="cover-line" x1="125" y1="75" x2="145" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
-              <line className="cover-line" x1="125" y1="300" x2="145" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
-              <line className="cover-line" x1="265" y1="185" x2="285" y2="140" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
-              <line className="cover-line" x1="265" y1="185" x2="285" y2="260" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              <line className="cover-line" x1="125" y1="75" x2="145" y2="185" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              <line className="cover-line" x1="125" y1="300" x2="145" y2="185" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              <line className="cover-line" x1="265" y1="185" x2="285" y2="140" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              <line className="cover-line" x1="265" y1="185" x2="285" y2="260" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
               {/* Flow dots */}
               <circle className="cover-flow" cx="125" cy="75" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
               <circle className="cover-flow" cx="125" cy="300" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
@@ -387,12 +389,12 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
               {/* Checkmark result overlay */}
               <foreignObject className="cover-result" x="0" y="0" width="420" height="360" style={{ pointerEvents: 'none', opacity: 0 }}>
                 <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(34,197,94,0.1)', border: '2px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: light ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)', border: light ? '2px solid rgba(34,197,94,0.6)' : '2px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                      <polyline points="7,14 12,20 21,9" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      <polyline points="7,14 12,20 21,9" stroke={light ? '#16a34a' : '#22c55e'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <span style={{ color: '#fff', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Transaction Verified</span>
+                  <span style={{ color: light ? '#0f172a' : '#fff', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Transaction Verified</span>
                 </div>
               </foreignObject>
             </svg>

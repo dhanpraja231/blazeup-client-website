@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import { useTheme } from '@/components/ThemeProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import {
@@ -105,13 +106,7 @@ const COVER_LABEL_STYLE: React.CSSProperties = {
   padding: '16px 16px 20px',
 };
 
-const COVER_LABEL_H3_STYLE: React.CSSProperties = {
-  fontSize: 28,
-  fontWeight: 700,
-  color: '#fff',
-  marginBottom: 0,
-  letterSpacing: '-0.02em',
-};
+// COVER_LABEL_H3_STYLE is now dynamic — see renderCover
 
 /* ═══════════ Main Component ═══════════ */
 export default function WorkflowTabs() {
@@ -119,6 +114,7 @@ export default function WorkflowTabs() {
   const [hoveredColumn, setHoveredColumn] = useState<ColumnId | null>(null);
   const [activeAnimCol, setActiveAnimCol] = useState<ColumnId>('design');
   const [isMobile, setIsMobile] = useState(false);
+  const { light } = useTheme();
   const isHoveringRef = useRef(false);
   const columnRefs = useRef<Record<ColumnId, HTMLDivElement | null>>({
     design: null,
@@ -154,21 +150,21 @@ export default function WorkflowTabs() {
       if (!el || hoveredColumn) return;
       if (c.id === activeAnimCol) {
         gsap.to(el, {
-          borderColor: 'rgba(255,255,255,0.12)',
+          borderColor: light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)',
           duration: 0.5,
           ease: 'power2.out',
           overwrite: 'auto',
         });
       } else {
         gsap.to(el, {
-          borderColor: 'rgba(255,255,255,0.06)',
+          borderColor: light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)',
           duration: 0.5,
           ease: 'power2.out',
           overwrite: 'auto',
         });
       }
     });
-  }, [activeAnimCol, hoveredColumn]);
+  }, [activeAnimCol, hoveredColumn, light]);
 
   // Close on Escape
   useEffect(() => {
@@ -350,7 +346,14 @@ export default function WorkflowTabs() {
 
         {/* Label — always pinned at bottom */}
         <div style={COVER_LABEL_STYLE}>
-          <h3 style={COVER_LABEL_H3_STYLE}>
+          <h3 style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: light ? '#0f172a' : '#fff',
+            marginBottom: 0,
+            letterSpacing: '-0.02em',
+            transition: 'color 0.3s',
+          }}>
             {col.label}
           </h3>
         </div>
@@ -375,7 +378,7 @@ export default function WorkflowTabs() {
         </motion.div>
       </div>
     );
-  }, [hoveredColumn, handleExpand, designCover, evaluateCover, visualizeCover, evaluateHovered, evaluateCollapsedIcon]);
+  }, [hoveredColumn, handleExpand, designCover, evaluateCover, visualizeCover, evaluateHovered, evaluateCollapsedIcon, light]);
 
   /* ── Expanded full-screen overlay (memoized) ── */
   const renderExpandedView = useCallback(() => {
@@ -530,7 +533,7 @@ export default function WorkflowTabs() {
   return (
     <>
       {/* ─── 3-Column Section ─── */}
-      <section id="product" className="w-full py-16 sm:py-24">
+      <section id="product" className="w-full py-16 sm:py-24" style={{ background: light ? '#f8fafc' : 'transparent', transition: 'background 0.4s' }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="mb-12">
@@ -540,10 +543,10 @@ export default function WorkflowTabs() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4" style={{ color: light ? '#0f172a' : '#fff', transition: 'color 0.3s' }}>
                 Your{' '}Workflow
               </h2>
-              <p className="text-white/50 max-w-2xl text-lg">
+              <p className="max-w-2xl text-lg" style={{ color: light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)', transition: 'color 0.3s' }}>
                 Design, evaluate, and visualize — everything you need to manage
                 your card program in one place.
               </p>
@@ -574,11 +577,11 @@ export default function WorkflowTabs() {
                   flex: isMobile ? 'none' : 1,
                   height: isMobile ? 350 : undefined,
                   borderRadius: 20,
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  background: 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}`,
+                  background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
                   backdropFilter: 'blur(12px)',
                   overflow: 'hidden',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                  boxShadow: light ? '0 4px 20px rgba(0,0,0,0.06)' : '0 4px 20px rgba(0,0,0,0.2)',
                   transition: 'none',
                   willChange: isMobile ? undefined : 'flex, box-shadow, opacity',
                   transform: 'translateZ(0)',

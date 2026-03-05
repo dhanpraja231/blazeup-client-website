@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useCallback, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import { useTheme } from '@/components/ThemeProvider';
 
 const ThemeCtx = createContext(false);
 function useLight() { return useContext(ThemeCtx); }
@@ -34,8 +35,6 @@ import {
   AreaChart as AreaChartIcon,
   CircleDot,
   Store,
-  Sun,
-  Moon,
 } from 'lucide-react';
 
 /* ── Dynamic imports for recharts components (no SSR) ── */
@@ -633,7 +632,7 @@ export default function VisualizeDashboard() {
   const [mode, setMode] = useState<DashboardMode>('edit');
   const [zones, setZones] = useState<Record<string, PlacedWidget>>({});
  // const [showSubmitModal, setShowSubmitModal] = useState(false); submit button yeehaw
-  const [light, setLight] = useState(false);
+  const { light } = useTheme();
   const L = light;
 
   const widgetCount = Object.keys(zones).length;
@@ -685,9 +684,6 @@ export default function VisualizeDashboard() {
                 className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-30 disabled:cursor-not-allowed">
                 <Send className="w-3.5 h-3.5" /> Submit
               </button> */}
-              <button onClick={() => setLight(v => !v)} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 text-sm" style={{ background: L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`, color: L ? '#475569' : 'rgba(255,255,255,0.5)' }}>
-                {L ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              </button>
             </motion.div>
           </div>
           {widgetCount > 0 && (

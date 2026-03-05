@@ -3,11 +3,13 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function Hero() {
   const [displayedText, setDisplayedText] = useState('');
   const fullText = 'Corporate spends REIMAGINED.';
-  const typingSpeed = 50; // milliseconds per character
+  const typingSpeed = 50;
+  const { light } = useTheme();
 
   useEffect(() => {
     if (displayedText.length < fullText.length) {
@@ -37,7 +39,10 @@ export default function Hero() {
     <section 
       id="hero"
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ background: 'var(--dark-gray)' }}
+      style={{
+        background: light ? '#f8fafc' : 'var(--dark-gray)',
+        transition: 'background 0.4s',
+      }}
       suppressHydrationWarning
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -49,7 +54,10 @@ export default function Hero() {
             transition={{ duration: 0.6 }}
             className="mb-8"
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white min-h-[1.2em]">
+            <h1
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight min-h-[1.2em]"
+              style={{ color: light ? '#0f172a' : '#fff', transition: 'color 0.3s' }}
+            >
               {displayedText}
               <span className="inline-block w-1 h-[0.9em] bg-indigo-500 ml-1 animate-pulse align-middle" 
                     style={{ 
@@ -61,7 +69,8 @@ export default function Hero() {
 
             {/* Subtitle */}
             <motion.p
-              className="text-lg sm:text-xl text-white/60 mb-10 max-w-3xl mx-auto leading-relaxed"
+              className="text-lg sm:text-xl mb-10 max-w-3xl mx-auto leading-relaxed"
+              style={{ color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.6)', transition: 'color 0.3s' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: displayedText.length === fullText.length ? 1 : 0 }}
               transition={{ duration: 0.6 }}
@@ -91,7 +100,13 @@ export default function Hero() {
 
             <motion.button
               onClick={() => handleScrollToSection('pricing')}
-              className="px-8 py-4 text-base font-semibold bg-white/5 border border-white/10 text-white/90 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+              className="px-8 py-4 text-base font-semibold rounded-xl transition-all duration-300"
+              style={{
+                background: light ? 'rgba(15,23,42,0.05)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${light ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.1)'}`,
+                color: light ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.9)',
+                transition: 'all 0.3s',
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

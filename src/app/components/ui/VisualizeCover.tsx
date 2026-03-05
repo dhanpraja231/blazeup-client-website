@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import gsap from 'gsap';
+import { useTheme } from '@/components/ThemeProvider';
 
 // ── Only load one chart at a time via dynamic import ──
 const LineGraph = dynamic(
@@ -73,7 +74,7 @@ const CHART_CONFIGS: ChartConfig[] = [
   { id: 'pie', label: 'Quarterly Split', sweepColor: '#1a120a', sweepFrom: 'bottom' },
 ];
 
-const ChartRenderer = React.memo(function ChartRenderer({ chartId }: { chartId: string }) {
+const ChartRenderer = React.memo(function ChartRenderer({ chartId, light }: { chartId: string; light?: boolean }) {
   switch (chartId) {
     case 'line':
       return (
@@ -85,6 +86,7 @@ const ChartRenderer = React.memo(function ChartRenderer({ chartId }: { chartId: 
             { key: 'budget', name: 'Budget', color: '#6366f1' },
           ]}
           height={280}
+          light={light}
         />
       );
     case 'bar':
@@ -95,6 +97,7 @@ const ChartRenderer = React.memo(function ChartRenderer({ chartId }: { chartId: 
           dataKey="value"
           color="#06b6d4"
           height={280}
+          light={light}
         />
       );
     case 'donut':
@@ -104,6 +107,7 @@ const ChartRenderer = React.memo(function ChartRenderer({ chartId }: { chartId: 
           dataKey="value"
           nameKey="name"
           height={280}
+          light={light}
         />
       );
     case 'pie':
@@ -113,6 +117,7 @@ const ChartRenderer = React.memo(function ChartRenderer({ chartId }: { chartId: 
           dataKey="value"
           nameKey="name"
           height={280}
+          light={light}
         />
       );
     default:
@@ -123,6 +128,7 @@ const ChartRenderer = React.memo(function ChartRenderer({ chartId }: { chartId: 
 export default React.memo(function VisualizeCover({ isActive = true, onCycleComplete }: { isActive?: boolean; onCycleComplete?: () => void }) {
   const [currentChart, setCurrentChart] = useState(0);
   const curtainRef = useRef<HTMLDivElement>(null);
+  const { light } = useTheme();
   const labelRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAnimatingRef = useRef(false);
@@ -158,7 +164,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
     const config = CHART_CONFIGS[nextIndex];
 
     // Set curtain color and starting position
-    curtain.style.background = config.sweepColor;
+    curtain.style.background = light ? '#e2e8f0' : config.sweepColor;
 
     const sweepIn: Record<string, string> = {};
     const sweepOut: Record<string, string> = {};
@@ -284,7 +290,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
         <div style={{
           fontSize: 10,
           fontWeight: 600,
-          color: 'rgba(255,255,255,0.5)',
+          color: light ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.5)',
           letterSpacing: 1,
           textTransform: 'uppercase',
         }}>
@@ -311,7 +317,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
           transformOrigin: 'center center',
           transition: 'transform 0.15s ease-out',
         }}>
-          <ChartRenderer chartId={config.id} />
+          <ChartRenderer chartId={config.id} light={light} />
         </div>
       </div>
 
