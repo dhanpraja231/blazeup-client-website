@@ -274,6 +274,7 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
         justifyContent: 'center',
         transform: 'scale(1)',
         transformOrigin: 'center center',
+        transition: 'transform 0.15s ease-out',
       }}
     >
 

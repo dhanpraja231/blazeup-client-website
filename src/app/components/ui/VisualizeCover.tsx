@@ -309,6 +309,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
           width: 380,
           transform: 'scale(1)',
           transformOrigin: 'center center',
+          transition: 'transform 0.15s ease-out',
         }}>
           <ChartRenderer chartId={config.id} />
         </div>
