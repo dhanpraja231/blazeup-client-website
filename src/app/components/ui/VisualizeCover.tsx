@@ -127,6 +127,27 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAnimatingRef = useRef(false);
   const transitionCountRef = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const chartScaleRef = useRef<HTMLDivElement>(null);
+
+  // Continuously scale chart area — direct DOM update for smooth scaling
+  useEffect(() => {
+    const container = containerRef.current;
+    const scaleEl = chartScaleRef.current;
+    if (!container || !scaleEl) return;
+    const VIRTUAL_W = 380;
+    const VIRTUAL_H = 340;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width <= 0 || height <= 0) return;
+        const s = Math.min(width / VIRTUAL_W, height / VIRTUAL_H, 1);
+        scaleEl.style.transform = `scale(${s})`;
+      }
+    });
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, []);
 
   const transition = useCallback((nextIndex: number) => {
     const curtain = curtainRef.current;
@@ -238,13 +259,16 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
   const config = CHART_CONFIGS[currentChart];
 
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      borderRadius: 20,
-      overflow: 'hidden',
-      position: 'relative',
-    }}>
+    <div
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        borderRadius: 20,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
       {/* Chart label — pinned top */}
       <div
         ref={labelRef}
@@ -268,20 +292,24 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
         </div>
       </div>
 
-      {/* Chart area — absolute, fills all space below label */}
+      {/* Chart area — scales down proportionally */}
       <div style={{
         position: 'absolute',
         top: 28,
         left: 0,
         right: 0,
         bottom: 0,
-        padding: '0 8px 8px',
-        overflow: 'hidden',
-        pointerEvents: 'none',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        pointerEvents: 'none',
       }}>
-        <div style={{ width: '100%' }}>
+        <div ref={chartScaleRef} style={{
+          width: 380,
+          transform: 'scale(1)',
+          transformOrigin: 'center center',
+        }}>
           <ChartRenderer chartId={config.id} />
         </div>
       </div>

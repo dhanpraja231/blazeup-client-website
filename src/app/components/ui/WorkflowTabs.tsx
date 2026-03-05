@@ -338,7 +338,7 @@ export default function WorkflowTabs() {
         {/* Content area — fills available space above label */}
         <div style={COVER_CONTENT_STYLE}>
           {col.id === 'design' && (
-            <div style={{ margin: '0' }}>{designCover}</div>
+            <div style={{ width: '100%', height: '100%' }}>{designCover}</div>
           )}
 
           {col.id === 'evaluate' && evaluateCover}

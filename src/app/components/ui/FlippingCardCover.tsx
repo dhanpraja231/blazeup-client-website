@@ -49,6 +49,8 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
   const outerRef = useRef<HTMLDivElement>(null);
   const cardFaceRef = useRef<HTMLDivElement>(null);
   const patternRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
 
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
@@ -60,6 +62,25 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
   });
 
   const scrambleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Continuously scale the card to fit — direct DOM update, no React re-render
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    const inner = innerRef.current;
+    if (!wrapper || !inner) return;
+    const VIRTUAL_W = 340;
+    const VIRTUAL_H = 260;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width <= 0 || height <= 0) return;
+        const s = Math.min(width / VIRTUAL_W, height / VIRTUAL_H, 1);
+        inner.style.transform = `scale(${s})`;
+      }
+    });
+    ro.observe(wrapper);
+    return () => ro.disconnect();
+  }, []);
 
   const generateRandomDesign = useCallback(() => ({
     name: randomItem(NAMES),
@@ -230,15 +251,29 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
 
   return (
     <div
+      ref={wrapperRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+     <div
+      ref={innerRef}
       style={{
         perspective: 900,
         width: 340,
         height: 340,
-        margin: '0 auto',
+        flexShrink: 0,
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        transform: 'scale(1)',
+        transformOrigin: 'center center',
       }}
     >
 
@@ -432,6 +467,7 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
           }} />
         </div>
       </div>
+     </div>
     </div>
   );
 });
