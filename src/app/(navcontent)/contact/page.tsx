@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Send, User, Mail, MessageSquare, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
 
 type FormStatus = 'idle' | 'sending' | 'success' | 'error';
 
@@ -16,6 +17,7 @@ export default function ContactPage() {
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
+  const { light } = useTheme();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -51,16 +53,18 @@ export default function ContactPage() {
     }
   };
 
+  const borderColor = light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)';
+
   const inputBase = {
     width: '100%',
     padding: '14px 16px 14px 44px',
     borderRadius: 12,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.03)',
-    color: '#fff',
+    border: `1px solid ${borderColor}`,
+    background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)',
+    color: light ? '#0f172a' : '#fff',
     fontSize: 15,
     outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
+    transition: 'border-color 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s',
     fontFamily: 'inherit',
   } as const;
 
@@ -72,10 +76,11 @@ export default function ContactPage() {
   const labelStyle = {
     fontSize: 13,
     fontWeight: 600 as const,
-    color: 'rgba(255,255,255,0.5)',
+    color: light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)',
     marginBottom: 8,
     display: 'block',
     letterSpacing: '0.02em',
+    transition: 'color 0.3s',
   };
 
   const iconStyle = {
@@ -83,7 +88,7 @@ export default function ContactPage() {
     left: 14,
     top: '50%',
     transform: 'translateY(-50%)',
-    color: 'rgba(255,255,255,0.25)',
+    color: light ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.25)',
     pointerEvents: 'none' as const,
   };
 
@@ -95,6 +100,8 @@ export default function ContactPage() {
       justifyContent: 'center',
       padding: '120px 20px 80px',
       position: 'relative',
+      background: light ? '#f8fafc' : 'var(--dark-gray)',
+      transition: 'background 0.4s',
     }}>
 
       <motion.div
@@ -122,7 +129,7 @@ export default function ContactPage() {
               marginBottom: 16,
             }}
           >
-            <span style={{ color: '#fff' }}>Get in Touch</span>
+            <span style={{ color: light ? '#0f172a' : '#fff', transition: 'color 0.3s' }}>Get in Touch</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -130,10 +137,11 @@ export default function ContactPage() {
             transition={{ delay: 0.2, duration: 0.5 }}
             style={{
               fontSize: 16,
-              color: 'rgba(255,255,255,0.45)',
+              color: light ? 'rgba(15,23,42,0.45)' : 'rgba(255,255,255,0.45)',
               lineHeight: 1.6,
               maxWidth: 400,
               margin: '0 auto',
+              transition: 'color 0.3s',
             }}
           >
             Have a question or want to work together? Drop us a message and we&apos;ll get back to you.
@@ -146,11 +154,13 @@ export default function ContactPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
           style={{
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: light ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.02)',
+            border: `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}`,
             borderRadius: 20,
             padding: '40px 36px',
             backdropFilter: 'blur(12px)',
+            boxShadow: light ? '0 4px 24px rgba(0,0,0,0.04)' : 'none',
+            transition: 'background 0.3s, border 0.3s, box-shadow 0.3s',
           }}
         >
           <form ref={formRef} onSubmit={handleSubmit}>
@@ -169,7 +179,7 @@ export default function ContactPage() {
                   onChange={handleChange}
                   style={inputBase}
                   onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
+                  onBlur={(e) => { e.target.style.borderColor = borderColor; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>
@@ -189,7 +199,7 @@ export default function ContactPage() {
                   onChange={handleChange}
                   style={inputBase}
                   onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
+                  onBlur={(e) => { e.target.style.borderColor = borderColor; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>
@@ -209,7 +219,7 @@ export default function ContactPage() {
                   onChange={handleChange}
                   style={inputBase}
                   onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
+                  onBlur={(e) => { e.target.style.borderColor = borderColor; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>
@@ -234,7 +244,7 @@ export default function ContactPage() {
                     lineHeight: 1.6,
                   }}
                   onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
+                  onBlur={(e) => { e.target.style.borderColor = borderColor; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>
@@ -289,7 +299,8 @@ export default function ContactPage() {
             textAlign: 'center',
             marginTop: 28,
             fontSize: 13,
-            color: 'rgba(255,255,255,0.3)',
+            color: light ? 'rgba(15,23,42,0.35)' : 'rgba(255,255,255,0.3)',
+            transition: 'color 0.3s',
           }}
         >
           Or email us directly at{' '}
@@ -317,3 +328,4 @@ export default function ContactPage() {
     </main>
   );
 }
+

@@ -4,8 +4,6 @@ export const NAV_ITEMS: NavItem[] = [
   { name: 'Home', href: '#hero' },
   { name: 'Product', href: '#product' },
   { name: 'Integrations', href: '#integrations' },
-  { name: 'Pricing', href: '#pricing' },
-  { name: 'Testimonials', href: '#testimonials' },
   { name: 'Contact', href: '/contact' },
 ];
 

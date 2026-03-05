@@ -26,12 +26,19 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     setMounted(true);
   }, []);
 
-  // Persist to localStorage on change
+  // Persist to localStorage and sync Tailwind dark class
   useEffect(() => {
     if (!mounted) return;
     try {
       localStorage.setItem('blazeup-light-mode', String(light));
     } catch {}
+    // Toggle the Tailwind `dark` class on <html> for components using dark: utilities
+    const root = document.documentElement;
+    if (light) {
+      root.classList.remove('dark');
+    } else {
+      root.classList.add('dark');
+    }
   }, [light, mounted]);
 
   const toggleLight = React.useCallback(() => setLight(v => !v), []);

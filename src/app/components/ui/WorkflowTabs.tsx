@@ -12,6 +12,8 @@ import {
   Loader2,
   X,
   ChevronRight,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import CreditCardDesigner from './credit-card-designer';
 import FlippingCardCover from './FlippingCardCover';
@@ -114,7 +116,7 @@ export default function WorkflowTabs() {
   const [hoveredColumn, setHoveredColumn] = useState<ColumnId | null>(null);
   const [activeAnimCol, setActiveAnimCol] = useState<ColumnId>('design');
   const [isMobile, setIsMobile] = useState(false);
-  const { light } = useTheme();
+  const { light, toggleLight } = useTheme();
   const isHoveringRef = useRef(false);
   const columnRefs = useRef<Record<ColumnId, HTMLDivElement | null>>({
     design: null,
@@ -400,7 +402,7 @@ export default function WorkflowTabs() {
             right: 0,
             bottom: 0,
             zIndex: 99998,
-            backgroundColor: '#0a0a0a',
+            backgroundColor: light ? '#f8fafc' : '#0a0a0a',
             display: 'flex',
             flexDirection: 'column',
           }}
@@ -413,13 +415,14 @@ export default function WorkflowTabs() {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '10px 20px',
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-              background: '#0f0f0f',
+              borderBottom: light ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)',
+              background: light ? '#fff' : '#0f0f0f',
+              transition: 'background 0.3s, border-bottom 0.3s',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {/* Column selector pills */}
-              <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14, background: light ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)', border: `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'}` }}>
                 {COLUMNS.map(c => (
                   <button
                     key={c.id}
@@ -438,8 +441,8 @@ export default function WorkflowTabs() {
                       background: expandedColumn === c.id
                         ? `linear-gradient(135deg, ${c.accentFrom}25, ${c.accentTo}25)`
                         : 'transparent',
-                      color: expandedColumn === c.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                      outline: expandedColumn === c.id ? `1px solid rgba(255,255,255,0.1)` : 'none',
+                      color: expandedColumn === c.id ? (light ? '#0f172a' : '#fff') : (light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)'),
+                      outline: expandedColumn === c.id ? `1px solid ${light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'}` : 'none',
                     }}
                   >
                     {c.icon}
@@ -448,38 +451,60 @@ export default function WorkflowTabs() {
                 ))}
               </div>
 
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 13, color: light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>
                 {col.description}
               </span>
             </div>
 
-            {/* Close button */}
-            <button
-              onClick={handleClose}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 16px',
-                borderRadius: 10,
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                color: '#ef4444',
-                cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: 600,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(239, 68, 68, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(239, 68, 68, 0.1)';
-              }}
-            >
-              <X style={{ width: 16, height: 16 }} />
-              Close
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Light/Dark Toggle */}
+              <button
+                onClick={toggleLight}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: light ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
+                  color: light ? '#475569' : 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {light ? <Moon style={{ width: 16, height: 16 }} /> : <Sun style={{ width: 16, height: 16 }} />}
+              </button>
+
+              {/* Close button */}
+              <button
+                onClick={handleClose}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  borderRadius: 10,
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  color: '#ef4444',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(239, 68, 68, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(239, 68, 68, 0.1)';
+                }}
+              >
+                <X style={{ width: 16, height: 16 }} />
+                Close
+              </button>
+            </div>
           </div>
 
           {/* Content */}
@@ -528,7 +553,7 @@ export default function WorkflowTabs() {
         </motion.div>
       </AnimatePresence>
     );
-  }, [expandedColumn, handleClose]);
+  }, [expandedColumn, handleClose, light]);
 
   return (
     <>

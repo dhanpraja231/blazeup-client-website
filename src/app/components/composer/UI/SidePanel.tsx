@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Plus, Play, GitBranch, Zap, Shield, Grid3X3, Mail, MessageSquare, Sheet, Calendar, CreditCard, Clock, MapPin, Receipt, TrendingUp, Bell, Layers, Ban } from 'lucide-react';
 import { useUIStore } from '../store/uiStore';
 import { useState } from 'react';
+import { useTheme } from '@/components/ThemeProvider';
 import type { NodeType } from '../types/flow';
 
 interface NodeTemplate {
@@ -183,6 +184,7 @@ interface SidePanelProps {
 export default function SidePanel({ onAddNode }: SidePanelProps) {
   const { sidePanelOpen, toggleSidePanel } = useUIStore();
   const [searchTerm, setSearchTerm] = useState('');
+  const { light } = useTheme();
   
   const filteredNodes = nodeTemplates.filter(node =>
     node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -228,16 +230,16 @@ export default function SidePanel({ onAddNode }: SidePanelProps) {
             exit={{ x: -320 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="fixed left-0 bottom-0 w-80 border-r z-40 flex flex-col shadow-xl"
-            style={{ top: 70, background: 'var(--dark-gray)', borderColor: 'rgba(255,255,255,0.06)' }}
+            style={{ top: 71, background: light ? '#ffffff' : 'var(--dark-gray)', borderColor: light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)', transition: 'background 0.3s, border-color 0.3s' }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <h2 className="text-base font-bold" style={{ color: '#fff' }}>Add Nodes</h2>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: light ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)' }}>
+              <h2 className="text-base font-bold" style={{ color: light ? '#0f172a' : '#fff' }}>Add Nodes</h2>
               <button
                 onClick={toggleSidePanel}
                 className="p-1.5 rounded-lg transition-colors"
-                style={{ color: 'rgba(255,255,255,0.7)' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                style={{ color: light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.7)' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = light ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 <X className="w-5 h-5" />
@@ -245,16 +247,16 @@ export default function SidePanel({ onAddNode }: SidePanelProps) {
             </div>
             
             {/* Search */}
-            <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="px-4 py-3" style={{ borderBottom: light ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)' }}>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: light ? 'rgba(15,23,42,0.35)' : 'rgba(255,255,255,0.4)' }} />
                 <input
                   type="text"
                   placeholder="Search nodes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+                  style={{ background: light ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)', border: light ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)', color: light ? '#0f172a' : '#fff' }}
                 />
               </div>
             </div>
@@ -263,7 +265,7 @@ export default function SidePanel({ onAddNode }: SidePanelProps) {
             <div className="flex-1 overflow-y-auto px-4 py-3">
               {Object.entries(groupedNodes).map(([category, nodes]) => (
                 <div key={category} className="mb-6">
-                  <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <h3 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: light ? 'rgba(15,23,42,0.45)' : 'rgba(255,255,255,0.5)' }}>
                     {category}
                   </h3>
                   <div className="space-y-2">
@@ -281,30 +283,30 @@ export default function SidePanel({ onAddNode }: SidePanelProps) {
                             onClick={() => handleAddNode(node)}
                             className="w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-colors group cursor-move shadow-sm"
                             style={{ 
-                              background: 'rgba(255,255,255,0.03)',
-                              borderColor: 'rgba(255,255,255,0.08)'
+                              background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)',
+                              borderColor: light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)';
                               e.currentTarget.style.background = 'rgba(99,102,241,0.1)';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                              e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                              e.currentTarget.style.borderColor = light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)';
+                              e.currentTarget.style.background = light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)';
                             }}
                           >
                           <div className={`flex-shrink-0 w-10 h-10 rounded-lg ${node.color} flex items-center justify-center`}>
                             <Icon className="w-5 h-5" />
                           </div>
                           <div className="flex-1 text-left min-w-0">
-                            <div className="text-sm font-medium truncate" style={{ color: '#fff' }}>
+                            <div className="text-sm font-medium truncate" style={{ color: light ? '#0f172a' : '#fff' }}>
                               {node.label}
                             </div>
-                            <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                            <div className="text-xs truncate" style={{ color: light ? 'rgba(15,23,42,0.45)' : 'rgba(255,255,255,0.4)' }}>
                               {node.description}
                             </div>
                             </div>
-                            <Plus className="w-4 h-4 transition-colors flex-shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }} />
+                            <Plus className="w-4 h-4 transition-colors flex-shrink-0" style={{ color: light ? 'rgba(15,23,42,0.3)' : 'rgba(255,255,255,0.4)' }} />
                           </div>
                         </motion.div>
                       );
@@ -314,7 +316,7 @@ export default function SidePanel({ onAddNode }: SidePanelProps) {
               ))}
               
               {filteredNodes.length === 0 && (
-                <div className="text-center py-8 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <div className="text-center py-8 text-sm" style={{ color: light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.4)' }}>
                   No nodes found
                 </div>
               )}

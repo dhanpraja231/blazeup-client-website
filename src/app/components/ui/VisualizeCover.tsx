@@ -233,7 +233,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
         }
       },
     });
-  }, []);
+  }, [light]);
 
   useEffect(() => {
     if (!isActive) {

@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useTheme } from '@/components/ThemeProvider';
-
 // ── Node data — coordinates designed for ~900×450 expanded column ──
 const NODE_W = 195;
 
@@ -79,7 +78,7 @@ interface EvaluateCoverProps {
 
 export default React.memo(function EvaluateCover({ isExpanded = false, isHovered = false, isActive = true, onCycleComplete }: EvaluateCoverProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
-  const { light } = useTheme();
+  const {light} = useTheme();
   const flipperRef = useRef<HTMLDivElement>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
@@ -160,12 +159,10 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
 
     // 3. Flow dots travel along lines (left pair then right pair)
     const flowEls = Array.from(flows);
-    // Left pair: dot 0 travels (125,75)→(145,185), dot 1 travels (125,300)→(145,185)
     if (flowEls[0]) tl.fromTo(flowEls[0], { attr: { cx: 125, cy: 75 }, opacity: 0 }, { attr: { cx: 145, cy: 185 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.1');
     if (flowEls[1]) tl.fromTo(flowEls[1], { attr: { cx: 125, cy: 300 }, opacity: 0 }, { attr: { cx: 145, cy: 185 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.4');
     const leftDots = [flowEls[0], flowEls[1]].filter(Boolean);
     if (leftDots.length) tl.to(leftDots, { opacity: 0, duration: 0.15 });
-    // Right pair: dot 2 travels (265,185)→(285,140), dot 3 travels (265,185)→(285,260)
     if (flowEls[2]) tl.fromTo(flowEls[2], { attr: { cx: 265, cy: 185 }, opacity: 0 }, { attr: { cx: 285, cy: 140 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.1');
     if (flowEls[3]) tl.fromTo(flowEls[3], { attr: { cx: 265, cy: 185 }, opacity: 0 }, { attr: { cx: 285, cy: 260 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.4');
     const rightDots = [flowEls[2], flowEls[3]].filter(Boolean);
@@ -189,34 +186,38 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
   // ═══ FULL CANVAS ANIMATION (on hover) ═══
   useEffect(() => {
     const scene = sceneRef.current;
-    const flipper = flipperRef.current;
-    if (!scene || !flipper) return;
+    if (!scene) return;
 
     if (tlRef.current) tlRef.current.kill();
-    gsap.set(flipper, { rotationY: 0 });
+
+    const fadeTargets = scene.querySelectorAll('.edges-canvas, .node-block, .edge-label');
+    const modalEls = scene.querySelectorAll('.modal-anim');
+    const blackOverlay = scene.querySelector('.black-overlay');
+    const previewBack = scene.querySelector('.preview-back');
 
     const tl = gsap.timeline({
       repeat: 0,
       paused: true,
       onComplete: () => {
         if (isHoveredRef.current) {
+          gsap.set(fadeTargets, { opacity: 1 });
           NODES.forEach(n => { const el = scene.querySelector(`#${n.id}`); if (el) gsap.set(el, { opacity: 0 }); });
           EDGES.forEach(e => { const el = scene.querySelector(`.${e.id}`); if (el) gsap.set(el, { strokeDashoffset: 500 }); });
           LABELS.forEach(l => { const el = scene.querySelector(`#${l.id}`); if (el) gsap.set(el, { opacity: 0, scale: 0.5 }); });
           gsap.set(modalEls, { y: 15, opacity: 0 });
-          gsap.to(flipper, {
-            rotationY: 360, duration: 0.8, ease: 'power3.inOut',
-            onComplete: () => { gsap.set(flipper, { rotationY: 0 }); tl.restart(); },
-          });
+          tl.restart();
         }
       },
     });
     tlRef.current = tl;
 
+    // Initial setup
+    gsap.set(fadeTargets, { opacity: 1 });
+    if (blackOverlay) gsap.set(blackOverlay, { width: '0%', left: '0%' });
+    if (previewBack) gsap.set(previewBack, { left: '-100%', autoAlpha: 0 });
     NODES.forEach(n => { const el = scene.querySelector(`#${n.id}`); if (el) gsap.set(el, { opacity: 0 }); });
     EDGES.forEach(e => { const el = scene.querySelector(`.${e.id}`); if (el) gsap.set(el, { strokeDashoffset: 500 }); });
     LABELS.forEach(l => { const el = scene.querySelector(`#${l.id}`); if (el) gsap.set(el, { opacity: 0, scale: 0.5 }); });
-    const modalEls = scene.querySelectorAll('.modal-anim');
     gsap.set(modalEls, { y: 15, opacity: 0 });
 
     tl.fromTo('#node1', { scale: 1.1, opacity: 0, x: -40, y: -20, rotation: -4 },
@@ -235,10 +236,48 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
     tl.fromTo('#node5', { scale: 1.1, opacity: 0, x: 30, y: -20, rotation: 2 },
       { scale: 1, opacity: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.2)' }, '+=0.1');
     tl.to('.line5', { strokeDashoffset: 0, duration: 0.4, ease: 'power2.inOut' });
+    
+    // Pause for user to appreciate nodes
     tl.to({}, { duration: 1 });
-    tl.to(flipper, { rotationY: 180, duration: 0.8, ease: 'power3.inOut' });
-    tl.to(modalEls, { y: 0, opacity: 1, duration: 0.4, stagger: 0.08 }, '-=0.2');
+
+    // 1. Fade Content of Front to Black (Left to Right wipe)
+    tl.to(fadeTargets, {
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power2.in'
+    });
+    tl.fromTo(blackOverlay, 
+      { width: '0%', left: '0%' }, 
+      { width: '100%', left: '0%', duration: 1.2, ease: 'power2.inOut' }, 
+      '-=0.6'
+    );
+
+    // 2. Slide Policy Card in from Left
+    tl.fromTo(previewBack, 
+      { left: '-100%', autoAlpha: 1 }, 
+      { left: '0%', duration: 1, ease: 'power3.out' } 
+    );
+
+    // 3. Stagger Modal Content
+    tl.fromTo(modalEls,
+      { y: 15, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: 'power2.out' },
+      '-=0.4' 
+    );
+    
+    // Hold final view before loop
     tl.to({}, { duration: 2 });
+
+    // 4. Fade out the policy card smoothly before restarting
+    tl.to(previewBack, { 
+      autoAlpha: 0, 
+      duration: 0.6, 
+      ease: 'power2.inOut' 
+    });
+
+    // 5. Reset States for Loop Repeat
+    tl.set(previewBack, { left: '-100%' });
+    tl.set(blackOverlay, { width: '0%' });
 
     return () => { tl.kill(); };
   }, [isExpanded]);
@@ -246,20 +285,27 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
   // Start/stop full canvas animation on hover
   useEffect(() => {
     const tl = tlRef.current;
-    const flipper = flipperRef.current;
     const scene = sceneRef.current;
-    if (!tl || !flipper || !scene) return;
+    if (!tl || !scene) return;
 
     if (isHovered) {
       // Kill cover animation
       if (coverTlRef.current) coverTlRef.current.kill();
 
+      const fadeTargets = scene.querySelectorAll('.edges-canvas, .node-block, .edge-label');
+      const modalEls = scene.querySelectorAll('.modal-anim');
+      const blackOverlay = scene.querySelector('.black-overlay');
+      const previewBack = scene.querySelector('.preview-back');
+
+      gsap.set(fadeTargets, { opacity: 1 });
+      gsap.set(modalEls, { y: 15, opacity: 0 });
+      if (blackOverlay) gsap.set(blackOverlay, { width: '0%', left: '0%' });
+      if (previewBack) gsap.set(previewBack, { left: '-100%', autoAlpha: 0 });
+      
       NODES.forEach(n => { const el = scene.querySelector(`#${n.id}`); if (el) gsap.set(el, { opacity: 0 }); });
       EDGES.forEach(e => { const el = scene.querySelector(`.${e.id}`); if (el) gsap.set(el, { strokeDashoffset: 500 }); });
       LABELS.forEach(l => { const el = scene.querySelector(`#${l.id}`); if (el) gsap.set(el, { opacity: 0, scale: 0.5 }); });
-      const modalEls = scene.querySelectorAll('.modal-anim');
-      gsap.set(modalEls, { y: 15, opacity: 0 });
-      gsap.set(flipper, { rotationY: 0 });
+      
       tl.restart();
     } else {
       tl.pause();
@@ -307,7 +353,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
               {/* Connection lines */}
               <line className="cover-line" x1="125" y1="75" x2="145" y2="185" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
               <line className="cover-line" x1="125" y1="300" x2="145" y2="185" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
-              <line className="cover-line" x1="265" y1="185" x2="285" y2="140" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
+              <line className="cover-line" x1="265" y1="185" x2="285" y2="140" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeDasharray="200" strokeDashoffset="0" />
               <line className="cover-line" x1="265" y1="185" x2="285" y2="260" stroke={light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.12)'} strokeWidth="1.5" strokeDasharray="200" strokeDashoffset="0" />
               {/* Flow dots */}
               <circle className="cover-flow" cx="125" cy="75" r="4" fill="#3b82f6" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
@@ -408,8 +454,9 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
         style={{
           position: 'absolute',
           inset: 0,
-          perspective: 1500,
           transition: 'opacity 0.4s ease',
+          overflow: 'hidden',
+          borderRadius: 12,
           ...(showFullCanvas ? {} : { pointerEvents: 'none', opacity: 0 }),
         }}
       >
@@ -417,20 +464,18 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
           ref={flipperRef}
           style={{
             width: '100%', height: '100%', position: 'relative',
-            transformStyle: 'preserve-3d',
           }}
         >
           {/* ═══ FRONT: Node Canvas ═══ */}
           <div style={{
             width: '100%', height: '100%', position: 'absolute', top: 0, left: 0,
-            backfaceVisibility: 'hidden', borderRadius: 12,
             backgroundColor: '#121318',
             backgroundImage: 'radial-gradient(circle, #383a45 1.5px, transparent 1.5px)',
             backgroundSize: '28px 28px', backgroundPosition: '-10px -10px',
-            border: '1px solid #2A2B36', overflow: 'hidden',
-            transform: 'rotateY(0deg)',
+            border: '1px solid #2A2B36',
+            zIndex: 2,
           }}>
-            <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
+            <svg className="edges-canvas" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
               {EDGES.map(e => (
                 <path key={e.id} className={e.id} d={e.d}
                   fill="none" stroke="#646a7a" strokeWidth={4}
@@ -438,7 +483,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
               ))}
             </svg>
             {LABELS.map(l => (
-              <div key={l.id} id={l.id} style={{
+              <div key={l.id} id={l.id} className="edge-label" style={{
                 position: 'absolute', left: l.left, top: l.top,
                 background: '#1a1e28', border: '1px solid #3b4256',
                 color: '#9ca3af', fontSize: 11, fontWeight: 500,
@@ -448,7 +493,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
             {NODES.map(n => {
               const t = THEMES[n.theme];
               return (
-                <div key={n.id} id={n.id} style={{
+                <div key={n.id} id={n.id} className="node-block" style={{
                   position: 'absolute', width: NODE_W, left: n.left, top: n.top,
                   borderRadius: 8, border: `1px solid ${t.border}`, backgroundColor: t.bg,
                   boxShadow: '0 12px 24px rgba(0,0,0,0.4)', zIndex: 2, opacity: 0,
@@ -485,17 +530,19 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
             })}
           </div>
 
+          {/* ═══ BLACK OVERLAY ═══ */}
+          <div className="black-overlay" style={{
+            position: 'absolute', inset: 0, background: 'black', zIndex: 3, width: '0%', left: 0
+          }} />
+
           {/* ═══ BACK: Policy Card ═══ */}
-          <div style={{
-            width: '100%', height: '100%', position: 'absolute', top: 0, left: 0,
-            backfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)',
+          <div className="preview-back" style={{
+            width: '100%', height: '100%', position: 'absolute', top: 0, left: '-100%',
+            visibility: 'hidden', opacity: 0, zIndex: 4,
           }}>
             <div style={{
               width: '100%', height: '100%',
-              borderRadius: 12,
               backgroundColor: '#16161A',
-              border: '1px solid #2A2B36',
               overflow: 'hidden',
             }}>
             {/* Inner layout — horizontal split */}

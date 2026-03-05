@@ -2,6 +2,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import gsap from 'gsap';
+import { useTheme } from '@/components/ThemeProvider';
 import AITemplateGenerator from './AITemplateGenerator';
 import {
   CreditCard, Type, Circle, Square, Trash2, Undo2, Redo2, Upload,
@@ -240,6 +241,7 @@ export default function CreditCardDesigner() {
     // Add this to your state declarations (around line 280)
     const [showAIGenerator, setShowAIGenerator] = useState(false);
   const _saved = useRef(loadSavedState());
+  const { light: canvasLightMode } = useTheme();
   const [activeFace, setActiveFace] = useState<CardFace>('front');
   const [network, setNetwork] = useState<NetworkType>(() => _saved.current?.network ?? 'Visa');
   const [frontElements, setFrontElements] = useState<CardElement[]>(() => _saved.current?.frontElements ?? createFrontTemplate());
@@ -257,7 +259,6 @@ export default function CreditCardDesigner() {
   const [spotlightEnabled, setSpotlightEnabled] = useState(() => _saved.current?.spotlightEnabled ?? true);
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>(() => _saved.current?.orientation ?? 'horizontal');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [canvasLightMode, setCanvasLightMode] = useState(false);
   // Background removal parameters (from backgroundslider.html)
   const [bgRemovalTolerance, setBgRemovalTolerance] = useState(0.05);
   const [bgRemovalFade, setBgRemovalFade] = useState(0.10);
@@ -1252,13 +1253,6 @@ export default function CreditCardDesigner() {
                   {syncFaces ? 'Synced' : 'Sync'}
                 </button>
                 <span className={`text-[10px] ml-2 ${canvasLightMode ? 'text-slate-400' : 'text-slate-600'}`}>ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
-                <button onClick={() => setCanvasLightMode(p => !p)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-auto"
-                  style={{ background: light ? 'rgba(250,204,21,.12)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(250,204,21,.3)' : '1px solid rgba(255,255,255,.06)', color: light ? '#facc15' : '#64748b' }}
-                  title={canvasLightMode ? 'Switch to dark canvas' : 'Switch to light canvas'}>
-                  {canvasLightMode ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                  {canvasLightMode ? 'Light' : 'Dark'}
-                </button>
               </div>
               <div className="flex justify-center items-center" style={{ minHeight: 380, perspective: 1200 }}>
                 <div ref={flipContainerRef} style={{ transformStyle: 'preserve-3d' }}

@@ -6,7 +6,6 @@ import { Menu } from 'lucide-react';
 import FlowCanvas from './Canvas/FlowCanvas';
 import BottomSheetManager from './UI/BottomSheetManager';
 import VendorListModal from './Modals/VendorListModal';
-import ThemeToggle from './UI/ThemeToggle';
 import { useTheme } from './hooks/useTheme';
 import { useUIStore } from './store/uiStore';
 import type { PolicyWorkflow } from './types/flow';
@@ -33,27 +32,30 @@ export default function PolicyPlayground() {
     );
   }
 
+  const isLight = theme === 'light';
+
   return (
-    <div className="w-full h-full flex flex-col rounded-lg overflow-hidden" style={{ background: 'var(--dark-gray)' }}>
-      {/* Inline toolbar (replaces the fixed TopBar) */}
-      <div className="shrink-0 h-12 flex items-center justify-between px-4" style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+    <div className="w-full h-full flex flex-col rounded-lg overflow-hidden" style={{ background: isLight ? '#f8fafc' : 'var(--dark-gray)', transition: 'background 0.3s' }}>
+      {/* Inline toolbar */}
+      <div className="shrink-0 h-12 flex items-center justify-between px-4" style={{
+        background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.02)',
+        borderBottom: isLight ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)',
+        transition: 'background 0.3s, border-bottom 0.3s',
+      }}>
         <div className="flex items-center gap-3">
           <button
             onClick={toggleSidePanel}
             className="p-1.5 rounded-lg transition-colors"
-            style={{ color: '#fff' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            style={{ color: isLight ? '#334155' : '#fff' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             aria-label="Toggle side panel"
           >
             <Menu className="w-4.5 h-4.5" />
           </button>
-          <span className="text-sm font-semibold" style={{ color: '#fff' }}>
+          <span className="text-sm font-semibold" style={{ color: isLight ? '#0f172a' : '#fff', transition: 'color 0.3s' }}>
             {workflow.metadata?.name || 'Policy Playground'}
           </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </div>
       </div>
 
