@@ -1,5 +1,6 @@
 import Hero from '@/components/ui/Hero';
 import WorkflowTabs from '@/components/ui/WorkflowTabs';
+import VideoShowcase from '@/components/ui/VideoShowcase';
 import Integrations from '@/components/ui/Integrations';
 import Pricing from '@/components/ui/Pricing';
 import Testimonials from '@/components/ui/Testimonials';
@@ -10,6 +11,7 @@ export default function HomePage() {
     <main className="min-h-screen">
       <Hero />
       <WorkflowTabs />
+      <VideoShowcase />
       <Integrations />
       {/*  <Pricing /> */}
 

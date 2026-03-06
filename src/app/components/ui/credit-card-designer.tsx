@@ -1259,7 +1259,7 @@ export default function CreditCardDesigner() {
                     style={{ width: cardW, height: cardH, background: cardBg, borderRadius: CARD.R,
                       transition: 'width 0.4s ease, height 0.4s ease, box-shadow 0.3s ease, border 0.3s ease',
                       boxShadow: isDragOver ? '0 0 40px rgba(99,102,241,.5),0 25px 60px rgba(0,0,0,.4)' : '0 25px 60px rgba(0,0,0,.4)',
-                      border: isDragOver ? '2px dashed rgba(99,102,241,.6)' : '1px solid rgba(255,255,255,.08)' }}>
+                      border: isDragOver ? '2px dashed rgba(99,102,241,.6)' : 'none' }}>
 
                     {spotlightEnabled && !light && <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />}
                     {/* Pattern overlay */}
