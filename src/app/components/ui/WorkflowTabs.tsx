@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import dynamic from 'next/dynamic';
 import { useTheme } from '@/components/ThemeProvider';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -388,8 +389,7 @@ export default function WorkflowTabs() {
     const col = COLUMNS.find(c => c.id === expandedColumn)!;
 
     return (
-      <AnimatePresence>
-        <motion.div
+      <motion.div
           key="expanded-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -550,8 +550,7 @@ export default function WorkflowTabs() {
               )}
             </AnimatePresence>
           </div>
-        </motion.div>
-      </AnimatePresence>
+      </motion.div>
     );
   }, [expandedColumn, handleClose, light]);
 
@@ -620,7 +619,9 @@ export default function WorkflowTabs() {
       </section>
 
       {/* ─── Expanded Fullscreen Overlay ─── */}
-      {renderExpandedView()}
+      {typeof document !== 'undefined' && renderExpandedView()
+        ? ReactDOM.createPortal(renderExpandedView(), document.body)
+        : null}
     </>
   );
 }
