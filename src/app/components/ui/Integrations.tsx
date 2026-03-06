@@ -123,7 +123,7 @@ export default function Integrations() {
     <section
       id="integrations"
       className="relative py-20 sm:py-32 overflow-hidden"
-      style={{ background: light ? '#f1f5f9' : 'var(--dark-gray)', transition: 'background 0.4s' }}
+      style={{ background: light ? 'linear-gradient(180deg, #f1f5f9 0%, #ffffff 15%, #ffffff 100%)' : 'var(--dark-gray)', transition: 'background 0.4s' }}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}

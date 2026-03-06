@@ -98,20 +98,6 @@ export default function Hero() {
               </span>
             </motion.button>
 
-            <motion.button
-              onClick={() => handleScrollToSection('pricing')}
-              className="px-8 py-4 text-base font-semibold rounded-xl transition-all duration-300"
-              style={{
-                background: light ? 'rgba(15,23,42,0.05)' : 'rgba(255,255,255,0.05)',
-                border: `1px solid ${light ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.1)'}`,
-                color: light ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.9)',
-                transition: 'all 0.3s',
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              View Pricing
-            </motion.button>
           </motion.div>
         </div>
       </div>

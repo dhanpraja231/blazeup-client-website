@@ -11,8 +11,8 @@ export default function Footer() {
     <footer
       className="w-full"
       style={{
-        background: light ? 'rgba(241,245,249,0.95)' : 'rgba(0,0,0,0.90)',
-        borderTop: `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.1)'}`,
+        background: '#000000',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
         transition: 'background 0.4s, border-top 0.4s',
       }}
     >
@@ -24,20 +24,20 @@ export default function Footer() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <p style={{ color: light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.4)', fontSize: 14, transition: 'color 0.3s' }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
             © {currentYear} BlazeUp. All rights reserved.
           </p>
           <div className="flex space-x-6 text-sm">
             <motion.a
               href="#"
-              style={{ color: light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.4)', transition: 'color 0.3s' }}
+              style={{ color: 'rgba(255,255,255,0.4)' }}
               whileHover={{ y: -1 }}
             >
               Privacy Policy
             </motion.a>
             <motion.a
               href="#"
-              style={{ color: light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.4)', transition: 'color 0.3s' }}
+              style={{ color: 'rgba(255,255,255,0.4)' }}
               whileHover={{ y: -1 }}
             >
               Terms of Service

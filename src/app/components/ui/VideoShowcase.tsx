@@ -3,13 +3,17 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useTheme } from '@/components/ThemeProvider';
+import gsap from 'gsap';
 
 export default function VideoShowcase() {
   const { light } = useTheme();
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const companionRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: false, amount: 0.3 });
+  const companionInView = useInView(companionRef as React.RefObject<Element>, { once: true, amount: 0.3 });
   const [hasStarted, setHasStarted] = useState(false);
+  const [companionAnimated, setCompanionAnimated] = useState(false);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -21,13 +25,59 @@ export default function VideoShowcase() {
     }
   }, [isInView]);
 
+  // GSAP companion text animation
+  useEffect(() => {
+    if (!companionInView || companionAnimated || !companionRef.current) return;
+    setCompanionAnimated(true);
+
+    const items = companionRef.current.querySelectorAll('.companion-item');
+    const divider = companionRef.current.querySelectorAll('.companion-divider');
+
+    gsap.fromTo(items,
+      { y: 40, opacity: 0 },
+      {
+        y: 0, opacity: 1,
+        duration: 0.7,
+        stagger: 0.15,
+        ease: 'power3.out',
+      }
+    );
+
+    gsap.fromTo(divider,
+      { scaleY: 0, opacity: 0 },
+      {
+        scaleY: 1, opacity: 1,
+        duration: 0.5,
+        stagger: 0.1,
+        delay: 0.3,
+        ease: 'power2.out',
+      }
+    );
+
+    // Animate counter numbers
+    const counters = companionRef.current.querySelectorAll('.counter-value');
+    counters.forEach((el) => {
+      const target = parseInt(el.getAttribute('data-target') || '0', 10);
+      const obj = { val: 0 };
+      gsap.to(obj, {
+        val: target,
+        duration: 1.5,
+        delay: 0.4,
+        ease: 'power2.out',
+        onUpdate: () => {
+          el.textContent = Math.round(obj.val).toLocaleString() + (el.getAttribute('data-suffix') || '');
+        }
+      });
+    });
+  }, [companionInView, companionAnimated]);
+
   return (
     <section
       ref={sectionRef}
       className="relative overflow-hidden"
       style={{
         background: light
-          ? 'linear-gradient(180deg, #f1f5f9 0%, #e0e7ef 40%, #cbd5e1 100%)'
+          ? 'linear-gradient(180deg, #cbd5e1 0%, #e0e7ef 40%, #f1f5f9 100%)'
           : 'linear-gradient(180deg, #020617 0%, #0b1120 40%, #111827 100%)',
         transition: 'background 0.5s ease',
         padding: '80px 0 100px',
@@ -50,19 +100,7 @@ export default function VideoShowcase() {
         }}
       />
 
-      {/* Decorative top border line */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: '10%',
-          right: '10%',
-          height: '1px',
-          background: light
-            ? 'linear-gradient(90deg, transparent, rgba(0,0,0,0.08), transparent)'
-            : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)',
-        }}
-      />
+
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative" style={{ zIndex: 1 }}>
         {/* Section Header */}
@@ -102,7 +140,7 @@ export default function VideoShowcase() {
             The Complete{' '}
             <span
               style={{
-                color: light? '#f97316' : '#fb923c',
+                color: light ? '#f97316' : '#fb923c',
               }}
             >
               Experience
@@ -160,21 +198,156 @@ export default function VideoShowcase() {
             <source src="/CompleteVideo.mp4" type="video/mp4" />
           </video>
         </motion.div>
+
+        {/* ── Companion Stats Below Video ── */}
+        <div
+          ref={companionRef}
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'stretch',
+            gap: 0,
+            maxWidth: '900px',
+            margin: '56px auto 0',
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Stat 1 */}
+          <div className="companion-item" style={{ flex: 1, minWidth: 180, textAlign: 'center', padding: '0 24px', opacity: 0 }}>
+            <div
+              className="counter-value"
+              data-target="15"
+              data-suffix="+"
+              style={{
+                fontSize: 36,
+                fontWeight: 800,
+                letterSpacing: '-0.03em',
+                color: light ? '#0f172a' : '#fff',
+                marginBottom: 8,
+                transition: 'color 0.3s',
+              }}
+            >
+              0
+            </div>
+            <div style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: light ? '#f97316' : '#fb923c',
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.08em',
+              marginBottom: 6,
+            }}>
+              Policy Templates
+            </div>
+            <div style={{
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.4)',
+              transition: 'color 0.3s',
+            }}>
+              Pre-built workflows to get started in minutes
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="companion-divider" style={{
+            width: 1,
+            alignSelf: 'stretch',
+            background: light
+              ? 'linear-gradient(180deg, transparent, rgba(0,0,0,0.12), transparent)'
+              : 'linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent)',
+            opacity: 0,
+            transformOrigin: 'center top',
+          }} />
+
+          {/* Stat 2 */}
+          <div className="companion-item" style={{ flex: 1, minWidth: 180, textAlign: 'center', padding: '0 24px', opacity: 0 }}>
+            <div
+              className="counter-value"
+              data-target="500"
+              data-suffix="ms"
+              style={{
+                fontSize: 36,
+                fontWeight: 800,
+                letterSpacing: '-0.03em',
+                color: light ? '#0f172a' : '#fff',
+                marginBottom: 8,
+                transition: 'color 0.3s',
+              }}
+            >
+              0
+            </div>
+            <div style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: light ? '#6366f1' : '#818cf8',
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.08em',
+              marginBottom: 6,
+            }}>
+              Evaluation Speed
+            </div>
+            <div style={{
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.4)',
+              transition: 'color 0.3s',
+            }}>
+              Real-time policy decisions at scale
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="companion-divider" style={{
+            width: 1,
+            alignSelf: 'stretch',
+            background: light
+              ? 'linear-gradient(180deg, transparent, rgba(0,0,0,0.12), transparent)'
+              : 'linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent)',
+            opacity: 0,
+            transformOrigin: 'center top',
+          }} />
+
+          {/* Stat 3 */}
+          <div className="companion-item" style={{ flex: 1, minWidth: 180, textAlign: 'center', padding: '0 24px', opacity: 0 }}>
+            <div
+              className="counter-value"
+              data-target="100"
+              data-suffix="%"
+              style={{
+                fontSize: 36,
+                fontWeight: 800,
+                letterSpacing: '-0.03em',
+                color: light ? '#0f172a' : '#fff',
+                marginBottom: 8,
+                transition: 'color 0.3s',
+              }}
+            >
+              0
+            </div>
+            <div style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: light ? '#10b981' : '#34d399',
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.08em',
+              marginBottom: 6,
+            }}>
+              Audit Coverage
+            </div>
+            <div style={{
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.4)',
+              transition: 'color 0.3s',
+            }}>
+              Every transaction tracked and verified
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Decorative bottom border line */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: '10%',
-          right: '10%',
-          height: '1px',
-          background: light
-            ? 'linear-gradient(90deg, transparent, rgba(0,0,0,0.08), transparent)'
-            : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)',
-        }}
-      />
+
     </section>
   );
 }

@@ -558,7 +558,7 @@ export default function WorkflowTabs() {
   return (
     <>
       {/* ─── 3-Column Section ─── */}
-      <section id="product" className="w-full py-16 sm:py-24" style={{ background: light ? '#f8fafc' : 'transparent', transition: 'background 0.4s' }}>
+      <section id="product" className="w-full py-16 sm:py-24" style={{ background: light ? 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 20%, #e0e7ef 50%, #cbd5e1 100%)' : 'linear-gradient(180deg, #020617 0%, #0b1120 40%, #111827 100%)', transition: 'background 0.4s' }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="mb-12">
@@ -603,7 +603,7 @@ export default function WorkflowTabs() {
                   height: isMobile ? 350 : undefined,
                   borderRadius: 20,
                   border: `1px solid ${light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}`,
-                  background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
+                  background: light ? '#ffffff' : 'rgba(255,255,255,0.02)',
                   backdropFilter: 'blur(12px)',
                   overflow: 'hidden',
                   boxShadow: light ? '0 4px 20px rgba(0,0,0,0.06)' : '0 4px 20px rgba(0,0,0,0.2)',
