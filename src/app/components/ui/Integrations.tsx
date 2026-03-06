@@ -22,6 +22,7 @@ import {
 } from 'react-icons/si';
 import { FaFileInvoiceDollar, FaDatabase } from 'react-icons/fa';
 import { IconType } from 'react-icons';
+import { useTheme } from '@/components/ThemeProvider';
 
 // Row 1 - Left to right (ERP & Finance)
 const integrations_row1 = [
@@ -62,6 +63,7 @@ interface ScrollingRowProps {
 
 function ScrollingRow({ integrations, direction, speed }: ScrollingRowProps) {
   const duplicatedIntegrations = [...integrations, ...integrations, ...integrations];
+  const { light } = useTheme();
 
   return (
     <div className="relative overflow-hidden py-4">
@@ -88,16 +90,17 @@ function ScrollingRow({ integrations, direction, speed }: ScrollingRowProps) {
               style={{
                 width: '180px',
                 height: '140px',
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${light ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`,
+                transition: 'background 0.3s, border 0.3s',
               }}
             >
               {/* Integration Logo */}
               <div className="w-16 h-16 mb-3 flex items-center justify-center">
-                <Icon className="w-full h-full text-white" />
+                <Icon className="w-full h-full" style={{ color: light ? '#1e293b' : '#fff', transition: 'color 0.3s' }} />
               </div>
               {/* Company name */}
-              <h3 className="text-sm font-semibold text-center text-white">
+              <h3 className="text-sm font-semibold text-center" style={{ color: light ? '#1e293b' : '#fff', transition: 'color 0.3s' }}>
                 {integration.name}
               </h3>
               {/* Color indicator */}
@@ -114,8 +117,14 @@ function ScrollingRow({ integrations, direction, speed }: ScrollingRowProps) {
 }
 
 export default function Integrations() {
+  const { light } = useTheme();
+
   return (
-    <section id="integrations" className="relative py-20 sm:py-32 overflow-hidden" style={{ background: 'var(--dark-gray)' }}>
+    <section
+      id="integrations"
+      className="relative py-20 sm:py-32 overflow-hidden"
+      style={{ background: light ? 'linear-gradient(180deg, #f1f5f9 0%, #ffffff 15%, #ffffff 100%)' : 'var(--dark-gray)', transition: 'background 0.4s' }}
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
         <motion.div
@@ -127,6 +136,7 @@ export default function Integrations() {
         >
           <motion.h2 
             className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6"
+            style={{ color: light ? '#0f172a' : '#fff', transition: 'color 0.3s' }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -136,7 +146,7 @@ export default function Integrations() {
           </motion.h2>
           <motion.p 
             className="text-lg sm:text-xl max-w-3xl mx-auto"
-            style={{ color: 'rgba(255,255,255,0.6)' }}
+            style={{ color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.6)', transition: 'color 0.3s' }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -148,13 +158,8 @@ export default function Integrations() {
 
         {/* Scrolling Integration Rows */}
         <div className="space-y-6">
-          {/* Row 1: Left to right */}
           <ScrollingRow integrations={integrations_row1} direction="left" speed={25} />
-          
-          {/* Row 2: Right to left */}
           <ScrollingRow integrations={integrations_row2} direction="right" speed={30} />
-          
-          {/* Row 3: Left to right */}
           <ScrollingRow integrations={integrations_row3} direction="left" speed={28} />
         </div>
 
@@ -166,7 +171,7 @@ export default function Integrations() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <p className="text-lg" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <p className="text-lg" style={{ color: light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.5)', transition: 'color 0.3s' }}>
             And more integrations coming soon...
           </p>
         </motion.div>
@@ -174,3 +179,4 @@ export default function Integrations() {
     </section>
   );
 }
+

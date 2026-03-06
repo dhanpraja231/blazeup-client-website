@@ -3,7 +3,7 @@
     {
       "id": "1",
       "type": "trigger",
-      "position": { "x": 100, "y": 0 },
+      "position": { "x": 100, "y": 250 },
       "data": {
         "label": "Tuition Reimbursement Request",
         "description": "Employee submits reimbursement claim",
@@ -14,7 +14,7 @@
     {
       "id": "2",
       "type": "condition",
-      "position": { "x": 480, "y": 20 },
+      "position": { "x": 500, "y": 250 },
       "data": {
         "label": "Employee Status Check",
         "conditions": [
@@ -30,7 +30,7 @@
     {
       "id": "3",
       "type": "category_limits",
-      "position": { "x": 860, "y": -20 },
+      "position": { "x": 900, "y": 200 },
       "data": {
         "label": "Annual Limit Check",
         "categories": [
@@ -46,7 +46,7 @@
     {
       "id": "4",
       "type": "policy",
-      "position": { "x": 1360, "y": 0 },
+      "position": { "x": 1350, "y": 150 },
       "data": {
         "label": "Course Approval Requirements",
         "policyType": "approval_required",
@@ -73,7 +73,7 @@
     {
       "id": "5",
       "type": "policy",
-      "position": { "x": 1820, "y": 60 },
+      "position": { "x": 1350, "y": 450 },
       "data": {
         "label": "Eligible Course Types",
         "policyType": "vendor_list",
@@ -90,7 +90,7 @@
     {
       "id": "6",
       "type": "action",
-      "position": { "x": 2300, "y": -20 },
+      "position": { "x": 1800, "y": 250 },
       "data": {
         "label": "Approve Reimbursement",
         "actionType": "approve",
@@ -100,7 +100,7 @@
     {
       "id": "7",
       "type": "action",
-      "position": { "x": 460, "y": 220 },
+      "position": { "x": 500, "y": 450 },
       "data": {
         "label": "Reject - Not Full-Time",
         "actionType": "reject",
@@ -110,7 +110,7 @@
     {
       "id": "8",
       "type": "action",
-      "position": { "x": 900, "y": 300 },
+      "position": { "x": 900, "y": 450 },
       "data": {
         "label": "Reject - Exceeds Limit",
         "actionType": "reject",
@@ -120,7 +120,7 @@
     {
       "id": "9",
       "type": "integration",
-      "position": { "x": 2700, "y": -200 },
+      "position": { "x": 2200, "y": 200 },
       "data": {
         "label": "Notify HR & Manager",
         "service": "slack",
@@ -133,7 +133,7 @@
     {
       "id": "10",
       "type": "integration",
-      "position": { "x": 2680, "y": 80 },
+      "position": { "x": 2200, "y": 450 },
       "data": {
         "label": "Log to Finance System",
         "service": "sheets",

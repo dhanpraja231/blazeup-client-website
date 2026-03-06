@@ -3,6 +3,7 @@ import './globals.css'
 import Navbar from '@/components/layout/Navbar';
 import { Inter } from 'next/font/google';
 import Footer from './components/layout/Footer';
+import ThemeProvider from '@/components/ThemeProvider';
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
@@ -62,9 +63,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <Navbar/>
-        {children}
-        <Footer/>
+        <ThemeProvider>
+          <Navbar/>
+          {children}
+          <Footer/>
+        </ThemeProvider>
       </body>
     </html>
   );

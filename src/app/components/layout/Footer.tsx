@@ -1,12 +1,21 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { light } = useTheme();
 
   return (
-    <footer className="w-full bg-black/90 opacity-85 border-t border-white/10">
+    <footer
+      className="w-full"
+      style={{
+        background: '#000000',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        transition: 'background 0.4s, border-top 0.4s',
+      }}
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           className="flex flex-col sm:flex-row justify-between items-center py-6 space-y-4 sm:space-y-0"
@@ -15,20 +24,20 @@ export default function Footer() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <p className="text-white/40 text-sm">
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
             © {currentYear} BlazeUp. All rights reserved.
           </p>
           <div className="flex space-x-6 text-sm">
             <motion.a
               href="#"
-              className="text-white/40 hover:text-white/60 transition-colors duration-300"
+              style={{ color: 'rgba(255,255,255,0.4)' }}
               whileHover={{ y: -1 }}
             >
               Privacy Policy
             </motion.a>
             <motion.a
               href="#"
-              className="text-white/40 hover:text-white/60 transition-colors duration-300"
+              style={{ color: 'rgba(255,255,255,0.4)' }}
               whileHover={{ y: -1 }}
             >
               Terms of Service

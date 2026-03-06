@@ -2,6 +2,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import gsap from 'gsap';
+import { useTheme } from '@/components/ThemeProvider';
 import AITemplateGenerator from './AITemplateGenerator';
 import {
   CreditCard, Type, Circle, Square, Trash2, Undo2, Redo2, Upload,
@@ -21,19 +22,24 @@ const ENABLE_AI_TEMPLATES = false;
 // ====================== TYPES ======================
 type CardFace = 'front' | 'back';
 type NetworkType = 'Visa' | 'Mastercard' | 'RuPay' | 'Amex';
-interface PatternState { id: string | null; color: string; opacity: number; scale: number; }
-const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.06, scale: 1 };
+interface PatternState { id: string | null; color: string; opacity: number; scale: number; strokeWidth: number; useGradient: boolean; gradientColor: string; }
+const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.06, scale: 1, strokeWidth: 1, useGradient: false, gradientColor: '#6366f1' };
 
 // ============ PREDEFINED CARD PATTERNS ============
+const patGradDef = (color: string, color2: string | null, w: number, h: number) => {
+  if (!color2) return ''; // no gradient — flat color used directly
+  return `<defs><linearGradient id='patGrad' x1='0' y1='0' x2='${w}' y2='${h}' gradientUnits='userSpaceOnUse'><stop offset='0%' stop-color='${color}'/><stop offset='100%' stop-color='${color2}'/></linearGradient></defs>`;
+};
+const patStroke = (color: string, color2: string | null) => color2 ? 'url(#patGrad)' : color;
 const CARD_PATTERNS = [
-  { id: 'geometric', name: 'Geometric', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${60*scale}' height='${60*scale}'><g fill='none' stroke='${color}' stroke-width='0.8'><rect x='${5*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${15*scale})'/><rect x='${35*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${15*scale})'/><rect x='${5*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${45*scale})'/><rect x='${35*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${45*scale})'/><line x1='0' y1='${30*scale}' x2='${60*scale}' y2='${30*scale}'/><line x1='${30*scale}' y1='0' x2='${30*scale}' y2='${60*scale}'/></g></svg>` },
-  { id: 'tessellation', name: 'Tessellation', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${80*scale}' height='${80*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><polygon points='${40*scale},${2*scale} ${78*scale},${20*scale} ${78*scale},${60*scale} ${40*scale},${78*scale} ${2*scale},${60*scale} ${2*scale},${20*scale}'/><line x1='${40*scale}' y1='${2*scale}' x2='${40*scale}' y2='${78*scale}'/><line x1='${2*scale}' y1='${20*scale}' x2='${78*scale}' y2='${60*scale}'/><line x1='${78*scale}' y1='${20*scale}' x2='${2*scale}' y2='${60*scale}'/></g></svg>` },
-  { id: 'waves', name: 'Waves', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${120*scale}' height='${20*scale}'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-linecap='round'><path d='M0,${10*scale} Q${15*scale},${2*scale} ${30*scale},${10*scale} Q${45*scale},${18*scale} ${60*scale},${10*scale} Q${75*scale},${2*scale} ${90*scale},${10*scale} Q${105*scale},${18*scale} ${120*scale},${10*scale}'/></g></svg>` },
-  { id: 'chevron', name: 'Chevron', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${40*scale}' height='${24*scale}'><g fill='none' stroke='${color}' stroke-width='1'><path d='M0,${24*scale} L${20*scale},${12*scale} L${40*scale},${24*scale}'/><path d='M0,${12*scale} L${20*scale},0 L${40*scale},${12*scale}'/></g></svg>` },
-  { id: 'hexagons', name: 'Hexagons', svg: (color: string, scale: number) => { const s = 20 * scale; const h = s * Math.sqrt(3); return `<svg xmlns='http://www.w3.org/2000/svg' width='${s*3}' height='${h}'><g fill='none' stroke='${color}' stroke-width='0.6'><polygon points='${s},0 ${s*2},0 ${s*2.5},${h/2} ${s*2},${h} ${s},${h} ${s*0.5},${h/2}'/><polygon points='${s*2.5},${h/2} ${s*3},0 ${s*3},0'/></g></svg>`; } },
-  { id: 'crosshatch', name: 'Crosshatch', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${20*scale}' height='${20*scale}'><g stroke='${color}' stroke-width='0.5'><line x1='0' y1='0' x2='${20*scale}' y2='${20*scale}'/><line x1='${20*scale}' y1='0' x2='0' y2='${20*scale}'/></g></svg>` },
-  { id: 'circles', name: 'Circles', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${40*scale}' height='${40*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><circle cx='${20*scale}' cy='${20*scale}' r='${8*scale}'/><circle cx='0' cy='0' r='${8*scale}'/><circle cx='${40*scale}' cy='0' r='${8*scale}'/><circle cx='0' cy='${40*scale}' r='${8*scale}'/><circle cx='${40*scale}' cy='${40*scale}' r='${8*scale}'/></g></svg>` },
-  { id: 'topographic', name: 'Topographic', svg: (color: string, scale: number) => `<svg xmlns='http://www.w3.org/2000/svg' width='${100*scale}' height='${100*scale}'><g fill='none' stroke='${color}' stroke-width='0.6'><ellipse cx='${50*scale}' cy='${50*scale}' rx='${45*scale}' ry='${30*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${30*scale}' ry='${18*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${15*scale}' ry='${8*scale}'/></g></svg>` },
+  { id: 'geometric', name: 'Geometric', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 60*scale, h = 60*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.8*sw}'><rect x='${5*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${15*scale})'/><rect x='${35*scale}' y='${5*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${15*scale})'/><rect x='${5*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${15*scale} ${45*scale})'/><rect x='${35*scale}' y='${35*scale}' width='${20*scale}' height='${20*scale}' transform='rotate(45 ${45*scale} ${45*scale})'/><line x1='0' y1='${30*scale}' x2='${w}' y2='${30*scale}'/><line x1='${30*scale}' y1='0' x2='${30*scale}' y2='${h}'/></g></svg>`; } },
+  { id: 'tessellation', name: 'Tessellation', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 80*scale, h = 80*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.6*sw}'><polygon points='${40*scale},${2*scale} ${78*scale},${20*scale} ${78*scale},${60*scale} ${40*scale},${78*scale} ${2*scale},${60*scale} ${2*scale},${20*scale}'/><line x1='${40*scale}' y1='${2*scale}' x2='${40*scale}' y2='${78*scale}'/><line x1='${2*scale}' y1='${20*scale}' x2='${78*scale}' y2='${60*scale}'/><line x1='${78*scale}' y1='${20*scale}' x2='${2*scale}' y2='${60*scale}'/></g></svg>`; } },
+  { id: 'waves', name: 'Waves', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 120*scale, h = 20*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${1.2*sw}' stroke-linecap='round'><path d='M0,${10*scale} Q${15*scale},${2*scale} ${30*scale},${10*scale} Q${45*scale},${18*scale} ${60*scale},${10*scale} Q${75*scale},${2*scale} ${90*scale},${10*scale} Q${105*scale},${18*scale} ${w},${10*scale}'/></g></svg>`; } },
+  { id: 'chevron', name: 'Chevron', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 40*scale, h = 24*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${1*sw}'><path d='M0,${h} L${20*scale},${12*scale} L${w},${h}'/><path d='M0,${12*scale} L${20*scale},0 L${w},${12*scale}'/></g></svg>`; } },
+  { id: 'hexagons', name: 'Hexagons', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const sz = 20 * scale; const h = sz * Math.sqrt(3); const w = sz*3; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.6*sw}'><polygon points='${sz},0 ${sz*2},0 ${sz*2.5},${h/2} ${sz*2},${h} ${sz},${h} ${sz*0.5},${h/2}'/><polygon points='${sz*2.5},${h/2} ${sz*3},0 ${sz*3},0'/></g></svg>`; } },
+  { id: 'crosshatch', name: 'Crosshatch', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 20*scale, h = 20*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g stroke='${s}' stroke-width='${0.5*sw}'><line x1='0' y1='0' x2='${w}' y2='${h}'/><line x1='${w}' y1='0' x2='0' y2='${h}'/></g></svg>`; } },
+  { id: 'circles', name: 'Circles', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 40*scale, h = 40*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.6*sw}'><circle cx='${20*scale}' cy='${20*scale}' r='${8*scale}'/><circle cx='0' cy='0' r='${8*scale}'/><circle cx='${w}' cy='0' r='${8*scale}'/><circle cx='0' cy='${h}' r='${8*scale}'/><circle cx='${w}' cy='${h}' r='${8*scale}'/></g></svg>`; } },
+  { id: 'topographic', name: 'Topographic', svg: (color: string, scale: number, sw = 1, gc: string | null = null) => { const w = 100*scale, h = 100*scale; const s = patStroke(color, gc); return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${patGradDef(color, gc, w, h)}<g fill='none' stroke='${s}' stroke-width='${0.6*sw}'><ellipse cx='${50*scale}' cy='${50*scale}' rx='${45*scale}' ry='${30*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${30*scale}' ry='${18*scale}'/><ellipse cx='${50*scale}' cy='${50*scale}' rx='${15*scale}' ry='${8*scale}'/></g></svg>`; } },
 ];
 interface CardElement {
   id: string;
@@ -93,6 +99,7 @@ const DEFAULT_ICONS = [
 ];
 // ====================== COLOR HELPERS ======================
 function hexToHSL(hex: string): [number, number, number] {
+  if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length < 7) return [0, 0, 50];
   const r = parseInt(hex.slice(1, 3), 16) / 255;
   const g = parseInt(hex.slice(3, 5), 16) / 255;
   const b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -219,26 +226,39 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
     { id: 'hw-fine-print', type: 'text', face: 'back', x: 24, y: ch - 24, width: cw - 48, height: 14, content: 'This card is property of the issuing bank.', color: 'rgba(255,255,255,.35)', fontSize: 7, backgroundColor: 'transparent', opacity: 1, rotation: 0, letterSpacing: .5 },
   ];
 }
+// ====================== LOCALSTORAGE PERSISTENCE ======================
+const STORAGE_KEY = 'blazeup-card-state';
+function loadSavedState() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
 export default function CreditCardDesigner() {
     // Add this to your state declarations (around line 280)
     const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const _saved = useRef(loadSavedState());
+  const { light: canvasLightMode } = useTheme();
   const [activeFace, setActiveFace] = useState<CardFace>('front');
-  const [network, setNetwork] = useState<NetworkType>('Visa');
-  const [frontElements, setFrontElements] = useState<CardElement[]>(() => createFrontTemplate());
-  const [backElements, setBackElements] = useState<CardElement[]>(() => createBackTemplate('horizontal', 'Visa'));
-  const [frontBg, setFrontBg] = useState(GRADIENTS[0].value);
-  const [backBg, setBackBg] = useState('linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)');
+  const [network, setNetwork] = useState<NetworkType>(() => _saved.current?.network ?? 'Visa');
+  const [frontElements, setFrontElements] = useState<CardElement[]>(() => _saved.current?.frontElements ?? createFrontTemplate());
+  const [backElements, setBackElements] = useState<CardElement[]>(() => _saved.current?.backElements ?? createBackTemplate('horizontal', _saved.current?.network ?? 'Visa'));
+  const [frontBg, setFrontBg] = useState(() => _saved.current?.frontBg ?? GRADIENTS[0].value);
+  const [backBg, setBackBg] = useState(() => _saved.current?.backBg ?? 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [expandedPanel, setExpandedPanel] = useState<string | null>('components');
+  const [expandedPanel, setExpandedPanel] = useState<string | null>('');
   const [collisionWarn, setCollisionWarn] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
-  const [spotlightColor, setSpotlightColor] = useState('#1a1a3e');
-  const [spotlightX, setSpotlightX] = useState(30);
-  const [spotlightY, setSpotlightY] = useState(30);
-  const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [spotlightColor, setSpotlightColor] = useState(() => _saved.current?.spotlightColor ?? '#3535cf');
+  const [spotlightX, setSpotlightX] = useState(() => _saved.current?.spotlightX ?? 89);
+  const [spotlightY, setSpotlightY] = useState(() => _saved.current?.spotlightY ?? 38);
+  const [spotlightEnabled, setSpotlightEnabled] = useState(() => _saved.current?.spotlightEnabled ?? true);
+  const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>(() => _saved.current?.orientation ?? 'horizontal');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [canvasLightMode, setCanvasLightMode] = useState(false);
   // Background removal parameters (from backgroundslider.html)
   const [bgRemovalTolerance, setBgRemovalTolerance] = useState(0.05);
   const [bgRemovalFade, setBgRemovalFade] = useState(0.10);
@@ -247,24 +267,27 @@ export default function CreditCardDesigner() {
   // Image clipboard
   const [imageClipboard, setImageClipboard] = useState<{ id: string; dataUrl: string; name: string }[]>([]);
   // Pattern overlay (per face)
-  const [frontPattern, setFrontPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
-  const [backPattern, setBackPattern] = useState<PatternState>({ ...DEFAULT_PATTERN });
+  const [frontPattern, setFrontPattern] = useState<PatternState>(() => _saved.current?.frontPattern ?? { ...DEFAULT_PATTERN });
+  const [backPattern, setBackPattern] = useState<PatternState>(() => _saved.current?.backPattern ?? { ...DEFAULT_PATTERN });
   // Sync faces toggle
   const [syncFaces, setSyncFaces] = useState(false);
   const activePattern = activeFace === 'front' ? frontPattern : backPattern;
   const setActivePattern = activeFace === 'front' ? setFrontPattern : setBackPattern;
   // Layout state (per face)
   interface LayoutState { id: LayoutId; baseColor: string; overlayColor: string; }
-  const [frontLayout, setFrontLayout] = useState<LayoutState>({ id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
-  const [backLayout, setBackLayout] = useState<LayoutState>({ id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
+  const [frontLayout, setFrontLayout] = useState<LayoutState>(() => _saved.current?.frontLayout ?? { id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
+  const [backLayout, setBackLayout] = useState<LayoutState>(() => _saved.current?.backLayout ?? { id: 'none', baseColor: '#1a1a2e', overlayColor: '#2d1b69' });
   const activeLayout = activeFace === 'front' ? frontLayout : backLayout;
   const setActiveLayout = activeFace === 'front' ? setFrontLayout : setBackLayout;
   // Computed card dimensions based on orientation
   const cardW = orientation === 'horizontal' ? CARD.W : CARD.H;
   const cardH = orientation === 'horizontal' ? CARD.H : CARD.W;
   const [history, setHistory] = useState<HistoryState[]>([{
-    frontElements: createFrontTemplate(), backElements: createBackTemplate('horizontal', 'Visa'),
-    frontBg: GRADIENTS[0].value, backBg: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)', network: 'Visa',
+    frontElements: _saved.current?.frontElements ?? createFrontTemplate(),
+    backElements: _saved.current?.backElements ?? createBackTemplate('horizontal', _saved.current?.network ?? 'Visa'),
+    frontBg: _saved.current?.frontBg ?? GRADIENTS[0].value,
+    backBg: _saved.current?.backBg ?? 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)',
+    network: _saved.current?.network ?? 'Visa',
   }]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -282,19 +305,44 @@ export default function CreditCardDesigner() {
   const setCardBg = activeFace === 'front' ? setFrontBg : setBackBg;
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
+  // ---- localStorage debounced save ----
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        const state = {
+          frontElements, backElements, frontBg, backBg, network, orientation,
+          frontPattern, backPattern, frontLayout, backLayout,
+          spotlightColor, spotlightX, spotlightY, spotlightEnabled,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch { /* quota exceeded — silently ignore */ }
+    }, 500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [frontElements, backElements, frontBg, backBg, network, orientation, frontPattern, backPattern, frontLayout, backLayout, spotlightColor, spotlightX, spotlightY, spotlightEnabled]);
   // ---- toast auto-dismiss ----
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(t);
   }, [toast]);
-  // ---- sync front → back ----
+  // ---- bidirectional sync (front ↔ back) ----
+  const syncSourceRef = useRef<'front' | 'back' | null>(null);
   useEffect(() => {
-    if (!syncFaces) return;
+    if (!syncFaces || syncSourceRef.current === 'back') { syncSourceRef.current = null; return; }
+    syncSourceRef.current = 'front';
     setBackBg(frontBg);
     setBackPattern({ ...frontPattern });
     setBackLayout({ ...frontLayout });
   }, [syncFaces, frontBg, frontPattern, frontLayout]);
+  useEffect(() => {
+    if (!syncFaces || syncSourceRef.current === 'front') { syncSourceRef.current = null; return; }
+    syncSourceRef.current = 'back';
+    setFrontBg(backBg);
+    setFrontPattern({ ...backPattern });
+    setFrontLayout({ ...backLayout });
+  }, [syncFaces, backBg, backPattern, backLayout]);
   // ---- history ----
   const snap = useCallback((): HistoryState => ({
     frontElements: activeFace === 'front' ? elementsRef.current : frontElements,
@@ -339,23 +387,41 @@ export default function CreditCardDesigner() {
   useEffect(() => {
     const wrapper = canvasWrapperRef.current;
     if (!wrapper) return;
+    // Find the nearest scrollable ancestor (overlay div or window)
+    let scrollContainer: HTMLElement | Window = window;
+    let el: HTMLElement | null = wrapper.parentElement;
+    while (el) {
+      const style = getComputedStyle(el);
+      const overflowY = style.overflowY;
+      if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+        scrollContainer = el;
+        break;
+      }
+      el = el.parentElement;
+    }
+    const isWindow = scrollContainer === window;
     // gsap.quickTo creates a single reusable tween that smoothly interpolates — no jitter
     const setY = gsap.quickTo(wrapper, 'y', { duration: 0.4, ease: 'power3' });
     // Cache the original offset top once after layout
     const cacheTop = () => {
       gsap.set(wrapper, { y: 0 });
-      canvasOriginalTop.current = wrapper.getBoundingClientRect().top + window.scrollY;
+      if (isWindow) {
+        canvasOriginalTop.current = wrapper.getBoundingClientRect().top + window.scrollY;
+      } else {
+        canvasOriginalTop.current = wrapper.getBoundingClientRect().top - (scrollContainer as HTMLElement).getBoundingClientRect().top + (scrollContainer as HTMLElement).scrollTop;
+      }
     };
     cacheTop();
     const onScroll = () => {
       if (window.innerWidth < 1024) { setY(0); return; }
-      const scrollY = window.scrollY;
+      const scrollY = isWindow ? window.scrollY : (scrollContainer as HTMLElement).scrollTop;
       const pinStart = canvasOriginalTop.current - 32;
       setY(scrollY > pinStart ? scrollY - pinStart : 0);
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
+    const target = isWindow ? window : scrollContainer;
+    target.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', cacheTop);
-    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', cacheTop); };
+    return () => { target.removeEventListener('scroll', onScroll); window.removeEventListener('resize', cacheTop); };
   }, []);
   // ---- collision ----
   const checkCollision = useCallback((x: number, y: number, w: number, h: number, cw: number): string | null => {
@@ -757,9 +823,6 @@ export default function CreditCardDesigner() {
   const selectedData = elements.find(el => el.id === selectedElement);
   const comps = [
     { type: 'text' as const, icon: Type, label: 'Text', dv: 'Double click to edit' },
-    { type: 'cardNumber' as const, icon: CreditCard, label: 'Card Number', dv: 'XXXX XXXX XXXX XXXX' },
-    { type: 'circle' as const, icon: Circle, label: 'Circle', dv: '' },
-    { type: 'rectangle' as const, icon: Square, label: 'Rectangle', dv: '' },
     { type: 'icon' as const, icon: Sparkles, label: 'Icon', dv: '' },
     { type: 'image' as const, icon: Upload, label: 'Upload Logo', dv: '' },
   ];
@@ -977,13 +1040,27 @@ export default function CreditCardDesigner() {
                 </div>
                 {/* Spotlight gradient */}
                 <div className={`pt-2 border-t ${light ? 'border-black/5' : 'border-white/5'}`}>
-                  <PropLabel>Spotlight Gradient</PropLabel>
-                  <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); const g = generateSpotlightGradient(v, spotlightX, spotlightY); setCardBg(g); pushHistory(); }} className="w-full" />
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => { const val = parseInt(e.target.value); setSpotlightX(val); const g = generateSpotlightGradient(spotlightColor, val, spotlightY); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
-                    <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => { const val = parseInt(e.target.value); setSpotlightY(val); const g = generateSpotlightGradient(spotlightColor, spotlightX, val); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <PropLabel>Spotlight Gradient</PropLabel>
+                    <button onClick={() => {
+                      if (spotlightEnabled) {
+                        // Turning OFF: reset background to solid spotlightColor, removing radial-gradient entirely
+                        setCardBg(spotlightColor);
+                        pushHistory();
+                      }
+                      setSpotlightEnabled((p: boolean) => !p);
+                    }} className="relative w-10 h-5 rounded-full transition-colors" style={{ background: spotlightEnabled ? '#6366f1' : (light ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)') }}>
+                      <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: spotlightEnabled ? 22 : 2 }} />
+                    </button>
                   </div>
-                  <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }} />
+                  {spotlightEnabled && <>
+                    <ColorPicker value={spotlightColor} onChange={v => { setSpotlightColor(v); const g = generateSpotlightGradient(v, spotlightX, spotlightY); setCardBg(g); pushHistory(); }} className="w-full" />
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div><PropLabel>X: {spotlightX}%</PropLabel><input type="range" min="0" max="100" value={spotlightX} onChange={e => { const val = parseInt(e.target.value); setSpotlightX(val); const g = generateSpotlightGradient(spotlightColor, val, spotlightY); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                      <div><PropLabel>Y: {spotlightY}%</PropLabel><input type="range" min="0" max="100" value={spotlightY} onChange={e => { const val = parseInt(e.target.value); setSpotlightY(val); const g = generateSpotlightGradient(spotlightColor, spotlightX, val); setCardBg(g); pushHistory(); }} className="w-full accent-indigo-500" /></div>
+                    </div>
+                    <div className="mt-2 h-8 rounded-lg" style={{ background: generateSpotlightGradient(spotlightColor, spotlightX, spotlightY), border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }} />
+                  </>}
                 </div>
               </div>}
             </div>
@@ -1053,7 +1130,7 @@ export default function CreditCardDesigner() {
                     None
                   </button>
                   {CARD_PATTERNS.map(p => {
-                    const previewSvg = p.svg('#888888', 0.5);
+                    const previewSvg = p.svg('#888888', 0.5, 1);
                     const encoded = `url("data:image/svg+xml,${encodeURIComponent(previewSvg)}")`;
                     return (
                       <button key={p.id} onClick={() => setActivePattern(prev => ({ ...prev, id: p.id }))}
@@ -1066,8 +1143,18 @@ export default function CreditCardDesigner() {
                 {/* Customization controls */}
                 {activePattern.id && <>
                   <div><PropLabel>Pattern Color</PropLabel><ColorPicker value={activePattern.color} onChange={v => setActivePattern(p => ({ ...p, color: v }))} /></div>
+                  {/* Gradient toggle + end color */}
+                  <div className={`flex items-center justify-between p-2 rounded-lg`} style={{ background: light ? 'rgba(0,0,0,.02)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }}>
+                    <span className={`text-xs ${light ? 'text-slate-500' : 'text-slate-400'}`}>Gradient Stroke</span>
+                    <button onClick={() => setActivePattern(p => ({ ...p, useGradient: !p.useGradient }))} className="relative w-10 h-5 rounded-full transition-colors" style={{ background: activePattern.useGradient ? '#f43f5e' : (light ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)') }}>
+                      <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: activePattern.useGradient ? 22 : 2 }} />
+                    </button>
+                  </div>
+                  {activePattern.useGradient && <div><PropLabel>Gradient End Color</PropLabel><ColorPicker value={activePattern.gradientColor} onChange={v => setActivePattern(p => ({ ...p, gradientColor: v }))} /></div>}
+                  {activePattern.useGradient && <div className="h-5 rounded-lg" style={{ background: `linear-gradient(135deg, ${activePattern.color}, ${activePattern.gradientColor})`, border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }} />}
                   <div><PropLabel>Opacity: {(activePattern.opacity*100).toFixed(0)}%</PropLabel><input type="range" min="0.01" max="0.3" step="0.01" value={activePattern.opacity} onChange={e => setActivePattern(p => ({ ...p, opacity: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
                   <div><PropLabel>Scale: {activePattern.scale.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="3" step="0.1" value={activePattern.scale} onChange={e => setActivePattern(p => ({ ...p, scale: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
+                  <div><PropLabel>Thickness: {activePattern.strokeWidth.toFixed(1)}x</PropLabel><input type="range" min="0.3" max="4" step="0.1" value={activePattern.strokeWidth} onChange={e => setActivePattern(p => ({ ...p, strokeWidth: parseFloat(e.target.value) }))} className="w-full accent-rose-500" /></div>
                 </>}
               </div>}
             </div>
@@ -1162,21 +1249,14 @@ export default function CreditCardDesigner() {
                     style={{ background: activeFace === f ? 'rgba(99,102,241,.15)' : 'transparent', color: activeFace === f ? '#818cf8' : '#64748b', border: activeFace === f ? '1px solid rgba(99,102,241,.3)' : '1px solid transparent' }}>
                     {f === 'front' ? 'Front Face' : 'Back Face'}
                   </button>))}
-                <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON — back mirrors front styles' : 'Sync OFF — faces are independent', type: 'info' }); }}
+                <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON — front & back styles stay in sync' : 'Sync OFF — faces are independent', type: 'info' }); }}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-1"
                   style={{ background: syncFaces ? 'rgba(34,197,94,.12)' : (light ? 'rgba(0,0,0,.03)' : 'rgba(255,255,255,.03)'), border: syncFaces ? '1px solid rgba(34,197,94,.3)' : (light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)'), color: syncFaces ? '#4ade80' : '#64748b' }}
-                  title={syncFaces ? 'Front → Back sync ON: back face mirrors front styles' : 'Sync styles from front to back face'}>
+                  title={syncFaces ? 'Front ↔ Back sync ON: both faces stay in sync' : 'Sync styles between front and back face'}>
                   {syncFaces ? <Link2 className="w-3 h-3" /> : <Unlink2 className="w-3 h-3" />}
                   {syncFaces ? 'Synced' : 'Sync'}
                 </button>
                 <span className={`text-[10px] ml-2 ${canvasLightMode ? 'text-slate-400' : 'text-slate-600'}`}>ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
-                <button onClick={() => setCanvasLightMode(p => !p)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-auto"
-                  style={{ background: light ? 'rgba(250,204,21,.12)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(250,204,21,.3)' : '1px solid rgba(255,255,255,.06)', color: light ? '#facc15' : '#64748b' }}
-                  title={canvasLightMode ? 'Switch to dark canvas' : 'Switch to light canvas'}>
-                  {canvasLightMode ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                  {canvasLightMode ? 'Light' : 'Dark'}
-                </button>
               </div>
               <div className="flex justify-center items-center overflow-x-auto" style={{ minHeight: 300, perspective: 1200 }}>
                 <div ref={flipContainerRef} style={{ transformStyle: 'preserve-3d', maxWidth: '100%' }}
@@ -1186,14 +1266,15 @@ export default function CreditCardDesigner() {
                     style={{ width: cardW, height: cardH, background: cardBg, borderRadius: CARD.R,
                       transition: 'width 0.4s ease, height 0.4s ease, box-shadow 0.3s ease, border 0.3s ease',
                       boxShadow: isDragOver ? '0 0 40px rgba(99,102,241,.5),0 25px 60px rgba(0,0,0,.4)' : '0 25px 60px rgba(0,0,0,.4)',
-                      border: isDragOver ? '2px dashed rgba(99,102,241,.6)' : '1px solid rgba(255,255,255,.08)' }}>
-                    <div className="absolute inset-0 pointer-events-none" style={{ opacity: .04 }}><svg width="100%" height="100%"><pattern id="cp" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#cp)"/></svg></div>
-                    {!light && <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />}
+                      border: isDragOver ? '2px dashed rgba(99,102,241,.6)' : 'none' }}>
+
+                    {spotlightEnabled && !light && <div className="absolute pointer-events-none" style={{ width: 200, height: 200, right: -60, top: -60, background: 'radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)', borderRadius: '50%' }} />}
                     {/* Pattern overlay */}
                     {activePattern.id && (() => {
                       const pat = CARD_PATTERNS.find(p => p.id === activePattern.id);
                       if (!pat) return null;
-                      const svgStr = pat.svg(activePattern.color, activePattern.scale);
+                      const gc = activePattern.useGradient ? activePattern.gradientColor : null;
+                      const svgStr = pat.svg(activePattern.color, activePattern.scale, activePattern.strokeWidth, gc);
                       const encoded = `url("data:image/svg+xml,${encodeURIComponent(svgStr)}")`;
                       return <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: encoded, backgroundRepeat: 'repeat', opacity: activePattern.opacity, borderRadius: CARD.R }} />;
                     })()}

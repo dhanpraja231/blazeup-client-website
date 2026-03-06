@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integrated Black Hole Gateway</title>
+  <style>
+    body {
+      background-color: #020617; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden; 
+    }
+
+    .scene {
+      width: 900px;
+      height: 520px; 
+      position: relative;
+      background: linear-gradient(135deg, #070b19 0%, #110f2e 100%);
+      border: 1px solid #334155;
+      border-radius: 16px;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255,255,255,0.05);
+      overflow: hidden;
+      perspective: 1200px; 
+      will-change: transform;
+    }
+
+    /* --- Dashboard Video --- */
+    #dashboard-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover; 
+      z-index: 500; 
+      opacity: 0; 
+      pointer-events: none;
+    }
+
+    /* --- Final Results Screen (The Wipe) --- */
+    #results-scene {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #020617; 
+      z-index: 2000; 
+      transform: translateX(-100%); 
+      display: flex;
+    }
+
+    #lines-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .status-block {
+      position: absolute;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      opacity: 0; 
+    }
+
+    .status-block.approved {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    }
+
+    .status-block.declined {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Subtle ambient starlight/glow in the background */
+    .ambient-glow {
+      position: absolute;
+      top: 50%;
+      right: 50px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 120, 50, 0.08) 0%, rgba(100, 50, 150, 0.03) 40%, transparent 70%);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    /* --- The Organic Black Hole --- */
+    .blackhole-wrapper {
+      position: absolute;
+      right: 140px; 
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .gravity-well {
+      position: absolute;
+      width: 450px;
+      height: 550px;
+      background: radial-gradient(ellipse, rgba(0,0,0,0.9) 10%, rgba(0,0,0,0.4) 40%, transparent 70%);
+      z-index: 0;
+    }
+
+    .accretion-disk {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, 
+        rgba(255, 100, 20, 0) 0%, 
+        rgba(255, 120, 40, 0.5) 20%, 
+        rgba(255, 230, 180, 0.9) 50%, 
+        rgba(255, 120, 40, 0.5) 80%, 
+        rgba(255, 100, 20, 0) 100%
+      );
+      filter: blur(12px);
+      mix-blend-mode: screen; 
+      z-index: 1;
+      animation: spin-disk 3s linear infinite;
+    }
+
+    @keyframes spin-disk {
+      0% { transform: rotateY(75deg) rotateZ(0deg); }
+      100% { transform: rotateY(75deg) rotateZ(360deg); }
+    }
+
+    .photon-ring {
+      position: absolute;
+      width: 110px;
+      height: 330px; 
+      border-radius: 50%;
+      box-shadow: 0 0 30px 10px rgba(255, 150, 60, 0.6);
+      border: 4px solid rgba(255, 220, 150, 0.8);
+      filter: blur(4px);
+      mix-blend-mode: screen;
+      z-index: 2;
+    }
+
+    .blackhole-core {
+      position: absolute;
+      width: 100px;
+      height: 320px; 
+      background: #000;
+      border-radius: 50%;
+      box-shadow: inset 0 0 20px 5px rgba(0,0,0,1);
+      z-index: 3;
+      will-change: transform;
+    }
+
+    .shockwave {
+      position: absolute;
+      width: 100px;
+      height: 320px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 200, 100, 0.6);
+      z-index: 4;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    /* --- Tiny Muted Debris (Pixels) --- */
+    .debris {
+      position: absolute;
+      top: 0; 
+      left: 0; 
+      width: 3px; 
+      height: 3px;
+      background-color: rgba(148, 163, 184, 0.6); 
+      border-radius: 50%;
+      z-index: 50; 
+      pointer-events: none;
+      box-shadow: 0 0 4px rgba(148, 163, 184, 0.3);
+    }
+
+    /* --- Empty Blocks (Wireframes) --- */
+    .empty-block {
+      position: absolute;
+      top: 0; 
+      left: 0; 
+      border: 1px solid rgba(148, 163, 184, 0.5); 
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      z-index: 150; 
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    /* --- Transaction Cards --- */
+    .tx-card {
+      position: absolute;
+      top: 0px; 
+      left: 0px;
+      width: 240px;
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      opacity: 0;
+      transform-origin: right center; 
+      will-change: transform, opacity;
+      z-index: 1000; 
+    }
+
+    .tx-header {
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tx-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+    .tx-row { display: flex; justify-content: space-between; align-items: center; }
+    .tx-label { color: #94a3b8; font-size: 11px; }
+    .tx-value { color: #f8fafc; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;}
+    .tx-amount { font-size: 18px; font-weight: 700; }
+    .tx-vendor-logo { width: 28px; height: 28px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 14px; flex-shrink: 0; }
+
+  </style>
+</head>
+<body>
+
+  <div class="scene">
+    <video id="dashboard-video" muted loop playsinline>
+      <source src="./fin-os-scroll.mp4" type="video/mp4">
+    </video>
+
+    <div id="results-scene">
+      <svg id="lines-svg"></svg>
+      </div>
+
+    <div class="ambient-glow"></div>
+
+    <div class="blackhole-wrapper">
+      <div class="gravity-well"></div>
+      <div class="accretion-disk"></div>
+      <div class="photon-ring"></div>
+      <div class="blackhole-core"></div>
+    </div>
+
+    <div class="tx-card" id="tx1"><div class="tx-header"><span class="header-icon">💳</span> Software Spend</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">☁️</div><div><div class="tx-value">AWS Services</div><div class="tx-label">Server Hosting</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 5</div><div class="tx-amount">₹42,500</div></div></div></div>
+    <div class="tx-card" id="tx2"><div class="tx-header"><span class="header-icon">✈️</span> Travel Budget</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">💺</div><div><div class="tx-value">IndiGo Airlines</div><div class="tx-label">Flight Tickets</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 5</div><div class="tx-amount">₹12,400</div></div></div></div>
+    <div class="tx-card" id="tx3"><div class="tx-header"><span class="header-icon">☕</span> Meal Budget</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">🍴</div><div><div class="tx-value">Starbucks</div><div class="tx-label">Team Lunch</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 4</div><div class="tx-amount">₹1,200</div></div></div></div>
+    <div class="tx-card" id="tx4"><div class="tx-header"><span class="header-icon">📱</span> Telecom</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">📶</div><div><div class="tx-value">Jio Postpaid</div><div class="tx-label">Monthly Bill</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 4</div><div class="tx-amount">₹999</div></div></div></div>
+    <div class="tx-card" id="tx5"><div class="tx-header"><span class="header-icon">🔄</span> Subscription</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">💻</div><div><div class="tx-value">GitHub Copilot</div><div class="tx-label">Developer Tools</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 3</div><div class="tx-amount">₹1,600</div></div></div></div>
+    <div class="tx-card" id="tx6"><div class="tx-header"><span class="header-icon">🚕</span> Transit</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo" style="font-size: 12px;">Uber</div><div><div class="tx-value">Uber Trip</div><div class="tx-label">Office Ride</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 3</div><div class="tx-amount">₹450</div></div></div></div>
+    <div class="tx-card" id="tx7"><div class="tx-header"><span class="header-icon">📦</span> Supplies</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo" style="font-size: 16px;">a</div><div><div class="tx-value">Amazon Business</div><div class="tx-label">Monitors</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 2</div><div class="tx-amount">₹18,500</div></div></div></div>
+    <div class="tx-card" id="tx8"><div class="tx-header"><span class="header-icon">📁</span> Cloud</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">G</div><div><div class="tx-value">Google Workspace</div><div class="tx-label">Storage</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 2</div><div class="tx-amount">₹5,200</div></div></div></div>
+    <div class="tx-card" id="tx9"><div class="tx-header"><span class="header-icon">📢</span> Ads</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">M</div><div><div class="tx-value">Meta Platforms</div><div class="tx-label">Campaign</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 1</div><div class="tx-amount">₹75,000</div></div></div></div>
+    <div class="tx-card" id="tx10"><div class="tx-header"><span class="header-icon">🎓</span> Education</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">C</div><div><div class="tx-value">Coursera</div><div class="tx-label">Training</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Mar 1</div><div class="tx-amount">₹3,400</div></div></div></div>
+    <div class="tx-card" id="tx11"><div class="tx-header"><span class="header-icon">💬</span> Comms</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">S</div><div><div class="tx-value">Slack Pro</div><div class="tx-label">Chat</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Feb 28</div><div class="tx-amount">₹4,100</div></div></div></div>
+    <div class="tx-card" id="tx12"><div class="tx-header"><span class="header-icon">🎥</span> Video</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">Z</div><div><div class="tx-value">Zoom</div><div class="tx-label">Meetings</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Feb 28</div><div class="tx-amount">₹1,500</div></div></div></div>
+    <div class="tx-card" id="tx13"><div class="tx-header"><span class="header-icon">🎨</span> Design</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">F</div><div><div class="tx-value">Figma</div><div class="tx-label">UI Tools</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Feb 27</div><div class="tx-amount">₹3,200</div></div></div></div>
+    <div class="tx-card" id="tx14"><div class="tx-header"><span class="header-icon">📝</span> Docs</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">N</div><div><div class="tx-value">Notion</div><div class="tx-label">Workspace</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Feb 27</div><div class="tx-amount">₹1,800</div></div></div></div>
+    <div class="tx-card" id="tx15"><div class="tx-header"><span class="header-icon">📊</span> Monitoring</div><div class="tx-body"><div class="tx-row" style="justify-content: flex-start; gap: 12px;"><div class="tx-vendor-logo">D</div><div><div class="tx-value">Datadog</div><div class="tx-label">Analytics</div></div></div><div class="tx-row" style="margin-top: 2px;"><div class="tx-label">Feb 26</div><div class="tx-amount">₹12,500</div></div></div></div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  
+  <script>
+    // --- State Flags ---
+    let isTransitioning = false;
+    let isSequenceEnding = false; // Prevents recursive loops during reset
+
+    const txConfigs = [
+      { id: '#tx1', scale: 1.0 }, { id: '#tx2', scale: 0.95 }, { id: '#tx3', scale: 0.9 },
+      { id: '#tx4', scale: 0.85 }, { id: '#tx5', scale: 0.8 }, { id: '#tx6', scale: 0.75 },
+      { id: '#tx7', scale: 0.7 }, { id: '#tx8', scale: 0.65 }, { id: '#tx9', scale: 0.6 },
+      { id: '#tx10', scale: 0.55 }, { id: '#tx11', scale: 0.5 }, { id: '#tx12', scale: 0.45 },
+      { id: '#tx13', scale: 0.4 }, { id: '#tx14', scale: 0.35 }, { id: '#tx15', scale: 0.3 }
+    ];
+
+    const palette = [
+      { border: '#9084aa', bg: 'rgba(38, 32, 53, 0.92)' }, { border: '#728bac', bg: 'rgba(30, 38, 51, 0.92)' }, 
+      { border: '#729b7f', bg: 'rgba(30, 44, 35, 0.92)' }, { border: '#b88968', bg: 'rgba(53, 37, 26, 0.92)' }, 
+      { border: '#af7a98', bg: 'rgba(51, 32, 43, 0.92)' }, { border: '#639ba3', bg: 'rgba(28, 45, 48, 0.92)' }, 
+      { border: '#b56f6f', bg: 'rgba(51, 29, 29, 0.92)' }, { border: '#93a36d', bg: 'rgba(43, 48, 31, 0.92)' }, 
+      { border: '#848aba', bg: 'rgba(36, 38, 56, 0.92)' }, { border: '#8c95a1', bg: 'rgba(38, 42, 48, 0.92)' },
+      { border: '#9084aa', bg: 'rgba(38, 32, 53, 0.92)' }, { border: '#728bac', bg: 'rgba(30, 38, 51, 0.92)' }, 
+      { border: '#729b7f', bg: 'rgba(30, 44, 35, 0.92)' }, { border: '#b88968', bg: 'rgba(53, 37, 26, 0.92)' }, 
+      { border: '#af7a98', bg: 'rgba(51, 32, 43, 0.92)' }
+    ];
+
+    const blackHoleX = 720; 
+    const blackHoleY = 260; 
+
+    // --- SETUP FOR LOOPING ---
+    const sceneContainer = document.querySelector('.scene');
+    const originalSceneHTML = sceneContainer.innerHTML; // Cache a perfect pristine copy of the HTML
+    
+    const lanes = [90, 150, 210, 270, 330, 390];
+    let activeLanes = [false, false, false, false, false, false];
+
+    // ==========================================
+    // --- MASTER SEQUENCE INITIATOR ---
+    // ==========================================
+    function initSequence() {
+      // 1. Reset State
+      isTransitioning = false;
+      isSequenceEnding = false;
+      activeLanes = [false, false, false, false, false, false];
+
+      // 2. Restore the pristine DOM
+      sceneContainer.innerHTML = originalSceneHTML;
+
+      // 3. Fade in smoothly from black
+      gsap.fromTo(sceneContainer, { opacity: 0 }, { opacity: 1, duration: 1.5, ease: 'power2.inOut' });
+
+      // 4. Fire off Act 1 (Cards, Debris, and Black Hole)
+      txConfigs.forEach((tx, index) => {
+        const cardNode = sceneContainer.querySelector(tx.id);
+        gsap.set(cardNode, { borderColor: palette[index].border, background: palette[index].bg, borderStyle: 'solid', borderWidth: '1px' });
+        gsap.set(cardNode.querySelector('.tx-amount'), { color: palette[index].border });
+        gsap.set(cardNode.querySelector('.header-icon'), { color: palette[index].border });
+        gsap.set(cardNode.querySelector('.tx-vendor-logo'), { borderColor: palette[index].border, background: 'rgba(0,0,0,0.2)', borderStyle: 'solid', borderWidth: '1px' });
+        animateCard(cardNode, tx, true);
+      });
+
+      for(let i = 0; i < 40; i++) setTimeout(spawnDebris, Math.random() * 3000);
+      for(let i = 0; i < 15; i++) setTimeout(spawnEmptyBlock, Math.random() * 4000);
+
+      // Trigger the Act 1 -> Act 2 transition after 5 seconds 
+      setTimeout(triggerVideoTransition, 5000);
+    }
+
+    // --- Act 1 Specific Functions ---
+    function triggerBlackHolePulse() {
+      if (isTransitioning) return;
+      let wave = document.createElement('div');
+      wave.className = 'shockwave';
+      sceneContainer.querySelector('.blackhole-wrapper').appendChild(wave);
+      gsap.fromTo(wave, { scale: 0.8, opacity: 0.5 }, { scale: 2.2, opacity: 0, duration: 0.6, ease: 'power2.out', onComplete: () => wave.remove() });
+      gsap.fromTo('.photon-ring', { boxShadow: '0 0 50px 15px rgba(255, 180, 80, 0.9)' }, { boxShadow: '0 0 30px 10px rgba(255, 150, 60, 0.6)', duration: 0.5 });
+    }
+
+    function animateCard(node, tx, isFirstRun) {
+      if (isTransitioning) return; 
+      const randomY = 10 + (Math.random() * 380);
+      const randomRestX = -10 + (Math.random() * 80); 
+      const startX = randomRestX - 100 - (Math.random() * 50); 
+      const delayTime = isFirstRun ? Math.random() * 4 : Math.random() * 1.5;
+
+      gsap.set(node, { y: randomY, x: startX, scale: tx.scale, rotationY: 0, rotationZ: 0, opacity: 0, zIndex: 1000 + Math.round(tx.scale * 100) });
+
+      const tl = gsap.timeline({ delay: delayTime });
+      tl.to(node, { x: randomRestX, opacity: 1, duration: 0.5, ease: 'back.out(1.2)' })
+        .to({}, { duration: 0.3 + (Math.random() * 0.4) })
+        .to(node, {
+          x: blackHoleX, y: blackHoleY, rotationY: 70, rotationZ: (Math.random() > 0.5 ? 25 : -25), scale: 0, opacity: 0,             
+          duration: 0.5 + ((1 - tx.scale) * 0.3), ease: 'power3.in',
+          onComplete: () => { triggerBlackHolePulse(); animateCard(node, tx, false); }
+        });
+    }
+
+    function spawnDebris() {
+      if (isTransitioning) return;
+      const p = document.createElement('div'); p.className = 'debris'; p.style.width = (1 + Math.random() * 2.5) + 'px'; p.style.height = p.style.width;
+      sceneContainer.appendChild(p);
+      gsap.fromTo(p, { x: -50 + Math.random() * 350, y: Math.random() * 520, opacity: 0, scale: 1 }, { x: blackHoleX, y: blackHoleY, opacity: 0.6, scale: 0, duration: 1.5 + Math.random() * 2.5, ease: 'power1.in', onComplete: () => { p.remove(); spawnDebris(); }});
+    }
+
+    function spawnEmptyBlock() {
+      if (isTransitioning) return;
+      const b = document.createElement('div'); b.className = 'empty-block'; b.style.width = (20 + Math.random() * 40) + 'px'; b.style.height = (15 + Math.random() * 25) + 'px';
+      sceneContainer.appendChild(b);
+      const rotX = Math.random() * 360, rotY = Math.random() * 360, rotZ = Math.random() * 360;
+      gsap.fromTo(b, { x: -100 + Math.random() * 300, y: 20 + Math.random() * 480, opacity: 0, scale: 0.4 + Math.random() * 0.6, rotationX: rotX, rotationY: rotY, rotationZ: rotZ }, { x: blackHoleX, y: blackHoleY, opacity: 0.9, scale: 0, rotationX: rotX + 180 + Math.random() * 180, rotationY: rotY + 180 + Math.random() * 180, rotationZ: rotZ + 180 + Math.random() * 180, duration: 1.2 + Math.random() * 1.2, ease: 'power2.in', onComplete: () => { b.remove(); spawnEmptyBlock(); }});
+    }
+
+    // ==========================================
+    // --- ACT 2: VIDEO REVEAL ---
+    // ==========================================
+    function triggerVideoTransition() {
+      isTransitioning = true; 
+      const tl = gsap.timeline();
+
+      tl.to('.tx-card, .debris, .empty-block', { x: blackHoleX, y: blackHoleY, scale: 0, opacity: 0, duration: 0.8, ease: 'power3.in' }, 0);
+      tl.to('.accretion-disk, .photon-ring, .ambient-glow', { scale: 6, opacity: 0, duration: 1.2, ease: 'power2.inOut' }, 0.5);
+      tl.to('.blackhole-core', { scale: 30, duration: 1.5, ease: 'power3.inOut' }, 0.6);
+      
+      tl.to('#dashboard-video', {
+        opacity: 1, duration: 1.5, ease: 'power1.inOut',
+        onStart: () => { document.getElementById('dashboard-video').play(); }
+      }, 1.6); 
+
+      setTimeout(showResultsWipe, 6100);
+    }
+
+    // ==========================================
+    // --- ACT 3: RESULTS WIPE & LINE DRAWING ---
+    // ==========================================
+    function showResultsWipe() {
+      gsap.to('#results-scene', {
+        xPercent: 100,
+        duration: 1.2,
+        ease: 'power3.inOut',
+        onComplete: () => {
+          drawDataLines();
+          
+          // --- SET THE LOOP RESTART TIMER (After 12 seconds of sorting lines) ---
+          setTimeout(restartSequence, 5000);
+        }
+      });
+    }
+
+    function drawDataLines() {
+      spawnLineGroup();
+    }
+
+    function spawnLineGroup() {
+      if (isSequenceEnding) return; // Prevent loops when fading to black
+
+      let availableLanes = [];
+      activeLanes.forEach((isActive, index) => {
+        if (!isActive) availableLanes.push(index);
+      });
+
+      if (availableLanes.length > 0) {
+        availableLanes = availableLanes.sort(() => 0.5 - Math.random());
+        let numToSpawn = Math.min(availableLanes.length, Math.floor(Math.random() * 2) + 2);
+        
+        for (let i = 0; i < numToSpawn; i++) {
+          let laneIdx = availableLanes[i];
+          activeLanes[laneIdx] = true; 
+          spawnSingleLine(laneIdx, i * 0.1); 
+        }
+      }
+
+      setTimeout(spawnLineGroup, 400 + Math.random() * 400);
+    }
+
+    function spawnSingleLine(laneIdx, delayAmount) {
+      const svg = document.getElementById('lines-svg');
+      const container = document.getElementById('results-scene');
+
+      const isDeclined = Math.random() > 0.8; 
+
+      let startLaneIdx;
+      do { startLaneIdx = Math.floor(Math.random() * lanes.length); } while (startLaneIdx === laneIdx);
+
+      const startY = lanes[startLaneIdx];
+      const targetY = lanes[laneIdx]; 
+      const targetX = 500 + (Math.random() * 250); 
+      
+      const firstBreakX = 40 + Math.random() * 60;
+      const midY = startY + ((targetY - startY) / 2); 
+      const secondBreakX = firstBreakX + 40 + Math.random() * 60;
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const d = `M 0 ${startY} L ${firstBreakX} ${startY} L ${firstBreakX} ${midY} L ${secondBreakX} ${midY} L ${secondBreakX} ${targetY} L ${targetX} ${targetY}`;
+      
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "transparent");
+      path.setAttribute("stroke", isDeclined ? "#ef4444" : "#10b981");
+      path.setAttribute("stroke-width", "2");
+      path.setAttribute("stroke-linecap", "round");
+      path.style.filter = `drop-shadow(0 0 6px ${isDeclined ? 'rgba(239, 68, 68, 0.6)' : 'rgba(16, 185, 129, 0.6)'})`;
+      svg.appendChild(path);
+      
+      const length = path.getTotalLength();
+      gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
+
+      const block = document.createElement('div');
+      block.className = `status-block ${isDeclined ? 'declined' : 'approved'}`;
+      block.innerHTML = isDeclined ? '&#10006; Declined' : '&#10004; Approved';
+      block.style.top = (targetY - 14) + 'px'; 
+      block.style.left = (targetX + 10) + 'px';
+      
+      gsap.set(block, { opacity: 0, x: -20, scale: 0.8 });
+      container.appendChild(block);
+
+      gsap.to(path, {
+        strokeDashoffset: 0,
+        duration: 0.35, 
+        ease: "power2.inOut",
+        delay: delayAmount,
+        onComplete: () => {
+          gsap.to(block, { 
+            opacity: 1, x: 0, scale: 1, duration: 0.2, ease: "back.out(1.5)",
+            onComplete: () => {
+              
+              let glowAnim = gsap.to(block, {
+                boxShadow: isDeclined ? '0 0 20px 4px rgba(239, 68, 68, 0.6)' : '0 0 20px 4px rgba(16, 185, 129, 0.6)',
+                duration: 0.4, yoyo: true, repeat: -1, ease: "sine.inOut"
+              });
+
+              setTimeout(() => {
+                gsap.to([path, block], {
+                  opacity: 0,
+                  duration: 0.3,
+                  onComplete: () => {
+                    glowAnim.kill(); 
+                    path.remove();   
+                    block.remove();  
+                    activeLanes[laneIdx] = false; 
+                  }
+                });
+              }, 800 + Math.random() * 700); 
+            }
+          });
+        }
+      });
+    }
+
+    // ==========================================
+    // --- THE RESET ENGINE ---
+    // ==========================================
+    function restartSequence() {
+      isSequenceEnding = true; // Signals recursive loops to stop
+
+      // Fade everything out to the dark `#020617` body background
+      gsap.to(sceneContainer, {
+        opacity: 0,
+        duration: 1.5,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          // Immediately kill all ongoing animations/physics to clean up memory
+          gsap.killTweensOf("*");
+          
+          // Re-initialize the sequence exactly like it was at the start
+          initSequence();
+        }
+      });
+    }
+
+    // Kick off the animation for the very first time!
+    initSequence();
+
+  </script>
+</body>
+</html>

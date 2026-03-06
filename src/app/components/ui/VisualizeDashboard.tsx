@@ -3,8 +3,7 @@
 import React, { useState, useMemo, useCallback, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
-import { useDrag, useDrop } from 'react-dnd';
-import { MultiBackendDnDProvider } from './DnDProvider';
+import { useTheme } from '@/components/ThemeProvider';
 
 const ThemeCtx = createContext(false);
 function useLight() { return useContext(ThemeCtx); }
@@ -36,14 +35,13 @@ import {
   AreaChart as AreaChartIcon,
   CircleDot,
   Store,
-  Sun,
-  Moon,
 } from 'lucide-react';
 
 /* ── Dynamic imports for recharts components (no SSR) ── */
 const BarGraph = dynamic(() => import('@/components/charts/bar-graph').then(m => ({ default: m.BarGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const LineGraph = dynamic(() => import('@/components/charts/line-graph').then(m => ({ default: m.LineGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const DonutChart = dynamic(() => import('@/components/charts/donut-chart').then(m => ({ default: m.DonutChart })), { ssr: false, loading: () => <ChartSkeleton /> });
+const PieChart = dynamic(() => import('@/components/charts/pie-chart').then(m => ({ default: m.PieChartComponent })),{ ssr: false, loading: () => <ChartSkeleton /> });
 const ScatterGraph = dynamic(() => import('@/components/charts/scatter-graph').then(m => ({ default: m.ScatterGraph })), { ssr: false, loading: () => <ChartSkeleton /> });
 const SpendingHeatmap = dynamic(() => import('@/components/charts/spending-heatmap').then(m => ({ default: m.SpendingHeatmap })), { ssr: false, loading: () => <ChartSkeleton /> });
 
@@ -296,8 +294,8 @@ const RealChart = React.memo(function RealChart({ chartType, kpiId, height }: { 
     return <DonutChart data={data} dataKey="value" nameKey="name" height={h} light={light} />;
   }
   if (chartType === 'pie') {
-    return <DonutChart data={data} dataKey="value" nameKey="name" height={h} light={light} />;
-  }
+  return <PieChart data={data} dataKey="value" nameKey="name" height={h} light={light} />;
+}
   if (chartType === 'scatter') {
     const scatterData = SCATTER_DATA[kpiId] || SCATTER_DATA['time'];
     return <ScatterGraph data={scatterData} color={kpi?.accent} height={h} light={light} />;
@@ -308,37 +306,21 @@ const RealChart = React.memo(function RealChart({ chartType, kpiId, height }: { 
 /* ═══════════════ PALETTE ITEM ═══════════════ */
 const PaletteItem = React.memo(function PaletteItem({ widget }: { widget: typeof KPI_DIMENSIONS[number] }) {
   const L = useLight();
-  
-  const [{ isDragging }, drag, preview] = useDrag(() => ({
-    type: 'KPI_DIMENSION',
-    item: { id: widget.id },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  }), [widget.id]);
-
-  // Use callback ref to avoid type conflicts
-  const setDragRef = React.useCallback((node: HTMLDivElement | null) => {
-    drag(node);
-  }, [drag]);
-
   return (
-    <div ref={setDragRef as any}>
-      <motion.div
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing select-none transition-colors duration-200 bg-gradient-to-r ${widget.color}`}
-        style={{ 
-          border: L ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.06)',
-          opacity: isDragging ? 0.5 : 1,
-          touchAction: 'none'
-        }}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-      >
-        <GripVertical className="w-3.5 h-3.5 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.3)' }} />
-        <span style={{ color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.5)' }}>{widget.icon}</span>
-        <span className="text-xs font-semibold whitespace-nowrap" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{widget.label}</span>
-      </motion.div>
-    </div>
+    <motion.div
+      draggable
+      onDragStart={(e) => {
+        (e as unknown as React.DragEvent).dataTransfer?.setData('text/kpi-dimension', widget.id);
+      }}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing select-none transition-colors duration-200 bg-gradient-to-r ${widget.color}`}
+      style={{ border: L ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.06)' }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+    >
+      <GripVertical className="w-3.5 h-3.5 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.3)' }} />
+      <span style={{ color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.5)' }}>{widget.icon}</span>
+      <span className="text-xs font-semibold whitespace-nowrap" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{widget.label}</span>
+    </motion.div>
   );
 });
 
@@ -353,6 +335,7 @@ const DashboardZone = React.memo(function DashboardZone({
   onRemove: (zoneId: string) => void;
   onChartChange: (zoneId: string, chartType: string) => void;
 }) {
+  const [isDragOver, setIsDragOver] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const L = useLight();
   const kpi = widget ? KPI_DIMENSIONS.find(k => k.id === widget.kpiId) : null;
@@ -361,28 +344,8 @@ const DashboardZone = React.memo(function DashboardZone({
   const isPreview = mode === 'preview';
   const isLargeZone = zone.colSpan.includes('col-span-2') || zone.rowSpan.includes('row-span-2');
 
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: 'KPI_DIMENSION',
-    drop: (item: { id: string }) => {
-      if (!isPreview) {
-        onDrop(zone.id, item.id);
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-    }),
-  }), [zone.id, isPreview, onDrop]);
-
-  // Use callback ref to avoid type conflicts
-  const setDropRef = React.useCallback((node: HTMLDivElement | null) => {
-    drop(node);
-  }, [drop]);
-
-  const isDragOver = !isPreview && isOver;
-
   return (
     <motion.div
-      ref={setDropRef as any}
       layout
       className={`${zone.colSpan} ${zone.rowSpan} rounded-2xl flex flex-col relative overflow-hidden transition-all duration-300 ${
         isPreview
@@ -407,6 +370,15 @@ const DashboardZone = React.memo(function DashboardZone({
             : widget
               ? `1px solid ${L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`
               : `2px dashed ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`,
+      }}
+      onDragOver={(e) => { if (!isPreview) { e.preventDefault(); setIsDragOver(true); } }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        if (isPreview) return;
+        e.preventDefault();
+        setIsDragOver(false);
+        const kpiId = e.dataTransfer.getData('text/kpi-dimension');
+        if (kpiId) onDrop(zone.id, kpiId);
       }}
     >
       {/* Header */}
@@ -493,47 +465,7 @@ const AlertCard = React.memo(function AlertCard({ alert, index }: { alert: typeo
       className="relative flex items-center gap-4 rounded-2xl p-5 overflow-hidden"
       style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1, duration: 0.5 }}>
-      {/* Concentric circle pulse emanating from the icon center */}
-      <div className="absolute pointer-events-none" style={{ left: 'calc(20px + 22px)', top: '50%', transform: 'translate(-50%, -50%)', width: 0, height: 0 }}>
-        {[0, 1, 2].map((ring) => (
-          <motion.div
-            key={ring}
-            className="absolute rounded-full"
-            style={{
-              top: '50%',
-              left: '50%',
-              width: 44,
-              height: 44,
-              x: '-50%',
-              y: '-50%',
-              border: `2.5px solid ${ring === 0 ? alert.ringColor : alert.ringColor2}`,
-            }}
-            animate={{
-              scale: [1, 10],
-              opacity: [0.5, 0],
-            }}
-            transition={{
-              duration: 3 + ring * 0.5,
-              repeat: Infinity,
-              ease: 'easeOut',
-              delay: ring * 0.8,
-            }}
-          />
-        ))}
-        {/* Ambient glow */}
-        <div
-          className="absolute rounded-full blur-2xl"
-          style={{
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 60,
-            height: 60,
-            background: alert.accentColor,
-            opacity: 0.1,
-          }}
-        />
-      </div>
+
       <div className="relative z-10 shrink-0">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: alert.accentColor + '18', color: alert.accentColor }}>
           {alert.icon}
@@ -575,25 +507,26 @@ function EmployeeLookup() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Table */}
-      <div className="lg:col-span-7 rounded-2xl overflow-hidden flex flex-col h-full" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
-        <div className="px-5 py-4 flex items-center gap-3 shrink-0" style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
+      <div className="lg:col-span-7 rounded-2xl overflow-hidden" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
+        <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
           <Search className="w-4 h-4 shrink-0" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }} />
           <input type="text" placeholder="Search employees by name, department, or role..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="flex-1 bg-transparent text-sm outline-none" style={{ color: L ? '#1e293b' : '#fff' }} />
           {search && <button onClick={() => setSearch('')} className="p-1 rounded-md" style={{ color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)' }}><X className="w-3.5 h-3.5" /></button>}
         </div>
-        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider shrink-0" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.25)', borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'}` }}>
+        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.25)', borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'}` }}>
           <span className="col-span-4">Employee</span>
           <span className="col-span-2">Department</span>
           <span className="col-span-2 text-right">Spend</span>
           <span className="col-span-2 text-right">Txns</span>
           <span className="col-span-2 text-center">Status</span>
         </div>
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="max-h-[400px] overflow-y-auto">
           {filtered.map((emp) => (
-            <motion.button key={emp.id} onClick={(e) => { e.preventDefault(); setSelectedEmployee(emp); }}
+            <motion.button key={emp.id} onClick={() => setSelectedEmployee(emp)}
               className="w-full grid grid-cols-12 gap-2 px-5 py-3 text-left transition-colors duration-150"
-              style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'}`, background: selectedEmployee?.id === emp.id ? 'rgba(22,163,74,0.08)' : 'transparent' }}>
+              style={{ borderBottom: `1px solid ${L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'}`, background: selectedEmployee?.id === emp.id ? 'rgba(22,163,74,0.08)' : 'transparent' }}
+              whileTap={{ scale: 0.995 }}>
               <div className="col-span-4 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{emp.avatar}</div>
                 <div className="min-w-0"><p className="text-sm font-medium truncate" style={{ color: L ? '#1e293b' : 'rgba(255,255,255,0.8)' }}>{emp.name}</p><p className="text-[10px] truncate" style={{ color: L ? '#94a3b8' : 'rgba(255,255,255,0.3)' }}>{emp.role}</p></div>
@@ -615,7 +548,7 @@ function EmployeeLookup() {
         <AnimatePresence mode="wait">
           {selectedEmployee ? (
             <motion.div key={selectedEmployee.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5 h-full" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`, minHeight: '550px' }}>
+              transition={{ duration: 0.3 }} className="rounded-2xl p-6 space-y-5" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}` }}>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff' }}>{selectedEmployee.avatar}</div>
                 <div><h4 className="text-lg font-bold" style={{ color: L ? '#0f172a' : '#fff' }}>{selectedEmployee.name}</h4><p className="text-sm" style={{ color: L ? '#64748b' : 'rgba(255,255,255,0.4)' }}>{selectedEmployee.role} · {selectedEmployee.dept}</p></div>
@@ -653,7 +586,7 @@ function EmployeeLookup() {
   );
 }
 
-/* ═══════════════ SUBMIT MODAL ═══════════════ */
+/* ═══════════════ SUBMIT MODAL ═══════════════ 
 function SubmitModal({ onClose, widgetCount }: { onClose: () => void; widgetCount: number }) {
   const [submitted, setSubmitted] = useState(false);
   return (
@@ -693,13 +626,13 @@ function SubmitModal({ onClose, widgetCount }: { onClose: () => void; widgetCoun
     </div>
   );
 }
-
+*/
 /* ═══════════════ MAIN DASHBOARD ═══════════════ */
 export default function VisualizeDashboard() {
   const [mode, setMode] = useState<DashboardMode>('edit');
   const [zones, setZones] = useState<Record<string, PlacedWidget>>({});
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
-  const [light, setLight] = useState(false);
+ // const [showSubmitModal, setShowSubmitModal] = useState(false); submit button yeehaw
+  const { light } = useTheme();
   const L = light;
 
   const widgetCount = Object.keys(zones).length;
@@ -720,7 +653,6 @@ export default function VisualizeDashboard() {
   const isPreview = mode === 'preview';
 
   return (
-    <MultiBackendDnDProvider>
     <ThemeCtx.Provider value={light}>
     <div className="min-h-screen" style={{ background: L ? '#f8fafc' : 'var(--dark-gray)', color: L ? '#1e293b' : '#fff', transition: 'background 0.3s, color 0.3s' }}>
       {/* Header */}
@@ -748,13 +680,10 @@ export default function VisualizeDashboard() {
                   <Eye className="w-3.5 h-3.5" /> Preview
                 </button>
               </div>
-              <button onClick={() => setShowSubmitModal(true)} disabled={widgetCount === 0}
+              {/* <button onClick={() => setShowSubmitModal(true)} disabled={widgetCount === 0}
                 className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-30 disabled:cursor-not-allowed">
                 <Send className="w-3.5 h-3.5" /> Submit
-              </button>
-              <button onClick={() => setLight(v => !v)} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 text-sm" style={{ background: L ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', border: `1px solid ${L ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)'}`, color: L ? '#475569' : 'rgba(255,255,255,0.5)' }}>
-                {L ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              </button>
+              </button> */}
             </motion.div>
           </div>
           {widgetCount > 0 && (
@@ -791,11 +720,13 @@ export default function VisualizeDashboard() {
                 <h3 className="text-[11px] font-semibold mb-3 px-1 uppercase tracking-wider" style={{ color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.4)' }}>KPI Dimensions</h3>
                 <div className="flex flex-wrap lg:flex-col gap-2">
                   {KPI_DIMENSIONS.map((widget) => (
-                    <PaletteItem key={widget.id} widget={widget} />
+                    <div key={widget.id} draggable onDragStart={(e) => { e.dataTransfer.setData('text/kpi-dimension', widget.id); e.dataTransfer.effectAllowed = 'copy'; }}>
+                      <PaletteItem widget={widget} />
+                    </div>
                   ))}
                 </div>
                 <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
-                  <p className="text-[10px] leading-relaxed px-1" style={{ color: L ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.15)' }}>Drag a dimension into a zone, then choose a chart type from the dropdown.</p>
+                  <p className="text-xs leading-relaxed px-1" style={{ color: L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)' }}>Drag a dimension into a zone, then choose a chart type from the dropdown.</p>
                 </div>
               </div>
             </aside>
@@ -829,9 +760,8 @@ export default function VisualizeDashboard() {
         </div>
       </div>
 
-      {showSubmitModal && <SubmitModal onClose={() => setShowSubmitModal(false)} widgetCount={widgetCount} />}
+      {/* {showSubmitModal && <SubmitModal onClose={() => setShowSubmitModal(false)} widgetCount={widgetCount} />} */}
     </div>
     </ThemeCtx.Provider>
-    </MultiBackendDnDProvider>
   );
 }
