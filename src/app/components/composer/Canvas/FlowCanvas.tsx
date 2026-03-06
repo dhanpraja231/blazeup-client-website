@@ -211,12 +211,10 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
-        fitView
-        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         proOptions={proOptions}
         minZoom={0.3}
         maxZoom={1.5}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+        defaultViewport={{ x: -452.8567854655678, y: 352.10236275365946, zoom: 0.6083756878740173 }}
         snapToGrid={true}
         snapGrid={[20, 20]}
         defaultEdgeOptions={{
@@ -225,6 +223,12 @@ export default function FlowCanvas({ workflow }: FlowCanvasProps) {
         }}
         nodeExtent={[[-1000, -1000], [10000, 10000]]}
         deleteKeyCode={['Backspace', 'Delete']}
+        panOnScroll={true}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={false}
+        panOnDrag={true}
+        selectNodesOnDrag={false}
       >
         <Background
           variant={BackgroundVariant.Dots}

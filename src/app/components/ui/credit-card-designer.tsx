@@ -606,10 +606,17 @@ export default function CreditCardDesigner() {
     const clipboardData = e.dataTransfer.getData('text/clipboard-image');
     if (clipboardData) { addClipboardImageToCard(clipboardData); return; }
     const f = e.dataTransfer.files?.[0]; if (f?.type.startsWith('image/')) processImageFile(f); };
+  // ---- Touch to Mouse conversion for mobile support ----
+  const touchToMouse = (touch: React.Touch): { clientX: number; clientY: number } => ({
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  });
+
   // ---- element dragging (zero-overhead: everything cached on mousedown) ----
-  const handleElementMouseDown = (e: React.MouseEvent, elId: string) => {
+  const handleElementMouseDown = (e: React.MouseEvent | React.TouchEvent, elId: string) => {
     e.preventDefault(); e.stopPropagation();
     clickedElementRef.current = true;
+    const clientPos = 'touches' in e ? touchToMouse(e.touches[0]) : { clientX: e.clientX, clientY: e.clientY };
     const el = elements.find(i => i.id === elId);
     if (!el || el.isHardware || el.isPositionLocked) { setSelectedElement(elId); return; }
     const canvas = canvasRef.current; if (!canvas) return;
@@ -617,7 +624,7 @@ export default function CreditCardDesigner() {
     const cachedRect = canvas.getBoundingClientRect();
     const cw = cardW, ch = cardH;
     const sx = cw / cachedRect.width, sy = ch / cachedRect.height;
-    const mx = (e.clientX - cachedRect.left) * sx, my = (e.clientY - cachedRect.top) * sy;
+    const mx = (clientPos.clientX - cachedRect.left) * sx, my = (clientPos.clientY - cachedRect.top) * sy;
     const origX = el.x, origY = el.y, rot = el.rotation || 0;
     const elW = el.width, elH = el.height;
     const cachedRectLeft = cachedRect.left, cachedRectTop = cachedRect.top;
@@ -966,7 +973,7 @@ export default function CreditCardDesigner() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* ===== SIDEBAR ===== */}
-          <div className="lg:col-span-3 space-y-3">
+          <div className="lg:col-span-3 space-y-3 order-2 lg:order-1 max-h-[60vh] lg:max-h-none overflow-y-auto lg:overflow-visible">
 
             {/* Components */}
             <div className="rounded-2xl overflow-visible sidebar-item" style={ps}>
@@ -1226,7 +1233,7 @@ export default function CreditCardDesigner() {
             </div></div>}
           </div>
           {/* ===== CANVAS ===== */}
-          <div ref={canvasWrapperRef} className="lg:col-span-9">
+          <div ref={canvasWrapperRef} className="lg:col-span-9 order-1 lg:order-2">
             <div className="rounded-2xl p-6 md:p-10 transition-colors duration-300" style={{
               backgroundColor: canvasLightMode ? '#ffffff' : '#09090b',
               backgroundImage: canvasLightMode
@@ -1251,8 +1258,8 @@ export default function CreditCardDesigner() {
                 </button>
                 <span className={`text-[10px] ml-2 ${canvasLightMode ? 'text-slate-400' : 'text-slate-600'}`}>ISO 7810 ID-1 • {orientation === 'horizontal' ? '85.60 × 53.98' : '53.98 × 85.60'} mm</span>
               </div>
-              <div className="flex justify-center items-center" style={{ minHeight: 380, perspective: 1200 }}>
-                <div ref={flipContainerRef} style={{ transformStyle: 'preserve-3d' }}
+              <div className="flex justify-center items-center overflow-x-auto" style={{ minHeight: 300, perspective: 1200 }}>
+                <div ref={flipContainerRef} style={{ transformStyle: 'preserve-3d', maxWidth: '100%' }}
                   onDragEnter={handleDragEnter} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleFileDrop}>
                   <div ref={canvasRef} onClick={handleCanvasClick}
                     className="relative overflow-hidden"
@@ -1284,12 +1291,14 @@ export default function CreditCardDesigner() {
                     {elements.map(el => (
                       <div key={el.id} id={`el-${el.id}`}
                         onMouseDown={e => handleElementMouseDown(e, el.id)}
+                        onTouchStart={e => handleElementMouseDown(e, el.id)}
                         onDoubleClick={e => { if (el.type === 'text' || el.type === 'cardNumber') handleTextDoubleClick(e, el.id); }}
                         className={`card-element absolute select-none ${selectedElement === el.id && !el.isHardware ? 'ring-1 ring-indigo-400/60' : ''}`}
                         style={{ left: el.x, top: el.y, width: el.width, height: el.height,
                           cursor: el.isHardware ? 'default' : el.isPositionLocked ? 'pointer' : 'grab',
                           transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
-                          zIndex: el.isHardware ? 60 : selectedElement === el.id ? 50 : 1 }}>
+                          zIndex: el.isHardware ? 60 : selectedElement === el.id ? 50 : 1,
+                          touchAction: 'none' }}>
                         {/* Inline delete button — not for hardware or position-locked */}
                         {selectedElement === el.id && !el.isHardware && !el.isPositionLocked && (
                           <button onMouseDown={e => { e.stopPropagation(); clickedElementRef.current = true; deleteElement(el.id); }}
