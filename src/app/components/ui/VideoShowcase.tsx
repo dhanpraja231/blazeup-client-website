@@ -102,9 +102,7 @@ export default function VideoShowcase() {
             The Complete{' '}
             <span
               style={{
-                background: 'linear-gradient(135deg, #f97316, #ec4899)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: light? '#f97316' : '#fb923c',
               }}
             >
               Experience
