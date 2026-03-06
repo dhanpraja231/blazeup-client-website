@@ -3,8 +3,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useTheme } from '@/components/ThemeProvider';
+
 // ── Node data — coordinates designed for ~900×450 expanded column ──
 const NODE_W = 195;
+const DESIGN_WIDTH = 1300;
+const DESIGN_HEIGHT = 450;
 
 const NODES = [
   {
@@ -67,8 +70,6 @@ const MODAL_RULES = [
   { label: 'Manager Slack Notification', color: '#a78bfa' },
 ];
 
-
-
 interface EvaluateCoverProps {
   isExpanded?: boolean;
   isHovered?: boolean;
@@ -78,7 +79,7 @@ interface EvaluateCoverProps {
 
 export default React.memo(function EvaluateCover({ isExpanded = false, isHovered = false, isActive = true, onCycleComplete }: EvaluateCoverProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
-  const {light} = useTheme();
+  const { light } = useTheme();
   const flipperRef = useRef<HTMLDivElement>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
@@ -86,6 +87,26 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
   const isHoveredRef = useRef(isHovered);
   const hasPlayedRef = useRef(false);
   const [isTooSmall, setIsTooSmall] = useState(false);
+  const [canvasScale, setCanvasScale] = useState(1);
+
+  // Responsive scale observer for the full canvas
+  useEffect(() => {
+    const sceneEl = sceneRef.current;
+    if (!sceneEl) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        const scaleX = width / DESIGN_WIDTH;
+        const scaleY = height / DESIGN_HEIGHT;
+        const finalScale = Math.min(scaleX, scaleY);
+        setCanvasScale(finalScale);
+      }
+    });
+
+    observer.observe(sceneEl);
+    return () => observer.disconnect();
+  }, []);
 
   // Detect truly small viewports (phones) — NOT container resize from hover
   useEffect(() => {
@@ -107,10 +128,9 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
 
     const showFullCanvas = isHovered || isExpanded;
     if (showFullCanvas || isTooSmall) {
-      return; // full canvas handles hover; isTooSmall shows fallback
+      return; 
     }
     if (!isActive) {
-      // Show static state — cards + lines visible, no animation
       svg.querySelectorAll('.cover-card').forEach(el => gsap.set(el, { opacity: 1, y: 0, borderColor: '' }));
       svg.querySelectorAll('.cover-line').forEach(el => gsap.set(el, { strokeDashoffset: 0, opacity: 1 }));
       svg.querySelectorAll('.cover-flow').forEach(el => gsap.set(el, { opacity: 0 }));
@@ -124,7 +144,6 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
     const flows = svg.querySelectorAll('.cover-flow');
     const result = svg.querySelector('.cover-result');
 
-    // Reset
     flows.forEach(el => gsap.set(el, { opacity: 0 }));
     if (result) gsap.set(result, { opacity: 0 });
 
@@ -132,11 +151,9 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
     hasPlayedRef.current = true;
 
     if (isFirstPlay) {
-      // First time: slide cards in from below
       cards.forEach(el => gsap.set(el, { opacity: 0, y: 20 }));
       lines.forEach(el => gsap.set(el, { strokeDasharray: 200, strokeDashoffset: 200, opacity: 0 }));
     } else {
-      // Subsequent times: cards and lines already visible, just reset borders
       cards.forEach(el => gsap.set(el, { opacity: 1, y: 0, borderColor: '' }));
       lines.forEach(el => gsap.set(el, { strokeDasharray: 200, strokeDashoffset: 0, opacity: 1 }));
     }
@@ -151,13 +168,10 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
     coverTlRef.current = tl;
 
     if (isFirstPlay) {
-      // 1. Cards slide in
       tl.to(cards, { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)', overwrite: 'auto' });
-      // 2. Lines draw
       tl.to(lines, { strokeDashoffset: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power2.inOut', overwrite: 'auto' }, '-=0.1');
     }
 
-    // 3. Flow dots travel along lines (left pair then right pair)
     const flowEls = Array.from(flows);
     if (flowEls[0]) tl.fromTo(flowEls[0], { attr: { cx: 125, cy: 75 }, opacity: 0 }, { attr: { cx: 145, cy: 185 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.1');
     if (flowEls[1]) tl.fromTo(flowEls[1], { attr: { cx: 125, cy: 300 }, opacity: 0 }, { attr: { cx: 145, cy: 185 }, opacity: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.4');
@@ -168,16 +182,9 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
     const rightDots = [flowEls[2], flowEls[3]].filter(Boolean);
     if (rightDots.length) tl.to(rightDots, { opacity: 0, duration: 0.15 });
 
-    // 4. Cards pulse green border
     tl.to(cards, { borderColor: '#22c55e', duration: 0.3, stagger: 0.05, overwrite: 'auto' }, '-=0.1');
-
-    // 5. Fade cards + lines
     tl.to([cards, lines], { opacity: 0.15, duration: 0.4, overwrite: 'auto' }, '+=0.3');
-
-    // 6. Show checkmark + text overlay
     if (result) tl.to(result, { opacity: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' }, '-=0.2');
-
-    // 7. Hold
     tl.to({}, { duration: 1 });
 
     return () => { tl.kill(); };
@@ -211,7 +218,6 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
     });
     tlRef.current = tl;
 
-    // Initial setup
     gsap.set(fadeTargets, { opacity: 1 });
     if (blackOverlay) gsap.set(blackOverlay, { width: '0%', left: '0%' });
     if (previewBack) gsap.set(previewBack, { left: '-100%', autoAlpha: 0 });
@@ -237,59 +243,30 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
       { scale: 1, opacity: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.2)' }, '+=0.1');
     tl.to('.line5', { strokeDashoffset: 0, duration: 0.4, ease: 'power2.inOut' });
     
-    // Pause for user to appreciate nodes
     tl.to({}, { duration: 1 });
 
-    // 1. Fade Content of Front to Black (Left to Right wipe)
-    tl.to(fadeTargets, {
-      opacity: 0,
-      duration: 0.8,
-      ease: 'power2.in'
-    });
-    tl.fromTo(blackOverlay, 
-      { width: '0%', left: '0%' }, 
-      { width: '100%', left: '0%', duration: 1.2, ease: 'power2.inOut' }, 
-      '-=0.6'
-    );
+    tl.to(fadeTargets, { opacity: 0, duration: 0.8, ease: 'power2.in' });
+    tl.fromTo(blackOverlay, { width: '0%', left: '0%' }, { width: '100%', left: '0%', duration: 1.2, ease: 'power2.inOut' }, '-=0.6');
 
-    // 2. Slide Policy Card in from Left
-    tl.fromTo(previewBack, 
-      { left: '-100%', autoAlpha: 1 }, 
-      { left: '0%', duration: 1, ease: 'power3.out' } 
-    );
+    tl.fromTo(previewBack, { left: '-100%', autoAlpha: 1 }, { left: '0%', duration: 1, ease: 'power3.out' });
 
-    // 3. Stagger Modal Content
-    tl.fromTo(modalEls,
-      { y: 15, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: 'power2.out' },
-      '-=0.4' 
-    );
+    tl.fromTo(modalEls, { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: 'power2.out' }, '-=0.4');
     
-    // Hold final view before loop
     tl.to({}, { duration: 2 });
 
-    // 4. Fade out the policy card smoothly before restarting
-    tl.to(previewBack, { 
-      autoAlpha: 0, 
-      duration: 0.6, 
-      ease: 'power2.inOut' 
-    });
-
-    // 5. Reset States for Loop Repeat
+    tl.to(previewBack, { autoAlpha: 0, duration: 0.6, ease: 'power2.inOut' });
     tl.set(previewBack, { left: '-100%' });
     tl.set(blackOverlay, { width: '0%' });
 
     return () => { tl.kill(); };
   }, [isExpanded]);
 
-  // Start/stop full canvas animation on hover
   useEffect(() => {
     const tl = tlRef.current;
     const scene = sceneRef.current;
     if (!tl || !scene) return;
 
     if (isHovered) {
-      // Kill cover animation
       if (coverTlRef.current) coverTlRef.current.kill();
 
       const fadeTargets = scene.querySelectorAll('.edges-canvas, .node-block, .edge-label');
@@ -466,68 +443,83 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
             width: '100%', height: '100%', position: 'relative',
           }}
         >
-          {/* ═══ FRONT: Node Canvas ═══ */}
+          {/* ═══ FRONT: Node Canvas (Virtual Scale Approach) ═══ */}
           <div style={{
-            width: '100%', height: '100%', position: 'absolute', top: 0, left: 0,
+            position: 'absolute', top: 0, left: 0,
+            width: '100%', height: '100%',
             backgroundColor: '#121318',
             backgroundImage: 'radial-gradient(circle, #383a45 1.5px, transparent 1.5px)',
             backgroundSize: '28px 28px', backgroundPosition: '-10px -10px',
             border: '1px solid #2A2B36',
             zIndex: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden'
           }}>
-            <svg className="edges-canvas" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
-              {EDGES.map(e => (
-                <path key={e.id} className={e.id} d={e.d}
-                  fill="none" stroke="#646a7a" strokeWidth={4}
-                  strokeDasharray={500} strokeDashoffset={500} />
+            {/* VIRTUAL CANVAS WRAPPER */}
+            <div style={{
+              position: 'relative',
+              width: DESIGN_WIDTH,
+              height: DESIGN_HEIGHT,
+              transform: `scale(${canvasScale})`,
+              transformOrigin: 'center center',
+              flexShrink: 0
+            }}>
+              <svg className="edges-canvas" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
+                {EDGES.map(e => (
+                  <path key={e.id} className={e.id} d={e.d}
+                    fill="none" stroke="#646a7a" strokeWidth={4}
+                    strokeDasharray={500} strokeDashoffset={500} />
+                ))}
+              </svg>
+              {LABELS.map(l => (
+                <div key={l.id} id={l.id} className="edge-label" style={{
+                  position: 'absolute', left: l.left, top: l.top,
+                  background: '#1a1e28', border: '1px solid #3b4256',
+                  color: '#9ca3af', fontSize: 11, fontWeight: 500,
+                  padding: '4px 10px', borderRadius: 12, zIndex: 3, opacity: 0,
+                }}>{l.text}</div>
               ))}
-            </svg>
-            {LABELS.map(l => (
-              <div key={l.id} id={l.id} className="edge-label" style={{
-                position: 'absolute', left: l.left, top: l.top,
-                background: '#1a1e28', border: '1px solid #3b4256',
-                color: '#9ca3af', fontSize: 11, fontWeight: 500,
-                padding: '4px 10px', borderRadius: 12, zIndex: 3, opacity: 0,
-              }}>{l.text}</div>
-            ))}
-            {NODES.map(n => {
-              const t = THEMES[n.theme];
-              return (
-                <div key={n.id} id={n.id} className="node-block" style={{
-                  position: 'absolute', width: NODE_W, left: n.left, top: n.top,
-                  borderRadius: 8, border: `1px solid ${t.border}`, backgroundColor: t.bg,
-                  boxShadow: '0 12px 24px rgba(0,0,0,0.4)', zIndex: 2, opacity: 0,
-                }}>
-                  <div style={{ position: 'absolute', left: -7, top: n.handleY, transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: t.handleBg, border: `2px solid ${t.bg}`, zIndex: 5 }} />
-                  {n.id !== 'node5' && (
-                    <div style={{ position: 'absolute', right: -7, top: n.handleY, transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: t.handleBg, border: `2px solid ${t.bg}`, zIndex: 5 }} />
-                  )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderTopLeftRadius: 8, borderTopRightRadius: 8, fontSize: 12, fontWeight: 600, backgroundColor: t.headerBg, color: t.headerColor }}>
-                    {n.iconUrl ? (
-                      <img src={n.iconUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ width: 18, height: 18, borderRadius: 4, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+              {NODES.map(n => {
+                const t = THEMES[n.theme];
+                return (
+                  <div key={n.id} id={n.id} className="node-block" style={{
+                    position: 'absolute', width: NODE_W, left: n.left, top: n.top,
+                    borderRadius: 8, border: `1px solid ${t.border}`, backgroundColor: t.bg,
+                    boxShadow: '0 12px 24px rgba(0,0,0,0.4)', zIndex: 2, opacity: 0,
+                  }}>
+                    <div style={{ position: 'absolute', left: -7, top: n.handleY, transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: t.handleBg, border: `2px solid ${t.bg}`, zIndex: 5 }} />
+                    {n.id !== 'node5' && (
+                      <div style={{ position: 'absolute', right: -7, top: n.handleY, transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: t.handleBg, border: `2px solid ${t.bg}`, zIndex: 5 }} />
                     )}
-                    <span>{n.title}</span>
-                    {n.titleExtra && <span style={{ marginLeft: 'auto', fontSize: 10, color: '#9ca3af' }}>{n.titleExtra}</span>}
-                  </div>
-                  <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: '#f3f4f6' }}>{n.bodyTitle}</div>
-                        <div style={{ fontSize: 10, marginTop: 3, color: t.accent,
-                          ...(n.id === 'node5' ? { whiteSpace: 'normal' as const, lineHeight: 1.4, marginTop: 5 } : {}),
-                        }}>{n.bodySub}</div>
-                      </div>
-                      {n.amount && <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{n.amount}</div>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderTopLeftRadius: 8, borderTopRightRadius: 8, fontSize: 12, fontWeight: 600, backgroundColor: t.headerBg, color: t.headerColor }}>
+                      {n.iconUrl ? (
+                        <img src={n.iconUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: 18, height: 18, borderRadius: 4, background: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)' }} />
+                      )}
+                      <span>{n.title}</span>
+                      {n.titleExtra && <span style={{ marginLeft: 'auto', fontSize: 10, color: '#9ca3af' }}>{n.titleExtra}</span>}
                     </div>
-                    {n.extra && <div style={{ fontSize: 11, fontWeight: 500, color: t.accent, cursor: 'pointer', marginTop: 4 }}>{n.extra}</div>}
-                    {n.footer && <div style={{ fontSize: 10, color: '#6b7280', marginTop: 6 }}>{n.footer}</div>}
-                    {n.connected && <div style={{ fontSize: 11, fontWeight: 500, color: '#4ade80', marginTop: 3 }}>● Connected</div>}
+                    <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: '#f3f4f6' }}>{n.bodyTitle}</div>
+                          <div style={{ fontSize: 10, marginTop: 3, color: t.accent,
+                            ...(n.id === 'node5' ? { whiteSpace: 'normal' as const, lineHeight: 1.4, marginTop: 5 } : {}),
+                          }}>{n.bodySub}</div>
+                        </div>
+                        {n.amount && <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{n.amount}</div>}
+                      </div>
+                      {n.extra && <div style={{ fontSize: 11, fontWeight: 500, color: t.accent, cursor: 'pointer', marginTop: 4 }}>{n.extra}</div>}
+                      {n.footer && <div style={{ fontSize: 10, color: '#6b7280', marginTop: 6 }}>{n.footer}</div>}
+                      {n.connected && <div style={{ fontSize: 11, fontWeight: 500, color: '#4ade80', marginTop: 3 }}>● Connected</div>}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
           {/* ═══ BLACK OVERLAY ═══ */}
