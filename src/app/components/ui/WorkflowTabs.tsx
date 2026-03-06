@@ -117,6 +117,7 @@ export default function WorkflowTabs() {
   const [hoveredColumn, setHoveredColumn] = useState<ColumnId | null>(null);
   const [activeAnimCol, setActiveAnimCol] = useState<ColumnId>('design');
   const [isMobile, setIsMobile] = useState(false);
+  const [mobileToast, setMobileToast] = useState(false);
   const { light, toggleLight } = useTheme();
   const isHoveringRef = useRef(false);
   const columnRefs = useRef<Record<ColumnId, HTMLDivElement | null>>({
@@ -253,8 +254,13 @@ export default function WorkflowTabs() {
   }, [expandedColumn, isMobile]);
 
   const handleExpand = useCallback((colId: ColumnId) => {
+    if (isMobile) {
+      setMobileToast(true);
+      setTimeout(() => setMobileToast(false), 2500);
+      return;
+    }
     setExpandedColumn(colId);
-  }, []);
+  }, [isMobile]);
 
   const handleClose = useCallback(() => {
     setExpandedColumn(null);
@@ -622,6 +628,22 @@ export default function WorkflowTabs() {
       {typeof document !== 'undefined' && renderExpandedView()
         ? ReactDOM.createPortal(renderExpandedView(), document.body)
         : null}
+
+      {typeof document !== 'undefined' && mobileToast && ReactDOM.createPortal(
+        <div style={{
+          position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 99999, background: '#0f172a', color: '#fff', borderRadius: 14,
+          padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 10,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.25)', fontSize: 14, fontWeight: 500,
+          animation: 'toastIn 0.3s ease-out',
+          maxWidth: '90vw',
+        }}>
+          <style>{`@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(20px); } to { opacity:1; transform:translateX(-50%) translateY(0); }}`}</style>
+          <span style={{ fontSize: 18 }}>💻</span>
+          <span>Try a larger device for the full experience!</span>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
