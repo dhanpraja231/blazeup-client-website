@@ -40,7 +40,7 @@ export default function Hero() {
       id="hero"
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
       style={{
-        background: light ? '#f8fafc' : 'var(--dark-gray)',
+        background: light ? 'linear-gradient(180deg, #ffffff 0%, #ffffff 60%, #f8fafc 100%)' : 'var(--dark-gray)',
         transition: 'background 0.4s',
       }}
       suppressHydrationWarning

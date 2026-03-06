@@ -14,7 +14,7 @@ export function useTheme() {
 }
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [light, setLight] = useState(false);
+  const [light, setLight] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   // Read from localStorage on mount
