@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'BlazeUp – AI Native Finance OS for Corporate Expenses',
-    description: 'Issue corporate cards, enforce spend policies, and automate reimbursements with AI. Built for India, the Gulf, and Southeast Asia.',
+    description: 'Issue corporate cards, enforce spend policies, and automate reimbursements with AI.',
     images: ['/image_assets/BlazeUp_fire_bw_no_bg.svg'],
   },
   robots: {
