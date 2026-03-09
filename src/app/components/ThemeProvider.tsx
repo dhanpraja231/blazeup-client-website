@@ -14,14 +14,14 @@ export function useTheme() {
 }
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [light, setLight] = useState(true);
+  const [light, setLight] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Read from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem('blazeup-light-mode');
-      if (stored === 'true') setLight(true);
+      if (stored !== null) setLight(stored === 'true');
     } catch {}
     setMounted(true);
   }, []);
