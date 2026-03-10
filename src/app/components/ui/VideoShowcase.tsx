@@ -278,12 +278,7 @@ export default function VideoShowcase() {
             </div>
           </div>
 
-          <div className="companion-divider" style={{
-            width: 1, alignSelf: 'stretch', opacity: 0, transformOrigin: 'center top',
-            background: light
-              ? 'linear-gradient(180deg, transparent, rgba(0,0,0,0.12), transparent)'
-              : 'linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent)',
-          }} />
+          
 
           <div className="companion-item" style={{ flex: 1, minWidth: 200, textAlign: 'center', padding: '0 28px', opacity: 0 }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: light ? '#0f172a' : '#fff', marginBottom: 10, transition: 'color 0.3s' }}>
@@ -294,12 +289,7 @@ export default function VideoShowcase() {
             </div>
           </div>
 
-          <div className="companion-divider" style={{
-            width: 1, alignSelf: 'stretch', opacity: 0, transformOrigin: 'center top',
-            background: light
-              ? 'linear-gradient(180deg, transparent, rgba(0,0,0,0.12), transparent)'
-              : 'linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent)',
-          }} />
+          
 
           <div className="companion-item" style={{ flex: 1, minWidth: 200, textAlign: 'center', padding: '0 28px', opacity: 0 }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: light ? '#0f172a' : '#fff', marginBottom: 10, transition: 'color 0.3s' }}>
