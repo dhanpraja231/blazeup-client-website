@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar';
 import { Inter } from 'next/font/google';
@@ -12,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'BlazeUp – AI Native Finance OS for Corporate Expenses',
-  description: 'The AI-native corporate spend management platform. Issue smart corporate cards, enforce spend policies in real time, and eliminate reimbursement headaches — built for India, the Gulf, and Southeast Asia.',
+  description: 'The AI-native corporate spend management platform. Issue smart corporate cards, enforce spend policies in real time, and eliminate reimbursement headaches   built for India, the Gulf, and Southeast Asia.',
   keywords: 'corporate cards, expense management, spend management, reimbursements, finance OS, AI finance, corporate spend, fintech, India, Gulf, ASEAN, MENA, Dubai',
   authors: [{ name: 'BlazeUp Team' }],
   openGraph: {

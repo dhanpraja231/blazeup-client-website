@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Target, Zap, Eye, Monitor, Package, ArrowRight, Star, Globe, TrendingUp, Network, Lightbulb, Heart, Layers, Compass, Rocket, Sparkles } from 'lucide-react';
@@ -28,7 +28,7 @@ export default function VisionPage() {
     {
       icon: <Rocket className="w-8 h-8" />,
       title: "The Future",
-      narrative: "Today, we're not just building a platform. We're crafting the future of work—one where creativity, flexibility, and excellence converge.",
+      narrative: "Today, we're not just building a platform. We're crafting the future of work one where creativity, flexibility, and excellence converge.",
       visual: "The journey continues..."
     }
   ];
@@ -44,7 +44,7 @@ export default function VisionPage() {
     {
       icon: <Compass className="w-16 h-16" />,
       title: "Purpose-Driven Excellence",
-      philosophy: "Quality isn't just about deliverables—it's about creating work that matters.",
+      philosophy: "Quality isn't just about deliverables it's about creating work that matters.",
       manifestation: "We don't just build products; we craft experiences that leave lasting impact.",
       gradient: "from-blue-400 via-indigo-500 to-purple-600"
     },
@@ -205,7 +205,7 @@ export default function VisionPage() {
                 Our Mission
               </h2>
               <p className="text-xl text-white/60 max-w-3xl mx-auto">
-                We're not just changing how work gets done—we're reimagining what work can become.
+                We're not just changing how work gets done we're reimagining what work can become.
               </p>
             </motion.div>
 
@@ -286,7 +286,7 @@ export default function VisionPage() {
                 Our Core Values
               </h2>
               <p className="text-xl text-white/60 max-w-3xl mx-auto">
-                These aren't just words on a wall—they're the principles that guide every decision we make.
+                These aren't just words on a wall they're the principles that guide every decision we make.
               </p>
             </motion.div>
 
@@ -379,7 +379,7 @@ export default function VisionPage() {
     </p>
 
     <p className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-      Our aim: to make work feel real again—driven by purpose, shaped by people, and rewarding for everyone involved.
+      Our aim: to make work feel real again driven by purpose, shaped by people, and rewarding for everyone involved.
     </p>
   </div>
 </div>

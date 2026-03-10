@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -87,7 +87,7 @@ export default function SuccessPage() {
     {
       icon: <Users className="w-12 h-12" />,
       title: "Trust Earned",
-      narrative: "When clients choose to stay, it's not just about satisfaction—it's about trust. Our 95% retention rate tells the story of partnerships that grow stronger with every project.",
+      narrative: "When clients choose to stay, it's not just about satisfaction it's about trust. Our 95% retention rate tells the story of partnerships that grow stronger with every project.",
       value: "95%",
       label: "Client Retention",
       gradient: "from-purple-400 to-pink-400",
@@ -105,7 +105,7 @@ export default function SuccessPage() {
     {
       icon: <Award className="w-12 h-12" />,
       title: "Excellence Standard",
-      narrative: "Quality isn't negotiable. With a 98% quality score, we don't just meet expectations—we redefine what's possible when talent meets purpose.",
+      narrative: "Quality isn't negotiable. With a 98% quality score, we don't just meet expectations we redefine what's possible when talent meets purpose.",
       value: "98%",
       label: "Quality Score",
       gradient: "from-green-400 to-blue-400",
@@ -126,14 +126,14 @@ export default function SuccessPage() {
     {
       icon: <Handshake className="w-16 h-16" />,
       title: "Authentic Partnerships",
-      philosophy: "We don't just complete projects—we build relationships that last beyond the final delivery.",
+      philosophy: "We don't just complete projects we build relationships that last beyond the final delivery.",
       manifestation: "Every collaboration becomes a stepping stone to bigger opportunities and stronger networks.",
       gradient: "from-blue-400 via-purple-500 to-pink-600"
     },
     {
       icon: <CheckCircle className="w-16 h-16" />,
       title: "Quality at Scale",
-      philosophy: "Excellence isn't about perfection—it's about consistent value that exceeds expectations.",
+      philosophy: "Excellence isn't about perfection it's about consistent value that exceeds expectations.",
       manifestation: "We maintain the highest standards while scaling rapidly, proving that quality and speed can coexist.",
       gradient: "from-emerald-400 via-teal-500 to-cyan-600"
     },
@@ -339,7 +339,7 @@ export default function SuccessPage() {
                 What Makes Us Different
               </h2>
               <p className="text-xl text-white/60 max-w-3xl mx-auto">
-                Our success isn't just measured in numbers—it's defined by the principles that guide every interaction.
+                Our success isn't just measured in numbers it's defined by the principles that guide every interaction.
               </p>
             </motion.div>
 
@@ -628,7 +628,7 @@ export default function SuccessPage() {
               <div className="backdrop-blur-lg bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 border border-white/10 rounded-3xl p-16">
                 <div className="max-w-4xl mx-auto space-y-8 text-lg md:text-xl leading-relaxed text-white/80">
                   <p>
-                    Every success story starts with a single decision—the choice to believe that extraordinary results come from extraordinary partnerships.
+                    Every success story starts with a single decision the choice to believe that extraordinary results come from extraordinary partnerships.
                   </p>
 
                   {/* <p>

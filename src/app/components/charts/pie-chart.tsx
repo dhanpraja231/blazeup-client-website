@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo, useCallback, useId, useRef } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, Sector } from 'recharts';
@@ -49,7 +49,7 @@ function generateSubSegments(label: string, total: number) {
 }
 
 const GAP_WIDTH = 4;
-// Scale factor applied to the active slice — CSS transition animates this smoothly
+// Scale factor applied to the active slice   CSS transition animates this smoothly
 const ACTIVE_SCALE = 1.06;
 
 const renderCustomShape = (props: any) => {
@@ -70,7 +70,7 @@ const renderCustomShape = (props: any) => {
   const labelY = centerY + labelR * Math.sin(-midAngle);
 
   return (
-    // outerRadius is NEVER changed — hit detection stays perfectly aligned.
+    // outerRadius is NEVER changed   hit detection stays perfectly aligned.
     // CSS scale on this <g> drives the visual expansion with a smooth transition.
     <g
       style={{
@@ -98,7 +98,7 @@ const renderCustomShape = (props: any) => {
         </mask>
       </defs>
 
-      {/* Glow ring — fades in when active */}
+      {/* Glow ring   fades in when active */}
       <Sector
         cx={centerX} cy={centerY}
         innerRadius={outerRadius + 2}
@@ -111,7 +111,7 @@ const renderCustomShape = (props: any) => {
         }}
       />
 
-      {/* Main sector — geometry never changes, CSS scale drives the visual expansion */}
+      {/* Main sector   geometry never changes, CSS scale drives the visual expansion */}
       <Sector
         cx={centerX} cy={centerY}
         innerRadius={0}
@@ -210,7 +210,7 @@ export function PieChartComponent({ data, dataKey, nameKey, height = 300, light 
               className="text-[11px] font-semibold"
               style={{ color: light ? '#475569' : 'rgba(255,255,255,0.5)' }}
             >
-              {drilldown.label} — Breakdown
+              {drilldown.label}   Breakdown
             </span>
             <button
               onClick={handleBack}
@@ -238,7 +238,7 @@ export function PieChartComponent({ data, dataKey, nameKey, height = 300, light 
           style={{ width: '100%', height }}
         >
           <ResponsiveContainer width="100%" height="100%">
-            {/* onMouseLeave on PieChart catches exits that the Pie-level handler misses —
+            {/* onMouseLeave on PieChart catches exits that the Pie-level handler misses  
                 e.g. fast mouse movement off the edge, or crossing slice borders briefly */}
             <PieChart onMouseLeave={handleMouseLeave}>
               <Pie

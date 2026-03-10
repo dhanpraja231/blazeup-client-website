@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -204,8 +204,8 @@ export default function VideoShowcase() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.25 }}
           >
-            Watch how BlazeUp transforms your expense management — from card design
-            to policy evaluation — all in one seamless flow.
+            Watch how BlazeUp transforms your expense management   from card design
+            to policy evaluation   all in one seamless flow.
           </motion.p>
         </motion.div>
 
@@ -217,7 +217,7 @@ export default function VideoShowcase() {
           {/* Invisible spacer to maintain height based on video aspect ratio */}
           <div style={{ width: '100%', paddingTop: '56.25%' /* 16:9 */ }} />
 
-          {/* Video 1 — Complete Experience */}
+          {/* Video 1   Complete Experience */}
           <div ref={video1WrapRef} style={videoContainerStyle}>
             <video
               ref={video1Ref}
@@ -237,7 +237,7 @@ export default function VideoShowcase() {
             </video>
           </div>
 
-          {/* Video 2 — Consumer */}
+          {/* Video 2   Consumer */}
           <div ref={video2WrapRef} style={videoContainerStyle}>
             <video
               ref={video2Ref}
@@ -274,7 +274,7 @@ export default function VideoShowcase() {
               Craft Your Card
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.7, color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.45)', transition: 'color 0.3s' }}>
-              Design branded corporate cards with live preview — pick colors, logos, and layouts in seconds.
+              Design branded corporate cards with live preview   pick colors, logos, and layouts in seconds.
             </div>
           </div>
 
@@ -290,7 +290,7 @@ export default function VideoShowcase() {
               Set the Rules
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.7, color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.45)', transition: 'color 0.3s' }}>
-              Build spending policies visually — drag-and-drop approval flows that enforce limits automatically.
+              Build spending policies visually   drag-and-drop approval flows that enforce limits automatically.
             </div>
           </div>
 
@@ -306,7 +306,7 @@ export default function VideoShowcase() {
               See Everything
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.7, color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.45)', transition: 'color 0.3s' }}>
-              Real-time dashboards that break down every transaction — by category, team, and trend.
+              Real-time dashboards that break down every transaction   by category, team, and trend.
             </div>
           </div>
         </div>
