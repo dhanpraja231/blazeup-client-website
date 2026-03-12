@@ -62,15 +62,53 @@ interface ScrollingRowProps {
 }
 
 function ScrollingRow({ integrations, direction, speed }: ScrollingRowProps) {
-  const duplicatedIntegrations = [...integrations, ...integrations, ...integrations];
   const { light } = useTheme();
+
+  // Create a reusable component for a single set of integrations
+  const IntegrationSet = () => (
+    // Added `pr-6` to account for the trailing gap and `w-max` to ensure it doesn't compress
+    <div className="flex gap-6 pr-6 w-max">
+      {integrations.map((integration, index) => {
+        const Icon = integration.Icon;
+        return (
+          <div
+            key={index}
+            className="flex-shrink-0 rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105"
+            style={{
+              width: '180px',
+              height: '140px',
+              background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${light ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`,
+              transition: 'background 0.3s, border 0.3s',
+            }}
+          >
+            {/* Integration Logo */}
+            <div className="w-16 h-16 mb-3 flex items-center justify-center">
+              <Icon className="w-full h-full" style={{ color: light ? '#1e293b' : '#fff', transition: 'color 0.3s' }} />
+            </div>
+            {/* Company name */}
+            <h3 className="text-sm font-semibold text-center" style={{ color: light ? '#1e293b' : '#fff', transition: 'color 0.3s' }}>
+              {integration.name}
+            </h3>
+            {/* Color indicator */}
+            <div
+              className="w-8 h-1 rounded-full mt-2"
+              style={{ background: integration.color }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="relative overflow-hidden py-4">
       <motion.div
-        className="flex gap-6"
+        // `w-max` added here forces the container to tightly wrap the sets inside
+        className="flex w-max"
         animate={{
-          x: direction === 'left' ? ['0%', '-33.333%'] : ['-33.333%', '0%'],
+          // 8 total sets. Moving 1 set is exactly 12.5% of the total width.
+          x: direction === 'left' ? ['0%', '-12.5%'] : ['-12.5%', '0%'],
         }}
         transition={{
           x: {
@@ -81,36 +119,10 @@ function ScrollingRow({ integrations, direction, speed }: ScrollingRowProps) {
           },
         }}
       >
-        {duplicatedIntegrations.map((integration, index) => {
-          const Icon = integration.Icon;
-          return (
-            <div
-              key={index}
-              className="flex-shrink-0 rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105"
-              style={{
-                width: '180px',
-                height: '140px',
-                background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
-                border: `1px solid ${light ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`,
-                transition: 'background 0.3s, border 0.3s',
-              }}
-            >
-              {/* Integration Logo */}
-              <div className="w-16 h-16 mb-3 flex items-center justify-center">
-                <Icon className="w-full h-full" style={{ color: light ? '#1e293b' : '#fff', transition: 'color 0.3s' }} />
-              </div>
-              {/* Company name */}
-              <h3 className="text-sm font-semibold text-center" style={{ color: light ? '#1e293b' : '#fff', transition: 'color 0.3s' }}>
-                {integration.name}
-              </h3>
-              {/* Color indicator */}
-              <div
-                className="w-8 h-1 rounded-full mt-2"
-                style={{ background: integration.color }}
-              />
-            </div>
-          );
-        })}
+        {/* Render 8 identical sets to ensure enough width for ultra-wide monitors */}
+        {[...Array(8)].map((_, i) => (
+          <IntegrationSet key={i} />
+        ))}
       </motion.div>
     </div>
   );
@@ -158,9 +170,9 @@ export default function Integrations() {
 
         {/* Scrolling Integration Rows */}
         <div className="space-y-6">
-          <ScrollingRow integrations={integrations_row1} direction="left" speed={25} />
-          <ScrollingRow integrations={integrations_row2} direction="right" speed={30} />
-          <ScrollingRow integrations={integrations_row3} direction="left" speed={28} />
+          <ScrollingRow integrations={integrations_row1} direction="left" speed={24} />
+          <ScrollingRow integrations={integrations_row2} direction="right" speed={29} />
+          <ScrollingRow integrations={integrations_row3} direction="left" speed={27} />
         </div>
 
         {/* CTA Text */}
@@ -179,4 +191,3 @@ export default function Integrations() {
     </section>
   );
 }
-
