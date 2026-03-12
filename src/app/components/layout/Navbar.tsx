@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -34,13 +34,13 @@ export default function Navbar() {
     if (href.startsWith('#')) {
       const element = document.querySelector(href);
       if (element) {
-        // Section exists on current page — smooth scroll
+        // Section exists on current page   smooth scroll
         const offset = 80;
         const elementPosition = element.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - offset;
         window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
       } else {
-        // Section doesn't exist — navigate to home page with hash
+        // Section doesn't exist   navigate to home page with hash
         window.location.href = `/home${href}`;
       }
     }

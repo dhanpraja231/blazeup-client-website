@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom';
@@ -109,7 +109,7 @@ const COVER_LABEL_STYLE: React.CSSProperties = {
   padding: '16px 16px 20px',
 };
 
-// COVER_LABEL_H3_STYLE is now dynamic — see renderCover
+// COVER_LABEL_H3_STYLE is now dynamic   see renderCover
 
 /* ═══════════ Main Component ═══════════ */
 export default function WorkflowTabs() {
@@ -237,7 +237,7 @@ export default function WorkflowTabs() {
     isHoveringRef.current = false;
     setHoveredColumn(null);
 
-    // Reset all columns to equal — single tween for smooth return
+    // Reset all columns to equal   single tween for smooth return
     COLUMNS.forEach(c => {
       const el = columnRefs.current[c.id];
       if (!el) return;
@@ -340,7 +340,7 @@ export default function WorkflowTabs() {
           }}
         />
 
-        {/* Content area — fills available space above label */}
+        {/* Content area   fills available space above label */}
         <div style={COVER_CONTENT_STYLE}>
           {col.id === 'design' && (
             <div style={{ width: '100%', height: '100%' }}>{designCover}</div>
@@ -353,7 +353,7 @@ export default function WorkflowTabs() {
           )}
         </div>
 
-        {/* Label — always pinned at bottom */}
+        {/* Label   always pinned at bottom */}
         <div style={COVER_LABEL_STYLE}>
           <h3 style={{
             fontSize: 28,
@@ -577,7 +577,7 @@ export default function WorkflowTabs() {
                 Your{' '}Workflow
               </h2>
               <p className="max-w-2xl text-lg" style={{ color: light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)', transition: 'color 0.3s' }}>
-                Design, evaluate, and visualize — everything you need to manage
+                Design, evaluate, and visualize   everything you need to manage
                 your card program in one place.
               </p>
             </motion.div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useMemo, useCallback, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -561,7 +561,7 @@ function EmployeeLookup() {
                 ))}
               </div>
 
-              {/* Real Donut Chart — Spending by Category */}
+              {/* Real Donut Chart   Spending by Category */}
               <div className="rounded-xl p-4" style={{ background: L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', border: `1px solid ${L ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'}` }}>
                 <p className="text-xs font-medium mb-2" style={{ color: L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)' }}>Spending by Category</p>
                 <DonutChart data={EMPLOYEE_CATEGORIES} dataKey="value" nameKey="name" height={200} light={L} />
@@ -664,7 +664,7 @@ export default function VisualizeDashboard() {
                 Spending Dashboard
               </motion.h1>
               <motion.p className="mt-1 text-sm" style={{ color: L ? '#64748b' : 'rgba(255,255,255,0.4)' }} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
-                {isPreview ? 'Preview your dashboard — this is how it will look when shipped' : 'Build your dashboard by dragging KPI dimensions into the grid'}
+                {isPreview ? 'Preview your dashboard   this is how it will look when shipped' : 'Build your dashboard by dragging KPI dimensions into the grid'}
               </motion.p>
             </div>
             <motion.div className="flex items-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
@@ -702,7 +702,7 @@ export default function VisualizeDashboard() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-10">
-        {/* Alerts & Insights — moved to top */}
+        {/* Alerts & Insights   moved to top */}
         <div>
           <motion.h2 className="text-lg font-bold mb-4" style={{ color: L ? '#0f172a' : '#fff' }} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             Alerts & Insights

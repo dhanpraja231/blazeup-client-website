@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import {
@@ -66,7 +66,7 @@ export function BarGraph({ data, xKey, dataKey, color, height = 300, light = fal
             className="text-[11px] font-semibold"
             style={{ color: light ? '#475569' : 'rgba(255,255,255,0.5)' }}
           >
-            {drilldown.label} — Monthly Breakdown
+            {drilldown.label}   Monthly Breakdown
           </span>
           <button
             onClick={() => setDrilldown(null)}

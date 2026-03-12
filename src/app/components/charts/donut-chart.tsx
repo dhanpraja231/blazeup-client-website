@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo, useCallback } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, Sector } from 'recharts';
@@ -49,7 +49,7 @@ function generateSubSegments(label: string, total: number) {
   });
 }
 
-// Smooth active shape renderer — uses a gentle expand with CSS transitions
+// Smooth active shape renderer   uses a gentle expand with CSS transitions
 const renderActiveShape = (props: any) => {
   const {
     cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill,
@@ -160,7 +160,7 @@ export function DonutChart({ data, dataKey, nameKey, height = 300, light = false
               className="text-[11px] font-semibold"
               style={{ color: light ? '#475569' : 'rgba(255,255,255,0.5)' }}
             >
-              {drilldown.label} — Breakdown
+              {drilldown.label}   Breakdown
             </span>
             <button
               onClick={handleBack}

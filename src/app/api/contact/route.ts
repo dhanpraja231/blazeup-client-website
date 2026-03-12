@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 export async function POST(req: NextRequest) {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create transporter — configure with your SMTP credentials
+    // Create transporter   configure with your SMTP credentials
     // For production, set these environment variables:
     //   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
     const transporter = nodemailer.createTransport({
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     // Build the email
     const mailOptions = {
       from: `"BlazeUp Contact Form" <${process.env.SMTP_USER || 'noreply@blazeup.app'}>`,
-      to: 'contact@blazeup.app',
+      to: process.env.CONTACT_EMAIL || 'contact@blazeup.app',
       replyTo: email,
       subject: `[BlazeUp Contact] ${subject}`,
       html: `

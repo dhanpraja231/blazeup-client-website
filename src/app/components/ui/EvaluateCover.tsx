@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useTheme } from '@/components/ThemeProvider';
 
-// ── Node data — coordinates designed for ~900×450 expanded column ──
+// ── Node data   coordinates designed for ~900×450 expanded column ──
 const NODE_W = 195;
 const DESIGN_WIDTH = 1300;
 const DESIGN_HEIGHT = 450;
@@ -108,7 +108,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
     return () => observer.disconnect();
   }, []);
 
-  // Detect truly small viewports (phones) — NOT container resize from hover
+  // Detect truly small viewports (phones)   NOT container resize from hover
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 480px)');
     setIsTooSmall(mq.matches);
@@ -119,7 +119,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
 
   useEffect(() => { isHoveredRef.current = isHovered; }, [isHovered]);
 
-  // ═══ COVER ANIMATION — simple nodes + flow + checkmark ═══
+  // ═══ COVER ANIMATION   simple nodes + flow + checkmark ═══
   useEffect(() => {
     const svg = coverRef.current;
     if (!svg) return;
@@ -294,7 +294,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
-      {/* ═══ Cover Animation — mini card nodes → flow → checkmark ═══ */}
+      {/* ═══ Cover Animation   mini card nodes → flow → checkmark ═══ */}
       {!showFullCanvas && (
         <div
           ref={coverRef}
@@ -338,7 +338,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
               <circle className="cover-flow" cx="265" cy="185" r="4" fill="#22c55e" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }} />
               <circle className="cover-flow" cx="265" cy="185" r="4" fill="#22c55e" opacity="0" style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }} />
 
-              {/* Card 1 — Category Limits (purple) */}
+              {/* Card 1   Category Limits (purple) */}
               <foreignObject className="cover-card" x="15" y="50" width="110" height="55" style={{ overflow: 'visible' }}>
                 <div style={{ width: 110, borderRadius: 6, border: '1px solid #8b5cf6', background: '#2D2B3D', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
                   <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -352,7 +352,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
                 </div>
               </foreignObject>
 
-              {/* Card 2 — Condition (orange) */}
+              {/* Card 2   Condition (orange) */}
               <foreignObject className="cover-card" x="15" y="275" width="110" height="55" style={{ overflow: 'visible' }}>
                 <div style={{ width: 110, borderRadius: 6, border: '1px solid #b45309', background: '#382718', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
                   <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -366,7 +366,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
                 </div>
               </foreignObject>
 
-              {/* Card 3 — Policy Check (blue) */}
+              {/* Card 3   Policy Check (blue) */}
               <foreignObject className="cover-card" x="145" y="155" width="120" height="70" style={{ overflow: 'visible' }}>
                 <div style={{ width: 120, borderRadius: 6, border: '1px solid #3b82f6', background: '#2B3045', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
                   <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -381,7 +381,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
                 </div>
               </foreignObject>
 
-              {/* Card 4 — Action (green) */}
+              {/* Card 4   Action (green) */}
               <foreignObject className="cover-card" x="285" y="115" width="110" height="55" style={{ overflow: 'visible' }}>
                 <div style={{ width: 110, borderRadius: 6, border: '1px solid #22c55e', background: '#25332C', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
                   <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -395,7 +395,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
                 </div>
               </foreignObject>
 
-              {/* Card 5 — Notify (dark) */}
+              {/* Card 5   Notify (dark) */}
               <foreignObject className="cover-card" x="285" y="235" width="110" height="55" style={{ overflow: 'visible' }}>
                 <div style={{ width: 110, borderRadius: 6, border: '1px solid #4c1d95', background: '#1a1924', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
                   <div style={{ padding: '5px 8px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -537,13 +537,13 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
               backgroundColor: '#16161A',
               overflow: 'hidden',
             }}>
-            {/* Inner layout — horizontal split */}
+            {/* Inner layout   horizontal split */}
             <div style={{
               display: 'flex',
               width: '100%',
               height: '100%',
             }}>
-              {/* Left column — policy info */}
+              {/* Left column   policy info */}
               <div style={{
                 flex: 1,
                 padding: '24px 28px',
@@ -574,7 +574,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
                 </div>
               </div>
 
-              {/* Right column — logic nodes */}
+              {/* Right column   logic nodes */}
               <div style={{
                 width: 280,
                 flexShrink: 0,

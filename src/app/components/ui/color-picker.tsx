@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { HexColorPicker } from 'react-colorful';
@@ -56,7 +56,7 @@ export default function ColorPicker({ value, onChange, className }: ColorPickerP
         top = rect.bottom - popupH;
       }
       if (top < 20) {
-        // Still doesn't fit — center in viewport
+        // Still doesn't fit   center in viewport
         top = Math.max(20, (viewH - popupH) / 2);
       }
 

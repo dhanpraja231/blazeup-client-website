@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import gsap from 'gsap';
@@ -63,7 +63,7 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
 
   const scrambleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Continuously scale the card to fit — direct DOM update, no React re-render
+  // Continuously scale the card to fit   direct DOM update, no React re-render
   useEffect(() => {
     const wrapper = wrapperRef.current;
     const inner = innerRef.current;
@@ -101,7 +101,7 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
       iteration++;
       const progress = iteration / maxIterations;
 
-      // Build the scrambled string — characters resolve left to right
+      // Build the scrambled string   characters resolve left to right
       const scrambled = targetChars.map((char, i) => {
         // Spaces and dots stay
         if (char === ' ' || char === '•') return char;
@@ -318,11 +318,11 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
             }}
           />
 
-          {/* Card content — positioned to match credit-card-designer layout */}
+          {/* Card content   positioned to match credit-card-designer layout */}
           <div style={{
             position: 'relative', zIndex: 2, padding: 0, height: '100%',
           }}>
-            {/* Bank name — top left, matching hw-bankname position */}
+            {/* Bank name   top left, matching hw-bankname position */}
             <div style={{
               position: 'absolute',
               top: 10 * SCALE,
@@ -336,7 +336,7 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
               DEMO BANK
             </div>
 
-            {/* Network logo — top right */}
+            {/* Network logo   top right */}
             <span style={{
               position: 'absolute',
               top: 10 * SCALE,
@@ -352,7 +352,7 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
               {design.network}
             </span>
 
-            {/* EMV Chip — positioned exactly like the card designer */}
+            {/* EMV Chip   positioned exactly like the card designer */}
             <div style={{
               position: 'absolute',
               left: chipX,
@@ -374,7 +374,7 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
               </svg>
             </div>
 
-            {/* Contactless icon — right of chip */}
+            {/* Contactless icon   right of chip */}
             <div style={{
               position: 'absolute',
               left: chipX + chipW + 8,
@@ -390,7 +390,7 @@ export default React.memo(function FlippingCardCover({ isActive = true, onCycleC
               </svg>
             </div>
 
-            {/* Card number — with cryptographic scramble animation */}
+            {/* Card number   with cryptographic scramble animation */}
             <div style={{
               position: 'absolute',
               bottom: 46,

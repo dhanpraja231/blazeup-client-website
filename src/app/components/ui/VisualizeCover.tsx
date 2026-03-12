@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
@@ -136,7 +136,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
   const containerRef = useRef<HTMLDivElement>(null);
   const chartScaleRef = useRef<HTMLDivElement>(null);
 
-  // Continuously scale chart area — direct DOM update for smooth scaling
+  // Continuously scale chart area   direct DOM update for smooth scaling
   useEffect(() => {
     const container = containerRef.current;
     const scaleEl = chartScaleRef.current;
@@ -275,7 +275,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
         position: 'relative',
       }}
     >
-      {/* Chart label — pinned top */}
+      {/* Chart label   pinned top */}
       <div
         ref={labelRef}
         style={{
@@ -298,7 +298,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
         </div>
       </div>
 
-      {/* Chart area — scales down proportionally */}
+      {/* Chart area   scales down proportionally */}
       <div style={{
         position: 'absolute',
         top: 28,
@@ -321,7 +321,7 @@ export default React.memo(function VisualizeCover({ isActive = true, onCycleComp
         </div>
       </div>
 
-      {/* Color curtain — sweeps across to transition */}
+      {/* Color curtain   sweeps across to transition */}
       <div
         ref={curtainRef}
         style={{

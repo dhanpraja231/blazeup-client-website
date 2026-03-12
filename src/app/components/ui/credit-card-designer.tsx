@@ -27,7 +27,7 @@ const DEFAULT_PATTERN: PatternState = { id: null, color: '#ffffff', opacity: 0.0
 
 // ============ PREDEFINED CARD PATTERNS ============
 const patGradDef = (color: string, color2: string | null, w: number, h: number) => {
-  if (!color2) return ''; // no gradient — flat color used directly
+  if (!color2) return ''; // no gradient   flat color used directly
   return `<defs><linearGradient id='patGrad' x1='0' y1='0' x2='${w}' y2='${h}' gradientUnits='userSpaceOnUse'><stop offset='0%' stop-color='${color}'/><stop offset='100%' stop-color='${color2}'/></linearGradient></defs>`;
 };
 const patStroke = (color: string, color2: string | null) => color2 ? 'url(#patGrad)' : color;
@@ -188,13 +188,13 @@ const CARD_TEMPLATES = [
 
 function createFrontTemplate(): CardElement[] {
   return [
-    // Bank name/logo — position locked but resizable & styleable
+    // Bank name/logo   position locked but resizable & styleable
     { id: 'hw-bankname', type: 'text', face: 'front', x: CARD.MARGIN, y: CARD.MARGIN, width: 200, height: 26, content: 'DEMO BANK', color: '#fff', fontSize: 17, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 4, fontWeight: 600, isPositionLocked: true },
-    // EMV Chip — ISO 7816: fully locked hardware
+    // EMV Chip   ISO 7816: fully locked hardware
     { id: 'hw-chip', type: 'image', face: 'front', x: 47.5, y: 92.5, width: 55, height: 42.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'CHIP', isHardware: true },
-    // Contactless / NFC icon — fully movable & resizable
+    // Contactless / NFC icon   fully movable & resizable
     { id: 'hw-contactless', type: 'icon', face: 'front', x: 116, y: 100, width: 28, height: 28, content: '', color: 'rgba(255,255,255,.55)', fontSize: 16, backgroundColor: 'transparent', opacity: .55, iconName: 'Wifi', rotation: 90 },
-    // Account holder name — MOVABLE
+    // Account holder name   MOVABLE
     { id: 'hw-cardholder-name', type: 'text', face: 'front', x: 24, y: 224, width: 220, height: 22, content: 'YOUR NAME HERE', color: '#fff', fontSize: 14, backgroundColor: 'transparent', opacity: .9, rotation: 0, fontFamily: "'Inter',sans-serif", letterSpacing: 2, fontWeight: 500 },
   ];
 }
@@ -212,13 +212,13 @@ function createBackTemplate(orient: 'horizontal' | 'vertical', network: NetworkT
   const acctH = isV ? 70 : 20;
 
   return [
-    // Magnetic stripe — thickness 12.5mm (62.5px); 5mm (25px) from top (landscape) or right (portrait)
+    // Magnetic stripe   thickness 12.5mm (62.5px); 5mm (25px) from top (landscape) or right (portrait)
     { id: 'hw-magstripe', type: 'image', face: 'back', x: isV ? cw - 25 - 62.5 : 0, y: isV ? 0 : 25, width: isV ? 62.5 : cw, height: isV ? ch : 62.5, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'MAGSTRIPE', isHardware: true },
-    // Hologram — bottom-right in horizontal; lower-right in vertical above issuing bank text
+    // Hologram   bottom-right in horizontal; lower-right in vertical above issuing bank text
     { id: 'hw-hologram', type: 'image', face: 'back', x: isV ? cw - 130 : cw - 54, y: isV ? ch - 80 : ch - 48, width: 34, height: 28, content: '', color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, imageData: 'HOLOGRAM', isHardware: true },
-    // Network logo — 4px gap left of hologram
+    // Network logo   4px gap left of hologram
     { id: 'hw-network', type: 'text', face: 'back', x: isV ? cw - 199 : cw - 123, y: isV ? ch - 82 : ch - 50, width: 65, height: 36, content: network, color: '#fff', fontSize: 16, backgroundColor: 'transparent', opacity: 1, rotation: 0, isHardware: true },
-    // Linked account info group — moves as one unit
+    // Linked account info group   moves as one unit
     { id: 'hw-acctinfo', type: 'text', face: 'back', x: acctX, y: acctY, width: isV ? cw - 48 : 240, height: acctH + 24, content: acctContent, color: '#fff', fontSize: isV ? 13 : 14, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 3, fontWeight: 500, isLinkedGroup: true },
     { id: 'hw-cvv', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 2, width: 100, height: 16, content: 'CVV: 123', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
     { id: 'hw-expiry', type: 'text', face: 'back', x: acctX, y: acctY + acctH + 18, width: 140, height: 16, content: 'VALID THRU: 12/28', color: 'rgba(255,255,255,.7)', fontSize: 10, backgroundColor: 'transparent', opacity: 1, rotation: 0, fontFamily: "'Courier New',monospace", letterSpacing: 2, isLinkedGroup: true },
@@ -317,7 +317,7 @@ export default function CreditCardDesigner() {
           spotlightColor, spotlightX, spotlightY, spotlightEnabled,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch { /* quota exceeded — silently ignore */ }
+      } catch { /* quota exceeded   silently ignore */ }
     }, 500);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [frontElements, backElements, frontBg, backBg, network, orientation, frontPattern, backPattern, frontLayout, backLayout, spotlightColor, spotlightX, spotlightY, spotlightEnabled]);
@@ -400,7 +400,7 @@ export default function CreditCardDesigner() {
       el = el.parentElement;
     }
     const isWindow = scrollContainer === window;
-    // gsap.quickTo creates a single reusable tween that smoothly interpolates — no jitter
+    // gsap.quickTo creates a single reusable tween that smoothly interpolates   no jitter
     const setY = gsap.quickTo(wrapper, 'y', { duration: 0.4, ease: 'power3' });
     // Cache the original offset top once after layout
     const cacheTop = () => {
@@ -458,7 +458,7 @@ export default function CreditCardDesigner() {
       if (target.isLinkedGroup) {
         const dx = updates.x !== undefined ? updates.x - target.x : 0;
         const dy = updates.y !== undefined ? updates.y - target.y : 0;
-        // Font properties that propagate to all siblings (NOT fontSize — that stays independent)
+        // Font properties that propagate to all siblings (NOT fontSize   that stays independent)
         const sharedFontUpdates: Partial<CardElement> = {};
         if (updates.fontFamily !== undefined) sharedFontUpdates.fontFamily = updates.fontFamily;
         if (updates.fontWeight !== undefined) sharedFontUpdates.fontWeight = updates.fontWeight;
@@ -620,7 +620,7 @@ export default function CreditCardDesigner() {
     const el = elements.find(i => i.id === elId);
     if (!el || el.isHardware || el.isPositionLocked) { setSelectedElement(elId); return; }
     const canvas = canvasRef.current; if (!canvas) return;
-    // Cache EVERYTHING once — zero lookups in onMove
+    // Cache EVERYTHING once   zero lookups in onMove
     const cachedRect = canvas.getBoundingClientRect();
     const cw = cardW, ch = cardH;
     const sx = cw / cachedRect.width, sy = ch / cachedRect.height;
@@ -642,7 +642,7 @@ export default function CreditCardDesigner() {
     dragRef.current = { id: elId, offsetX: offX, offsetY: offY, startX: origX, startY: origY };
     setSelectedElement(elId);
     if (dom) gsap.to(dom, { scale: 1.05, duration: .15, ease: 'power2.out' });
-    // onMove: ONLY math + gsap.set — no DOM reads, no array scans, no reflows
+    // onMove: ONLY math + gsap.set   no DOM reads, no array scans, no reflows
     const onMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
       let nx = (ev.clientX - cachedRectLeft) * sx - offX;
@@ -672,7 +672,7 @@ export default function CreditCardDesigner() {
           const warnEl = document.getElementById('collision-warn');
           if (warnEl) { warnEl.style.display = 'flex'; warnEl.textContent = `Overlapping ${hit}`; setTimeout(() => { warnEl.style.display = 'none'; }, 2000); }
         }
-        // Update all linked siblings positions — anchor to cached offsets, not state (prevents drift after resize)
+        // Update all linked siblings positions   anchor to cached offsets, not state (prevents drift after resize)
         if (isGroup) {
           for (const s of siblings) {
             gsap.set(s.dom, { x: 0, y: 0, left: fx + s.dx, top: fy + s.dy });
@@ -796,7 +796,7 @@ export default function CreditCardDesigner() {
     setBackElements(createBackTemplate(orientation, network));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orientation]);
-  // Rotate EMV chip in-place when orientation changes (keep same x,y — just rotate 90°)
+  // Rotate EMV chip in-place when orientation changes (keep same x,y   just rotate 90°)
   useEffect(() => {
     setFrontElements(prev => prev.map(el =>
       el.id === 'hw-chip'
@@ -1007,7 +1007,7 @@ export default function CreditCardDesigner() {
                       draggable
                       onDragStart={(e) => { e.dataTransfer.setData('text/clipboard-image', img.dataUrl); e.dataTransfer.effectAllowed = 'copy'; }}
                       onClick={() => addClipboardImageToCard(img.dataUrl)}
-                      title={`${img.name} — Click to add or drag onto card`}>
+                      title={`${img.name}   Click to add or drag onto card`}>
                       <img src={img.dataUrl} alt={img.name} className="w-full h-full object-cover" draggable={false} />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                         <Plus className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1093,7 +1093,7 @@ export default function CreditCardDesigner() {
                     );
                   })}
                 </div>
-                {/* Color controls — only when a layout is selected */}
+                {/* Color controls   only when a layout is selected */}
                 {activeLayout.id !== 'none' && <>
                   <div><PropLabel>Base Color</PropLabel><ColorPicker value={activeLayout.baseColor} onChange={v => { setActiveLayout(prev => ({ ...prev, baseColor: v })); setCardBg(v); pushHistory(); }} /></div>
                   <div><PropLabel>Overlay Color</PropLabel><ColorPicker value={activeLayout.overlayColor} onChange={v => { setActiveLayout(prev => ({ ...prev, overlayColor: v })); pushHistory(); }} /></div>
@@ -1158,7 +1158,7 @@ export default function CreditCardDesigner() {
                 </>}
               </div>}
             </div>
-            {/* Properties — ENHANCED */}
+            {/* Properties   ENHANCED */}
             {selectedData && <div className="rounded-2xl overflow-visible sidebar-item" style={ps}><div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium">Properties
@@ -1167,14 +1167,14 @@ export default function CreditCardDesigner() {
                 </span>
                 {!selectedData.isHardware && !selectedData.isPositionLocked && <button onClick={() => deleteElement(selectedElement!)} className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
               </div>
-              {selectedData.isHardware && <p className={`text-[11px] ${light ? 'text-slate-400' : 'text-slate-500'}`}>Hardware element — fully locked</p>}
+              {selectedData.isHardware && <p className={`text-[11px] ${light ? 'text-slate-400' : 'text-slate-500'}`}>Hardware element   fully locked</p>}
               {!selectedData.isHardware && <div className="space-y-3">
-                {/* Position sliders — hidden for position-locked elements */}
+                {/* Position sliders   hidden for position-locked elements */}
                 {!selectedData.isPositionLocked && <div className="grid grid-cols-2 gap-2">
                   <div><PropLabel>X: {Math.round(selectedData.x)}</PropLabel><input type="range" min="0" max={CARD.W} value={selectedData.x} onChange={e => updateElement(selectedElement!, { x: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
                   <div><PropLabel>Y: {Math.round(selectedData.y)}</PropLabel><input type="range" min="0" max={CARD.H} value={selectedData.y} onChange={e => updateElement(selectedElement!, { y: parseFloat(e.target.value) })} className="w-full accent-indigo-500" /></div>
                 </div>}
-                {/* Size sliders — always shown */}
+                {/* Size sliders   always shown */}
                 <div className="grid grid-cols-2 gap-2">
                   <div><PropLabel>W: {Math.round(selectedData.width)}</PropLabel><input type="range" min="20" max="400" value={selectedData.width} onChange={e => updateElement(selectedElement!, { width: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
                   <div><PropLabel>H: {Math.round(selectedData.height)}</PropLabel><input type="range" min="20" max="260" value={selectedData.height} onChange={e => updateElement(selectedElement!, { height: parseInt(e.target.value) })} className="w-full accent-indigo-500" /></div>
@@ -1209,7 +1209,7 @@ export default function CreditCardDesigner() {
                       <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ left: selectedData.isBackgroundRemoved ? 22 : 2 }} />
                     </button>
                   </div>
-                  {/* Background removal sliders — integrated from backgroundslider.html */}
+                  {/* Background removal sliders   integrated from backgroundslider.html */}
                   <div className="space-y-2 p-2 rounded-lg" style={{ background: light ? 'rgba(0,0,0,.02)' : 'rgba(255,255,255,.03)', border: light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)' }}>
                     <div>
                       <PropLabel>Tolerance - Color Sensitivity: {bgRemovalTolerance.toFixed(2)}</PropLabel>
@@ -1249,7 +1249,7 @@ export default function CreditCardDesigner() {
                     style={{ background: activeFace === f ? 'rgba(99,102,241,.15)' : 'transparent', color: activeFace === f ? '#818cf8' : '#64748b', border: activeFace === f ? '1px solid rgba(99,102,241,.3)' : '1px solid transparent' }}>
                     {f === 'front' ? 'Front Face' : 'Back Face'}
                   </button>))}
-                <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON — front & back styles stay in sync' : 'Sync OFF — faces are independent', type: 'info' }); }}
+                <button onClick={(e) => { e.stopPropagation(); const next = !syncFaces; setSyncFaces(next); setToast({ message: next ? 'Sync ON   front & back styles stay in sync' : 'Sync OFF   faces are independent', type: 'info' }); }}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ml-1"
                   style={{ background: syncFaces ? 'rgba(34,197,94,.12)' : (light ? 'rgba(0,0,0,.03)' : 'rgba(255,255,255,.03)'), border: syncFaces ? '1px solid rgba(34,197,94,.3)' : (light ? '1px solid rgba(0,0,0,.08)' : '1px solid rgba(255,255,255,.06)'), color: syncFaces ? '#4ade80' : '#64748b' }}
                   title={syncFaces ? 'Front ↔ Back sync ON: both faces stay in sync' : 'Sync styles between front and back face'}>
@@ -1299,14 +1299,14 @@ export default function CreditCardDesigner() {
                           transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
                           zIndex: el.isHardware ? 60 : selectedElement === el.id ? 50 : 1,
                           touchAction: 'none' }}>
-                        {/* Inline delete button — not for hardware or position-locked */}
+                        {/* Inline delete button   not for hardware or position-locked */}
                         {selectedElement === el.id && !el.isHardware && !el.isPositionLocked && (
                           <button onMouseDown={e => { e.stopPropagation(); clickedElementRef.current = true; deleteElement(el.id); }}
                             className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center shadow-lg hover:bg-red-400 transition-colors" style={{ zIndex: 110 }}>
                             <X className="w-3 h-3 text-white" />
                           </button>
                         )}
-                        {/* Resize handles — shown for non-hardware (including position-locked) */}
+                        {/* Resize handles   shown for non-hardware (including position-locked) */}
                         {selectedElement === el.id && !el.isHardware && <>
                           <div onMouseDown={e => handleResizeMouseDown(e, el.id, 'se')} style={resizeHandleStyle('se')} />
                           <div onMouseDown={e => handleResizeMouseDown(e, el.id, 'sw')} style={resizeHandleStyle('sw')} />

@@ -1,23 +1,23 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar';
 import { Inter } from 'next/font/google';
 import Footer from './components/layout/Footer';
 import ThemeProvider from '@/components/ThemeProvider';
+
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
 });
 
-
 export const metadata: Metadata = {
-  title: 'BlazeUp',
-  description: 'Connect with world-class freelancers who turn ambitious ideas into exceptional results. From concept to completion, we make it happen.',
-  keywords: 'freelancers, development, design, marketing, business strategy, AI, automation',
+  title: 'BlazeUp – AI Native Finance OS for Corporate Expenses',
+  description: 'The AI-native corporate spend management platform. Issue smart corporate cards, enforce spend policies in real time, and eliminate reimbursement headaches   built for India, the Gulf, and Southeast Asia.',
+  keywords: 'corporate cards, expense management, spend management, reimbursements, finance OS, AI finance, corporate spend, fintech, India, Gulf, ASEAN, MENA, Dubai',
   authors: [{ name: 'BlazeUp Team' }],
   openGraph: {
-    title: 'BlazeUp',
-    description: 'Connect with world-class freelancers who turn ambitious ideas into exceptional results.',
+    title: 'BlazeUp – AI Native Finance OS for Corporate Expenses',
+    description: 'Issue corporate cards, enforce spend policies, and automate reimbursements with AI.',
     url: 'https://blazeup.app',
     siteName: 'BlazeUp',
     images: [
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
         url: '/image_assets/BlazeUp_fire_bw_no_bg.svg',
         width: 1200,
         height: 630,
-        alt: 'BlazeUp - Premium Freelancer Platform',
+        alt: 'BlazeUp – AI Native Finance OS',
       },
     ],
     locale: 'en_US',
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BlazeUp - Transform Your Vision Into Reality',
-    description: 'Connect with world-class freelancers who turn ambitious ideas into exceptional results.',
+    title: 'BlazeUp – AI Native Finance OS for Corporate Expenses',
+    description: 'Issue corporate cards, enforce spend policies, and automate reimbursements with AI.',
     images: ['/image_assets/BlazeUp_fire_bw_no_bg.svg'],
   },
   robots: {
