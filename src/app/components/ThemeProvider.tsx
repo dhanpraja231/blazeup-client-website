@@ -17,12 +17,8 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   const [light, setLight] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Read from localStorage on mount
+  // Always start in dark mode
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('blazeup-light-mode');
-      if (stored !== null) setLight(stored === 'true');
-    } catch {}
     setMounted(true);
   }, []);
 

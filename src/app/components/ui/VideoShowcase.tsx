@@ -227,13 +227,13 @@ export default function VideoShowcase() {
               preload="metadata"
               style={{
                 display: 'block',
-                width: '100%',
+                width: 'auto',
                 height: 'auto',
-                transform: 'scale(1.4)',
+                transform: 'scale(1)',
                 transformOrigin: 'center center',
               }}
             >
-              <source src="/CompleteVideo.mp4" type="video/mp4" />
+              <source src="/Final_First.mp4" type="video/mp4" />
             </video>
           </div>
 
