@@ -61,7 +61,7 @@ export default function Hero() {
               {displayedText}
               <span className="inline-block w-1 h-[0.9em] ml-1 animate-pulse align-middle" 
                     style={{ 
-                      background: '#e85a2a',
+                      background: '#059669',
                       opacity: displayedText.length < fullText.length ? 1 : 0,
                       transition: 'opacity 0.3s'
                     }}

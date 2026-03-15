@@ -153,8 +153,8 @@ export default function VideoShowcase() {
           width: '900px',
           height: '600px',
           background: light
-            ? 'radial-gradient(ellipse, rgba(249,115,22,0.06) 0%, rgba(236,72,153,0.04) 40%, transparent 70%)'
-            : 'radial-gradient(ellipse, rgba(249,115,22,0.10) 0%, rgba(236,72,153,0.06) 40%, transparent 70%)',
+            ? 'radial-gradient(ellipse, rgba(5,150,105,0.06) 0%, rgba(52,211,153,0.04) 40%, transparent 70%)'
+            : 'radial-gradient(ellipse, rgba(5,150,105,0.08) 0%, rgba(52,211,153,0.05) 40%, transparent 70%)',
           pointerEvents: 'none',
           transition: 'background 0.5s ease',
         }}
@@ -171,7 +171,7 @@ export default function VideoShowcase() {
         >
           <motion.span
             className="inline-block text-xs sm:text-sm font-semibold tracking-widest uppercase mb-4"
-            style={{ color: light ? '#f97316' : '#fb923c', letterSpacing: '0.15em' }}
+            style={{ color: light ? '#059669' : '#34d399', letterSpacing: '0.15em' }}
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -189,7 +189,7 @@ export default function VideoShowcase() {
             transition={{ duration: 0.6, delay: 0.15 }}
           >
             The Complete{' '}
-            <span style={{ color: light ? '#f97316' : '#fb923c' }}>Experience</span>
+            <span style={{ color: light ? '#059669' : '#34d399' }}>Experience</span>
           </motion.h2>
 
           <motion.p

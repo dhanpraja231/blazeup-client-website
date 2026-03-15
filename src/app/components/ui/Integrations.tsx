@@ -182,7 +182,7 @@ export default function Integrations() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <p className="text-lg" style={{ color: light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.5)', transition: 'color 0.3s' }}>
+          <p className="text-lg" style={{ color: light ? '#059669' : '#34d399', transition: 'color 0.3s' }}>
             And more integrations coming soon...
           </p>
         </motion.div>
