@@ -59,8 +59,9 @@ export default function Hero() {
               style={{ color: light ? '#0f172a' : '#fff', transition: 'color 0.3s' }}
             >
               {displayedText}
-              <span className="inline-block w-1 h-[0.9em] bg-indigo-500 ml-1 animate-pulse align-middle" 
+              <span className="inline-block w-1 h-[0.9em] ml-1 animate-pulse align-middle" 
                     style={{ 
+                      background: '#e85a2a',
                       opacity: displayedText.length < fullText.length ? 1 : 0,
                       transition: 'opacity 0.3s'
                     }}
@@ -88,7 +89,8 @@ export default function Hero() {
           >
             <motion.button
               onClick={() => handleScrollToSection('product')}
-              className="group relative px-8 py-4 text-base font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl overflow-hidden transition-all duration-300 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
+              className="group relative px-8 py-4 text-base font-semibold text-white rounded-xl overflow-hidden transition-all duration-300"
+              style={{ background: '#e85a2a', boxShadow: '0 4px 20px rgba(232, 90, 42, 0.25)' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

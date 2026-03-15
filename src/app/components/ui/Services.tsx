@@ -63,7 +63,7 @@ function ServiceCard({ service }: { service: Service }) {
         className="bg-light-gray p-8 rounded-3xl border-gradient relative overflow-hidden group transition-all duration-300 h-full"
       >
         {/* Animated Top Border */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blaze-orange via-rich-purple to-electric-blue bg-200 animate-gradient-flow" />
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ background: '#e85a2a' }} />
         
         {/* Service Icon */}
         <motion.div
@@ -88,7 +88,7 @@ function ServiceCard({ service }: { service: Service }) {
 
         {/* Hover Effect Overlay */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-blaze-orange/5 to-rich-purple/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-br from-blaze-orange/5 to-blaze-orange/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none"
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
         />

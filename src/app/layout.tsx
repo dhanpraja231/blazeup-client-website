@@ -1,13 +1,14 @@
 ﻿import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar';
-import { Inter } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import Footer from './components/layout/Footer';
 import ThemeProvider from '@/components/ThemeProvider';
 
-const inter = Inter({ 
+const plusJakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-plus-jakarta',
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 export const metadata: Metadata = {
@@ -62,7 +63,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+      <body className={`${plusJakarta.className} antialiased`} suppressHydrationWarning>
         <ThemeProvider>
           <Navbar/>
           {children}

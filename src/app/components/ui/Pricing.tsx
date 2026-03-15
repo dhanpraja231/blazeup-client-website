@@ -85,8 +85,8 @@ export default function Pricing() {
                 key={index}
                 className="relative rounded-3xl p-8 transition-all duration-300"
                 style={{ 
-                  background: plan.popular ? 'rgba(99,102,241,0.05)' : 'rgba(255,255,255,0.02)',
-                  border: plan.popular ? '2px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                  background: plan.popular ? 'rgba(232, 90, 42, 0.05)' : 'rgba(255,255,255,0.02)',
+                  border: plan.popular ? '2px solid rgba(232, 90, 42, 0.3)' : '1px solid rgba(255,255,255,0.06)',
                   transform: plan.popular ? 'scale(1.05)' : 'scale(1)'
                 }}
                 initial={{ opacity: 0, y: 30 }}
@@ -95,14 +95,14 @@ export default function Pricing() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ 
                   scale: plan.popular ? 1.08 : 1.02,
-                  borderColor: plan.popular ? 'rgba(99,102,241,0.5)' : 'rgba(99,102,241,0.2)'
+                  borderColor: plan.popular ? 'rgba(232, 90, 42, 0.5)' : 'rgba(232, 90, 42, 0.2)'
                 }}
               >
                 {/* Popular badge */}
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold"
                     style={{ 
-                      background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                      background: '#e85a2a',
                       color: 'white'
                     }}
                   >
@@ -141,7 +141,7 @@ export default function Pricing() {
                 <ul className="space-y-4 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                      <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#e85a2a' }} />
                       <span style={{ color: 'rgba(255,255,255,0.7)' }}>{feature}</span>
                     </li>
                   ))}
@@ -152,7 +152,7 @@ export default function Pricing() {
                   className="w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300"
                   style={{
                     background: plan.popular 
-                      ? 'linear-gradient(135deg, #6366f1, #a855f7)'
+                      ? '#e85a2a'
                       : 'rgba(255,255,255,0.05)',
                     border: plan.popular ? 'none' : '1px solid rgba(255,255,255,0.1)',
                     color: 'white'
@@ -160,7 +160,7 @@ export default function Pricing() {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-2px)';
                     e.currentTarget.style.boxShadow = plan.popular 
-                      ? '0 10px 30px rgba(99,102,241,0.4)'
+                      ? '0 10px 30px rgba(232, 90, 42, 0.35)'
                       : '0 10px 30px rgba(255,255,255,0.1)';
                   }}
                   onMouseLeave={(e) => {

@@ -60,7 +60,7 @@ export default function Testimonials() {
               whileHover={{ 
                 scale: 1.05,
                 background: 'rgba(255,255,255,0.04)',
-                borderColor: 'rgba(99,102,241,0.2)'
+                borderColor: 'rgba(232, 90, 42, 0.2)'
               }}
             >
               {/* Company Logo */}
@@ -82,7 +82,7 @@ export default function Testimonials() {
               <div 
                 className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                 style={{ 
-                  background: 'radial-gradient(circle at 50% 50%, rgba(99,102,241,0.05), transparent)'
+                  background: 'radial-gradient(circle at 50% 50%, rgba(232, 90, 42, 0.05), transparent)'
                 }}
               />
             </motion.div>

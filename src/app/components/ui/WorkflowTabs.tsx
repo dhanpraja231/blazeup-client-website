@@ -70,8 +70,8 @@ const COLUMNS: ColumnConfig[] = [
     label: 'Evaluate',
     description: 'Design and evaluate credit card policy workflows with visual composer',
     icon: <SearchCheck className="w-6 h-6" />,
-    accentFrom: '#6366f1',
-    accentTo: '#8b5cf6',
+    accentFrom: '#0ea5e9',
+    accentTo: '#06b6d4',
   },
   {
     id: 'visualize',

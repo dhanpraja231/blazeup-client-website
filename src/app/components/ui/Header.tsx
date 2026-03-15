@@ -49,10 +49,10 @@ export default function Navbar() {
               className="flex items-center space-x-2 cursor-pointer logo-hover"
               onClick={() => scrollToSection('#hero')}
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-blaze-orange to-rich-purple rounded-lg flex items-center justify-center logo-spin">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center logo-spin" style={{ background: '#e85a2a' }}>
                 <div className="w-4 h-4 bg-white rounded-sm logo-inner-spin" />
               </div>
-              <span className="text-4xl font-bold text-gradient-animated">
+              <span className="text-4xl font-bold" style={{ color: '#e85a2a' }}>
                 BlazeUp
               </span>
             </div>
@@ -74,7 +74,7 @@ export default function Navbar() {
 
             {/* CTA Button */}
             {/* <div className="hidden lg:flex items-center space-x-4">
-              <button className="bg-gradient-to-r from-blaze-orange to-rich-purple px-6 py-2.5 rounded-full text-white font-semibold text-sm shadow-glow hover:shadow-glow-hover transition-all duration-300 cta-entrance cta-hover">
+              <button className="px-6 py-2.5 rounded-full text-white font-semibold text-sm shadow-glow hover:shadow-glow-hover transition-all duration-300 cta-entrance cta-hover" style={{ background: '#e85a2a' }}>
                 Get Started
               </button>
             </div> */}
@@ -107,7 +107,7 @@ export default function Navbar() {
                   {item.name}
                 </button>
               ))}
-              {/* <button className="bg-gradient-to-r from-blaze-orange to-rich-purple px-6 py-3 rounded-full text-white font-semibold text-center shadow-glow mt-4 mobile-cta">
+              {/* <button className="px-6 py-3 rounded-full text-white font-semibold text-center shadow-glow mt-4 mobile-cta" style={{ background: '#e85a2a' }}>
                 Get Started
               </button> */}
             </div>
@@ -155,7 +155,7 @@ export default function Navbar() {
           left: 0;
           right: 0;
           height: 2px;
-          background: linear-gradient(90deg, var(--blaze-orange), var(--rich-purple));
+          background: var(--blaze-orange);
           transform: scaleX(0);
           transform-origin: left;
           transition: transform 0.3s ease;

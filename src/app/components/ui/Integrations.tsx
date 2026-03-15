@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import {
   SiSap,
-  SiOracle,
   SiZoho,
   SiQuickbooks,
   SiXero,
@@ -27,7 +26,7 @@ import { useTheme } from '@/components/ThemeProvider';
 // Row 1 - Left to right (ERP & Finance)
 const integrations_row1 = [
   { name: 'SAP', color: '#0FAAFF', Icon: SiSap },
-  { name: 'Oracle', color: '#F80000', Icon: SiOracle },
+  { name: 'Oracle', color: '#F80000', Icon: FaDatabase },
   { name: 'NetSuite', color: '#1C4587', Icon: FaDatabase },
   { name: 'Zoho Expenses', color: '#D32F2F', Icon: SiZoho },
   { name: 'QuickBooks', color: '#2CA01C', Icon: SiQuickbooks },

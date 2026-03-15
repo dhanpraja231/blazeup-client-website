@@ -134,18 +134,14 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
       svg.querySelectorAll('.cover-card').forEach(el => gsap.set(el, { opacity: 1, y: 0, borderColor: '' }));
       svg.querySelectorAll('.cover-line').forEach(el => gsap.set(el, { strokeDashoffset: 0, opacity: 1 }));
       svg.querySelectorAll('.cover-flow').forEach(el => gsap.set(el, { opacity: 0 }));
-      const result = svg.querySelector('.cover-result');
-      if (result) gsap.set(result, { opacity: 0 });
       return;
     }
 
     const cards = svg.querySelectorAll('.cover-card');
     const lines = svg.querySelectorAll('.cover-line');
     const flows = svg.querySelectorAll('.cover-flow');
-    const result = svg.querySelector('.cover-result');
 
     flows.forEach(el => gsap.set(el, { opacity: 0 }));
-    if (result) gsap.set(result, { opacity: 0 });
 
     const isFirstPlay = !hasPlayedRef.current;
     hasPlayedRef.current = true;
@@ -183,9 +179,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
     if (rightDots.length) tl.to(rightDots, { opacity: 0, duration: 0.15 });
 
     tl.to(cards, { borderColor: '#22c55e', duration: 0.3, stagger: 0.05, overwrite: 'auto' }, '-=0.1');
-    tl.to([cards, lines], { opacity: 0.15, duration: 0.4, overwrite: 'auto' }, '+=0.3');
-    if (result) tl.to(result, { opacity: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' }, '-=0.2');
-    tl.to({}, { duration: 1 });
+    tl.to({}, { duration: 1.5 });
 
     return () => { tl.kill(); };
   }, [isHovered, isExpanded, isActive, isTooSmall]);
@@ -409,17 +403,7 @@ export default React.memo(function EvaluateCover({ isExpanded = false, isHovered
                 </div>
               </foreignObject>
 
-              {/* Checkmark result overlay */}
-              <foreignObject className="cover-result" x="0" y="0" width="420" height="360" style={{ pointerEvents: 'none', opacity: 0 }}>
-                <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: light ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)', border: light ? '2px solid rgba(34,197,94,0.6)' : '2px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                      <polyline points="7,14 12,20 21,9" stroke={light ? '#16a34a' : '#22c55e'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                  <span style={{ color: light ? '#0f172a' : '#fff', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Transaction Verified</span>
-                </div>
-              </foreignObject>
+
             </svg>
           )}
         </div>
