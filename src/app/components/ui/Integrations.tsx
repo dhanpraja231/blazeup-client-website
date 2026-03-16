@@ -20,7 +20,6 @@ import {
   SiStripe,
 } from 'react-icons/si';
 import { FaFileInvoiceDollar, FaDatabase } from 'react-icons/fa';
-import { IconType } from 'react-icons';
 import { useTheme } from '@/components/ThemeProvider';
 
 // Row 1 - Left to right (ERP & Finance)
@@ -63,37 +62,27 @@ interface ScrollingRowProps {
 function ScrollingRow({ integrations, direction, speed }: ScrollingRowProps) {
   const { light } = useTheme();
 
-  // Create a reusable component for a single set of integrations
   const IntegrationSet = () => (
-    // Added `pr-6` to account for the trailing gap and `w-max` to ensure it doesn't compress
-    <div className="flex gap-6 pr-6 w-max">
+    <div className="flex gap-4 pr-4 w-max">
       {integrations.map((integration, index) => {
         const Icon = integration.Icon;
         return (
           <div
             key={index}
-            className="flex-shrink-0 rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105"
+            className="flex-shrink-0 rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-300 hover:scale-[1.02]"
             style={{
-              width: '180px',
-              height: '140px',
+              width: '170px',
+              height: '130px',
               background: light ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${light ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`,
-              transition: 'background 0.3s, border 0.3s',
+              border: `1px solid ${light ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'}`,
             }}
           >
-            {/* Integration Logo */}
-            <div className="w-16 h-16 mb-3 flex items-center justify-center">
-              <Icon className="w-full h-full" style={{ color: light ? '#1e293b' : '#fff', transition: 'color 0.3s' }} />
+            <div className="w-14 h-14 mb-3 flex items-center justify-center">
+              <Icon className="w-full h-full" style={{ color: light ? '#3f3f46' : '#A1A1AA', transition: 'color 0.3s' }} />
             </div>
-            {/* Company name */}
-            <h3 className="text-sm font-semibold text-center" style={{ color: light ? '#1e293b' : '#fff', transition: 'color 0.3s' }}>
+            <h3 className="text-xs font-medium text-center tracking-wide" style={{ color: light ? '#3f3f46' : '#A1A1AA', transition: 'color 0.3s' }}>
               {integration.name}
             </h3>
-            {/* Color indicator */}
-            <div
-              className="w-8 h-1 rounded-full mt-2"
-              style={{ background: integration.color }}
-            />
           </div>
         );
       })}
@@ -101,12 +90,10 @@ function ScrollingRow({ integrations, direction, speed }: ScrollingRowProps) {
   );
 
   return (
-    <div className="relative overflow-hidden py-4">
+    <div className="relative overflow-hidden py-3">
       <motion.div
-        // `w-max` added here forces the container to tightly wrap the sets inside
         className="flex w-max"
         animate={{
-          // 8 total sets. Moving 1 set is exactly 12.5% of the total width.
           x: direction === 'left' ? ['0%', '-12.5%'] : ['-12.5%', '0%'],
         }}
         transition={{
@@ -118,7 +105,6 @@ function ScrollingRow({ integrations, direction, speed }: ScrollingRowProps) {
           },
         }}
       >
-        {/* Render 8 identical sets to ensure enough width for ultra-wide monitors */}
         {[...Array(8)].map((_, i) => (
           <IntegrationSet key={i} />
         ))}
@@ -134,7 +120,11 @@ export default function Integrations() {
     <section
       id="integrations"
       className="relative py-20 sm:py-32 overflow-hidden"
-      style={{ background: light ? 'linear-gradient(180deg, #f1f5f9 0%, #ffffff 15%, #ffffff 100%)' : 'var(--dark-gray)', transition: 'background 0.4s' }}
+      style={{
+        background: light ? '#f8f8f6' : '#09090B',
+        borderTop: `1px solid ${light ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)'}`,
+        transition: 'background 0.4s',
+      }}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
@@ -145,30 +135,41 @@ export default function Integrations() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <motion.h2 
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ color: light ? '#0f172a' : '#fff', transition: 'color 0.3s' }}
+          <motion.p
+            className="text-xs font-medium tracking-[0.2em] uppercase mb-4"
+            style={{ color: '#C8A97E' }}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+          >
+            Ecosystem
+          </motion.p>
+          <motion.h2
+            className="text-4xl sm:text-5xl lg:text-6xl font-display mb-6"
+            style={{ color: light ? '#18181B' : '#FAFAFA', transition: 'color 0.3s', letterSpacing: '-0.02em' }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Seamless Integrations
+            Built to{' '}
+            <span className="font-display italic" style={{ color: '#C8A97E' }}>connect</span>
           </motion.h2>
-          <motion.p 
-            className="text-lg sm:text-xl max-w-3xl mx-auto"
-            style={{ color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.6)', transition: 'color 0.3s' }}
+          <motion.p
+            className="text-lg sm:text-xl max-w-2xl mx-auto"
+            style={{ color: '#71717A', transition: 'color 0.3s' }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Connect with your entire tech stack. Native integrations with ERPs, communication tools, and productivity platforms.
+            Native integrations with ERPs, communication tools, and productivity platforms.
           </motion.p>
         </motion.div>
 
         {/* Scrolling Integration Rows */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <ScrollingRow integrations={integrations_row1} direction="left" speed={24} />
           <ScrollingRow integrations={integrations_row2} direction="right" speed={29} />
           <ScrollingRow integrations={integrations_row3} direction="left" speed={27} />
@@ -182,8 +183,8 @@ export default function Integrations() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <p className="text-lg" style={{ color: light ? '#059669' : '#34d399', transition: 'color 0.3s' }}>
-            And more integrations coming soon...
+          <p className="text-sm tracking-wide" style={{ color: '#71717A' }}>
+            And more integrations coming soon
           </p>
         </motion.div>
       </div>

@@ -2,23 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 export default function Hero() {
-  const [displayedText, setDisplayedText] = useState('');
-  const fullText = 'Corporate spends REIMAGINED.';
-  const typingSpeed = 50;
-
-  useEffect(() => {
-    if (displayedText.length < fullText.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText(fullText.slice(0, displayedText.length + 1));
-      }, typingSpeed);
-      return () => clearTimeout(timeout);
-    }
-  }, [displayedText]);
-
   const handleScrollToSection = (sectionId: string) => {
     const element = document.querySelector(`#${sectionId}`);
     if (element) {
@@ -29,184 +14,155 @@ export default function Hero() {
     }
   };
 
-  const typingDone = displayedText.length === fullText.length;
-
-  // Split text: "Corporate spends " (0-17) and "REIMAGINED." (17+)
-  const line1 = displayedText.slice(0, Math.min(displayedText.length, 17));
-  const line2 = displayedText.length > 17 ? displayedText.slice(17) : '';
-
   return (
     <section
       id="hero"
       className="min-h-screen flex items-center relative overflow-hidden"
-      style={{ background: '#020a06' }}
+      style={{ background: 'var(--surface)' }}
     >
-      {/* === Background Gradient Layers === */}
+      {/* Subtle grain texture */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          background:
-            'radial-gradient(ellipse 80% 60% at 30% 50%, rgba(5,150,105,0.15) 0%, transparent 70%), ' +
-            'radial-gradient(ellipse 60% 80% at 70% 30%, rgba(16,185,129,0.08) 0%, transparent 60%), ' +
-            'linear-gradient(160deg, #020a06 0%, #022c22 30%, #064e3b 55%, #022c22 80%, #020a06 100%)',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
         }}
       />
 
-      {/* === Dot Pattern Overlay === */}
+      {/* Single thin horizontal line accent */}
       <div
-        className="absolute inset-0"
+        className="absolute left-0 right-0"
         style={{
-          backgroundImage:
-            'radial-gradient(rgba(16,185,129,0.12) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
+          top: '38%',
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent 0%, var(--accent) 20%, var(--accent) 80%, transparent 100%)',
+          opacity: 0.08,
         }}
       />
 
-      {/* === Glowing Orbs === */}
-      <div
-        className="absolute rounded-full blur-[120px]"
-        style={{
-          width: '500px',
-          height: '500px',
-          top: '10%',
-          left: '-5%',
-          background: 'rgba(5,150,105,0.2)',
-        }}
-      />
-      <div
-        className="absolute rounded-full blur-[100px]"
-        style={{
-          width: '400px',
-          height: '400px',
-          bottom: '5%',
-          right: '10%',
-          background: 'rgba(16,185,129,0.12)',
-        }}
-      />
-      <div
-        className="absolute rounded-full blur-[80px]"
-        style={{
-          width: '200px',
-          height: '200px',
-          top: '60%',
-          left: '40%',
-          background: 'rgba(52,211,153,0.08)',
-        }}
-      />
-
-      {/* === Content === */}
+      {/* Content */}
       <div className="w-full px-6 sm:px-10 lg:px-20 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-30">
-
-          {/* Left Side — Text */}
-          <div className="flex-1 text-left max-w-4xl pl-6 sm:pl-8 lg:pl-30">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-            >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                <span className="text-white whitespace-nowrap">{line1}</span>
-                {line2 && (
-                  <>
-                    <br />
-                    <span
-                      style={{
-                        background: 'linear-gradient(135deg, #10b981, #34d399, #6ee7b7)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                      }}
-                    >
-                      {line2}
-                    </span>
-                  </>
-                )}
-                {!typingDone && (
-                  <span
-                    className="inline-block w-[3px] h-[0.85em] ml-1 animate-pulse align-middle"
-                    style={{ background: '#10b981' }}
-                  />
-                )}
-              </h1>
-
-              {/* Subtitle */}
-              <motion.p
-                className="text-lg sm:text-xl mb-10 leading-relaxed max-w-xl"
-                style={{ color: 'rgba(167,212,194,0.7)' }}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: typingDone ? 1 : 0, y: typingDone ? 0 : 10 }}
-                transition={{ duration: 0.6 }}
-              >
-                Policies built into every payment. Real-time visibility. Credit Lines. UPI and more.
-              </motion.p>
-            </motion.div>
-
-            {/* CTA Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: typingDone ? 1 : 0, y: typingDone ? 0 : 10 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <motion.button
-                onClick={() => handleScrollToSection('product')}
-                className="group relative px-8 py-4 text-base font-semibold text-white rounded-xl overflow-hidden transition-all duration-300"
-                style={{
-                  background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                  boxShadow: '0 4px 25px rgba(16,185,129,0.35), 0 0 60px rgba(16,185,129,0.1)',
-                }}
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow: '0 6px 35px rgba(16,185,129,0.5), 0 0 80px rgba(16,185,129,0.15)',
-                }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  See How It Works
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </motion.button>
-            </motion.div>
-          </div>
-
-          {/* Right Side — Card Image */}
-          <motion.div
-            className="flex-1 flex justify-center lg:justify-end"
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: typingDone ? 1 : 0, x: typingDone ? 0 : 60 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+        <div className="max-w-5xl mx-auto">
+          {/* Overline */}
+          <motion.p
+            className="text-xs sm:text-sm font-medium tracking-[0.25em] uppercase mb-8"
+            style={{ color: 'var(--accent)' }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
           >
-            <motion.div
-              animate={{ y: [0, -12, 0] }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              style={{
-                filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.5)) drop-shadow(0 10px 20px rgba(16,185,129,0.15))',
-              }}
-            >
-              <Image
-                src="/Hero_Image_NoBG.png"
-                alt="Premium corporate credit cards"
-                width={800}
-                height={800}
-                priority
-                className="w-[75vw] sm:w-[55vw] lg:w-[38vw] h-auto"
-              />
-            </motion.div>
-          </motion.div>
-            
+            Corporate Spend Management
+          </motion.p>
 
+          {/* Main Headline */}
+          <motion.h1
+            className="font-display mb-8"
+            style={{
+              fontSize: 'clamp(3rem, 8vw, 7rem)',
+              lineHeight: 1.05,
+              letterSpacing: '-0.02em',
+              color: 'var(--text-primary)',
+            }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            Every payment,{' '}
+            <br className="hidden sm:block" />
+            <span
+              className="font-display italic"
+              style={{ color: 'var(--accent)' }}
+            >
+              every policy
+            </span>
+            — one platform.
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            className="text-lg sm:text-xl max-w-xl mb-12"
+            style={{
+              color: 'var(--text-secondary)',
+              lineHeight: 1.7,
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+          >
+            Issue corporate cards with built-in spend policies.
+            Real-time visibility. Credit lines. UPI and more.
+          </motion.p>
+
+          {/* CTA */}
+          <motion.div
+            className="flex items-center gap-8"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.55 }}
+          >
+            <motion.button
+              onClick={() => handleScrollToSection('product')}
+              className="group relative px-8 py-4 text-sm font-semibold tracking-wide uppercase rounded-none overflow-hidden transition-all duration-300"
+              style={{
+                background: 'var(--accent)',
+                color: 'var(--surface)',
+                letterSpacing: '0.08em',
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                See How It Works
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </motion.button>
+
+            <motion.button
+              onClick={() => handleScrollToSection('integrations')}
+              className="text-sm font-medium tracking-wide transition-colors duration-300"
+              style={{ color: 'var(--text-muted)' }}
+              whileHover={{ color: 'var(--text-primary)' }}
+            >
+              View Integrations
+            </motion.button>
+          </motion.div>
+
+          {/* Bottom stat line */}
+          <motion.div
+            className="flex items-center gap-12 mt-24 pt-8"
+            style={{ borderTop: '1px solid var(--border)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+          >
+            {[
+              { label: 'Policy Engine', value: 'Real-time' },
+              { label: 'Card Issuance', value: 'Instant' },
+              { label: 'Integrations', value: '20+' },
+            ].map((stat, i) => (
+              <div key={i}>
+                <p
+                  className="text-sm font-medium mb-1"
+                  style={{ color: 'var(--accent)' }}
+                >
+                  {stat.value}
+                </p>
+                <p
+                  className="text-xs tracking-wide uppercase"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </div>
 
-      {/* === Bottom Fade === */}
+      {/* Bottom fade */}
       <div
         className="absolute bottom-0 left-0 right-0 h-32"
         style={{
-          background: 'linear-gradient(to top, #0a0a0a, transparent)',
+          background: 'linear-gradient(to top, var(--surface), transparent)',
         }}
       />
     </section>

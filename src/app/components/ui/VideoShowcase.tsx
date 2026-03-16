@@ -120,11 +120,12 @@ export default function VideoShowcase() {
 
   const videoContainerStyle: React.CSSProperties = {
     maxWidth: '1400px',
-    borderRadius: '18px',
+    borderRadius: '12px',
     overflow: 'hidden',
     boxShadow: light
-      ? '0 25px 60px -12px rgba(0,0,0,0.15)'
-      : '0 25px 60px -12px rgba(0,0,0,0.7)',
+      ? '0 8px 30px -8px rgba(0,0,0,0.1)'
+      : '0 8px 30px -8px rgba(0,0,0,0.5)',
+    border: light ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)',
     position: 'absolute',
     top: 0,
     left: 0,
@@ -137,8 +138,8 @@ export default function VideoShowcase() {
       className="relative overflow-hidden"
       style={{
         background: light
-          ? 'linear-gradient(180deg, #cbd5e1 0%, #e0e7ef 40%, #f1f5f9 100%)'
-          : 'linear-gradient(180deg, #020617 0%, #0b1120 40%, #111827 100%)',
+          ? '#f8f8f6'
+          : '#09090B',
         transition: 'background 0.5s ease',
         padding: '80px 0 100px',
       }}
@@ -153,8 +154,8 @@ export default function VideoShowcase() {
           width: '900px',
           height: '600px',
           background: light
-            ? 'radial-gradient(ellipse, rgba(5,150,105,0.06) 0%, rgba(52,211,153,0.04) 40%, transparent 70%)'
-            : 'radial-gradient(ellipse, rgba(5,150,105,0.08) 0%, rgba(52,211,153,0.05) 40%, transparent 70%)',
+            ? 'radial-gradient(ellipse, rgba(200,169,126,0.04) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse, rgba(200,169,126,0.03) 0%, transparent 70%)',
           pointerEvents: 'none',
           transition: 'background 0.5s ease',
         }}
@@ -171,7 +172,7 @@ export default function VideoShowcase() {
         >
           <motion.span
             className="inline-block text-xs sm:text-sm font-semibold tracking-widest uppercase mb-4"
-            style={{ color: light ? '#059669' : '#34d399', letterSpacing: '0.15em' }}
+            style={{ color: '#C8A97E', letterSpacing: '0.2em' }}
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -181,21 +182,21 @@ export default function VideoShowcase() {
           </motion.span>
 
           <motion.h2
-            className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-5"
-            style={{ color: light ? '#0f172a' : '#fff', transition: 'color 0.3s', lineHeight: 1.15 }}
+            className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-display mb-5"
+            style={{ color: light ? '#18181B' : '#FAFAFA', transition: 'color 0.3s', lineHeight: 1.15, letterSpacing: '-0.02em' }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15 }}
           >
             The Complete{' '}
-            <span style={{ color: light ? '#059669' : '#34d399' }}>Experience</span>
+            <span className="font-display italic" style={{ color: '#C8A97E' }}>Experience</span>
           </motion.h2>
 
           <motion.p
             className="text-base sm:text-lg lg:text-xl max-w-2xl mx-auto"
             style={{
-              color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.5)',
+              color: '#71717A',
               transition: 'color 0.3s',
               lineHeight: 1.7,
             }}
@@ -270,10 +271,10 @@ export default function VideoShowcase() {
           }}
         >
           <div className="companion-item" style={{ flex: 1, minWidth: 200, textAlign: 'center', padding: '0 28px', opacity: 0 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: light ? '#0f172a' : '#fff', marginBottom: 10, transition: 'color 0.3s' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: light ? '#18181B' : '#FAFAFA', marginBottom: 10, transition: 'color 0.3s' }}>
               Craft Your Card
             </div>
-            <div style={{ fontSize: 14, lineHeight: 1.7, color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.45)', transition: 'color 0.3s' }}>
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: '#71717A', transition: 'color 0.3s' }}>
               Design branded corporate cards with live preview   pick colors, logos, and layouts in seconds.
             </div>
           </div>
@@ -281,10 +282,10 @@ export default function VideoShowcase() {
           
 
           <div className="companion-item" style={{ flex: 1, minWidth: 200, textAlign: 'center', padding: '0 28px', opacity: 0 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: light ? '#0f172a' : '#fff', marginBottom: 10, transition: 'color 0.3s' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: light ? '#18181B' : '#FAFAFA', marginBottom: 10, transition: 'color 0.3s' }}>
               Set the Rules
             </div>
-            <div style={{ fontSize: 14, lineHeight: 1.7, color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.45)', transition: 'color 0.3s' }}>
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: '#71717A', transition: 'color 0.3s' }}>
               Build spending policies visually   drag-and-drop approval flows that enforce limits automatically.
             </div>
           </div>
@@ -292,10 +293,10 @@ export default function VideoShowcase() {
           
 
           <div className="companion-item" style={{ flex: 1, minWidth: 200, textAlign: 'center', padding: '0 28px', opacity: 0 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: light ? '#0f172a' : '#fff', marginBottom: 10, transition: 'color 0.3s' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: light ? '#18181B' : '#FAFAFA', marginBottom: 10, transition: 'color 0.3s' }}>
               See Everything
             </div>
-            <div style={{ fontSize: 14, lineHeight: 1.7, color: light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.45)', transition: 'color 0.3s' }}>
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: '#71717A', transition: 'color 0.3s' }}>
               Real-time dashboards that break down every transaction   by category, team, and trend.
             </div>
           </div>

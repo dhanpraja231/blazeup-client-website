@@ -60,26 +60,26 @@ const COLUMNS: ColumnConfig[] = [
   {
     id: 'design',
     label: 'Design',
-    description: 'Create stunning credit card designs with AI-powered templates and live preview',
+    description: 'Create credit card designs with templates and live preview',
     icon: <Palette className="w-6 h-6" />,
-    accentFrom: '#f97316',
-    accentTo: '#ec4899',
+    accentFrom: '#C8A97E',
+    accentTo: '#D4B896',
   },
   {
     id: 'evaluate',
     label: 'Evaluate',
-    description: 'Design and evaluate credit card policy workflows with visual composer',
+    description: 'Build and evaluate card policy workflows with visual composer',
     icon: <SearchCheck className="w-6 h-6" />,
-    accentFrom: '#0ea5e9',
-    accentTo: '#06b6d4',
+    accentFrom: '#A1A1AA',
+    accentTo: '#C8A97E',
   },
   {
     id: 'visualize',
     label: 'Visualize',
-    description: 'Analyze card spending patterns and view interactive analytics dashboards',
+    description: 'Analyze spending patterns and view interactive analytics',
     icon: <BarChart3 className="w-6 h-6" />,
-    accentFrom: '#10b981',
-    accentTo: '#06b6d4',
+    accentFrom: '#C8A97E',
+    accentTo: '#A1A1AA',
   },
 ];
 
@@ -154,14 +154,14 @@ export default function WorkflowTabs() {
       if (!el || hoveredColumn) return;
       if (c.id === activeAnimCol) {
         gsap.to(el, {
-          borderColor: light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)',
+          borderColor: light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
           duration: 0.5,
           ease: 'power2.out',
           overwrite: 'auto',
         });
       } else {
         gsap.to(el, {
-          borderColor: light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)',
+          borderColor: light ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)',
           duration: 0.5,
           ease: 'power2.out',
           overwrite: 'auto',
@@ -358,7 +358,7 @@ export default function WorkflowTabs() {
           <h3 style={{
             fontSize: 28,
             fontWeight: 700,
-            color: light ? '#0f172a' : '#fff',
+            color: light ? '#18181B' : '#FAFAFA',
             marginBottom: 0,
             letterSpacing: '-0.02em',
             transition: 'color 0.3s',
@@ -408,7 +408,7 @@ export default function WorkflowTabs() {
             right: 0,
             bottom: 0,
             zIndex: 99998,
-            backgroundColor: light ? '#f8fafc' : '#0a0a0a',
+            backgroundColor: light ? '#f8f8f6' : '#09090B',
             display: 'flex',
             flexDirection: 'column',
           }}
@@ -421,14 +421,14 @@ export default function WorkflowTabs() {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '10px 20px',
-              borderBottom: light ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)',
-              background: light ? '#fff' : '#0f0f0f',
+              borderBottom: light ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)',
+              background: light ? '#fff' : '#18181B',
               transition: 'background 0.3s, border-bottom 0.3s',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {/* Column selector pills */}
-              <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14, background: light ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)', border: `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'}` }}>
+              <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 10, background: light ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)', border: `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
                 {COLUMNS.map(c => (
                   <button
                     key={c.id}
@@ -447,8 +447,8 @@ export default function WorkflowTabs() {
                       background: expandedColumn === c.id
                         ? `linear-gradient(135deg, ${c.accentFrom}25, ${c.accentTo}25)`
                         : 'transparent',
-                      color: expandedColumn === c.id ? (light ? '#0f172a' : '#fff') : (light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)'),
-                      outline: expandedColumn === c.id ? `1px solid ${light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'}` : 'none',
+                      color: expandedColumn === c.id ? (light ? '#18181B' : '#FAFAFA') : (light ? '#71717A' : '#71717A'),
+                      outline: expandedColumn === c.id ? `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'}` : 'none',
                     }}
                   >
                     {c.icon}
@@ -457,7 +457,7 @@ export default function WorkflowTabs() {
                 ))}
               </div>
 
-              <span style={{ fontSize: 13, color: light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 13, color: light ? '#A1A1AA' : '#71717A', whiteSpace: 'nowrap' }}>
                 {col.description}
               </span>
             </div>
@@ -473,9 +473,9 @@ export default function WorkflowTabs() {
                   width: 36,
                   height: 36,
                   borderRadius: 10,
-                  background: light ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
-                  color: light ? '#475569' : 'rgba(255,255,255,0.6)',
+                  background: 'transparent',
+                  border: `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}`,
+                  color: light ? '#71717A' : '#71717A',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                 }}
@@ -563,7 +563,7 @@ export default function WorkflowTabs() {
   return (
     <>
       {/* ─── 3-Column Section ─── */}
-      <section id="product" className="w-full py-16 sm:py-24" style={{ background: light ? 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 20%, #e0e7ef 50%, #cbd5e1 100%)' : 'linear-gradient(180deg, #020617 0%, #0b1120 40%, #111827 100%)', transition: 'background 0.4s' }}>
+      <section id="product" className="w-full py-16 sm:py-24" style={{ background: light ? '#f8f8f6' : '#09090B', transition: 'background 0.4s' }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="mb-12">
@@ -573,11 +573,11 @@ export default function WorkflowTabs() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4" style={{ color: light ? '#0f172a' : '#fff', transition: 'color 0.3s' }}>
-                Your{' '}Workflow
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display mb-4" style={{ color: light ? '#18181B' : '#FAFAFA', transition: 'color 0.3s', letterSpacing: '-0.02em' }}>
+                Your Workflow
               </h2>
-              <p className="max-w-2xl text-lg" style={{ color: light ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)', transition: 'color 0.3s' }}>
-                Design, evaluate, and visualize   everything you need to manage
+              <p className="max-w-2xl text-lg" style={{ color: light ? '#71717A' : '#71717A', transition: 'color 0.3s' }}>
+                Design, evaluate, and visualize — everything you need to manage
                 your card program in one place.
               </p>
             </motion.div>
@@ -606,12 +606,11 @@ export default function WorkflowTabs() {
                 style={{
                   flex: isMobile ? 'none' : 1,
                   height: isMobile ? 350 : undefined,
-                  borderRadius: 20,
-                  border: `1px solid ${light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}`,
-                  background: light ? '#ffffff' : 'rgba(255,255,255,0.02)',
-                  backdropFilter: 'blur(12px)',
+                  borderRadius: 12,
+                  border: `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}`,
+                  background: light ? '#ffffff' : '#18181B',
                   overflow: 'hidden',
-                  boxShadow: light ? '0 4px 20px rgba(0,0,0,0.06)' : '0 4px 20px rgba(0,0,0,0.2)',
+                  boxShadow: light ? '0 1px 3px rgba(0,0,0,0.04)' : 'none',
                   transition: 'none',
                   willChange: isMobile ? undefined : 'flex, box-shadow, opacity',
                   transform: 'translateZ(0)',
@@ -632,7 +631,7 @@ export default function WorkflowTabs() {
       {typeof document !== 'undefined' && mobileToast && ReactDOM.createPortal(
         <div style={{
           position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 99999, background: '#0f172a', color: '#fff', borderRadius: 14,
+          zIndex: 99999, background: '#18181B', color: '#FAFAFA', borderRadius: 8,
           padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 10,
           boxShadow: '0 8px 32px rgba(0,0,0,0.25)', fontSize: 14, fontWeight: 500,
           animation: 'toastIn 0.3s ease-out',
